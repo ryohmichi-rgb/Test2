@@ -1,0 +1,11 @@
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/vendor/bundle
+/storage/*
+!/storage/.keep
+/public/assets
+.byebug_history
+.env
+*.pid
