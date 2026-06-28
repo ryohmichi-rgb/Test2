@@ -1,8 +1,17 @@
 #!/bin/bash -e
 
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+  # Wait for DB to be ready (up to 30s)
+  echo "Waiting for database..."
+  retries=10
+  until ./bin/rails db:version > /dev/null 2>&1 || [ $retries -eq 0 ]; do
+    echo "Database not ready, retrying in 3s... ($retries retries left)"
+    retries=$((retries - 1))
+    sleep 3
+  done
+
   ./bin/rails db:prepare
-  ./bin/rails db:seed
+  ./bin/rails db:seed || echo "Seed already complete or skipped."
 fi
 
 exec "${@}"

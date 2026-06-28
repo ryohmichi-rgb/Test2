@@ -21,6 +21,8 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
+  config.require_master_key = false
+
   # Railwayなどのリバースプロキシ経由のSSL
   config.assume_ssl = true
   config.force_ssl = true
