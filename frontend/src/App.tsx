@@ -3,10 +3,12 @@ import StartPage from "./pages/StartPage";
 import GradesPage from "./pages/GradesPage";
 import PracticePage from "./pages/PracticePage";
 import ProgressPage from "./pages/ProgressPage";
+import PasswordGate from "./components/PasswordGate";
 import "./App.css";
 
 function App() {
   return (
+    <PasswordGate>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<StartPage />} />
@@ -16,6 +18,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
+    </PasswordGate>
   );
 }
 
