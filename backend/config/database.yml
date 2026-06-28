@@ -58,14 +58,5 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
-  primary:
-    <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
-  cache:
-    <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
-    database_tasks: false
-  queue:
-    <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
-    database_tasks: false
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
