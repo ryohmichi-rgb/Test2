@@ -3,6 +3,7 @@ import StartPage from "./pages/StartPage";
 import GradesPage from "./pages/GradesPage";
 import PracticePage from "./pages/PracticePage";
 import ProgressPage from "./pages/ProgressPage";
+import StatsPage from "./pages/StatsPage";
 import PasswordGate from "./components/PasswordGate";
 import "./App.css";
 
@@ -15,6 +16,7 @@ function App() {
         <Route path="/grades" element={<GradesPage />} />
         <Route path="/units/:unitId" element={<PracticePage />} />
         <Route path="/progress/:studentId" element={<ProgressPage />} />
+        <Route path="/stats" element={<StatsPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

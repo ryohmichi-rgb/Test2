@@ -60,3 +60,22 @@ export interface StudentProgress {
   student: Student;
   progress: UnitProgress[];
 }
+
+export interface StatGoal {
+  target_value: number;
+  target_date: string;
+}
+
+export interface StudentStat {
+  stat_type_id: number;
+  name: string;
+  description: string;
+  display_order: number;
+  value: number;
+  goal: StatGoal | null;
+}
+
+export interface ReferenceStat {
+  label: string;
+  stats: { stat_type_id: number; name: string; value: number }[];
+}
