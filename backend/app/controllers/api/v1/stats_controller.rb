@@ -2,7 +2,7 @@ module Api
   module V1
     class StatsController < ApplicationController
       def index
-        student = Student.find(params[:student_id])
+        student = Student.find(params[:id])
         stats = StudentStat.where(student: student).includes(:stat_type)
         stat_map = stats.index_by(&:stat_type_id)
 

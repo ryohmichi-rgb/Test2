@@ -2,7 +2,7 @@ module Api
   module V1
     class GoalsController < ApplicationController
       def upsert
-        student = Student.find(params[:student_id])
+        student = Student.find(params[:id])
         goal = Goal.find_or_initialize_by(student: student, stat_type_id: goal_params[:stat_type_id])
         goal.assign_attributes(goal_params)
 
