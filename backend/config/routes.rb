@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       resources :students, only: [:create, :show] do
         get :progress, on: :member
         get :stats, on: :member, to: "stats#index"
+        get :plan, on: :member, to: "plan#show"
         put :goals, to: "goals#upsert", on: :member
       end
       resources :answer_records, only: [:create]

@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AnswerResult, StudentProgress, StudentStat, ReferenceStat } from "../types";
+import type { Grade, Unit, Student, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -31,6 +31,9 @@ export const updateGoal = (
 
 export const fetchReferenceStats = (): Promise<ReferenceStat[]> =>
   api.get<ReferenceStat[]>("/reference_stats").then((r) => r.data);
+
+export const fetchLearningPlan = (studentId: number): Promise<LearningPlan> =>
+  api.get<LearningPlan>(`/students/${studentId}/plan`).then((r) => r.data);
 
 export const submitAnswer = (
   studentId: number,

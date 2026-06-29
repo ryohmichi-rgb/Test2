@@ -79,3 +79,32 @@ export interface ReferenceStat {
   label: string;
   stats: { stat_type_id: number; name: string; value: number }[];
 }
+
+export interface GoalSummary {
+  stat_type_id: number;
+  stat_name: string;
+  current: number;
+  target: number;
+  target_date: string;
+  days_remaining: number;
+  points_needed: number;
+  points_per_day: number;
+  achieved: boolean;
+}
+
+export interface PlanUnit {
+  unit_id: number;
+  unit_title: string;
+  stat_name: string;
+  stat_type_id: number;
+  accuracy: number | null;
+  total_answered: number;
+  estimated_points: number;
+  is_new: boolean;
+  priority: number;
+}
+
+export interface LearningPlan {
+  goals_summary: GoalSummary[];
+  today_plan: PlanUnit[];
+}

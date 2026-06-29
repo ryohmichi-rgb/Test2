@@ -27,11 +27,11 @@ export default function GradesPage() {
       <header className="page-header">
         <h2>{studentName}さんの学習</h2>
         <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button className="btn-primary" onClick={() => navigate("/plan")}>
+            今日のプラン
+          </button>
           <button className="btn-secondary" onClick={() => navigate("/stats")}>
             ステータス
-          </button>
-          <button className="btn-secondary" onClick={() => navigate(`/progress/${studentId}`)}>
-            進捗
           </button>
         </div>
       </header>

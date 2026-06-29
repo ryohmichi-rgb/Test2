@@ -469,3 +469,17 @@ body {
   border-radius: 8px;
   border: 1px solid #e2e8f0;
 }
+
+/* ===== Plan Page ===== */
+.plan-unit-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.plan-unit-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
