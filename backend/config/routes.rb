@@ -7,8 +7,11 @@ Rails.application.routes.draw do
       resources :units, only: [:show]
       resources :students, only: [:create, :show] do
         get :progress, on: :member
+        get :stats, on: :member
+        put :goals, to: "goals#upsert", on: :member
       end
       resources :answer_records, only: [:create]
+      resources :reference_stats, only: [:index]
     end
   end
 end

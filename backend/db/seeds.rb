@@ -1,3 +1,27 @@
+# ステータス種別
+stat_calc    = StatType.find_or_create_by!(name: "計算力")    { |s| s.description = "四則演算・分数・小数の正確さと速さ"; s.display_order = 1 }
+stat_number  = StatType.find_or_create_by!(name: "数的センス") { |s| s.description = "数の性質・規則性・比の理解";         s.display_order = 2 }
+stat_shape   = StatType.find_or_create_by!(name: "図形力")    { |s| s.description = "図形の性質・面積・体積の理解";       s.display_order = 3 }
+stat_reading = StatType.find_or_create_by!(name: "文章読解力") { |s| s.description = "文章題を式に落とし込む力";           s.display_order = 4 }
+stat_logic   = StatType.find_or_create_by!(name: "論理力")    { |s| s.description = "順序立てて考え、式を組み立てる力";   s.display_order = 5 }
+
+# 参考値
+[
+  { label: "数学の先生",       stat_type: stat_calc,    value: 500 },
+  { label: "数学の先生",       stat_type: stat_logic,   value: 400 },
+  { label: "数学の先生",       stat_type: stat_number,  value: 350 },
+  { label: "高校受験（公立）", stat_type: stat_calc,    value: 300 },
+  { label: "高校受験（公立）", stat_type: stat_reading, value: 250 },
+  { label: "高校受験（公立）", stat_type: stat_logic,   value: 250 },
+  { label: "中学卒業レベル",   stat_type: stat_calc,    value: 200 },
+  { label: "中学卒業レベル",   stat_type: stat_number,  value: 150 },
+  { label: "中学卒業レベル",   stat_type: stat_reading, value: 150 }
+].each do |ref|
+  ReferenceStat.find_or_create_by!(label: ref[:label], stat_type: ref[:stat_type]) do |r|
+    r.value = ref[:value]
+  end
+end
+
 # 教科
 math_e = Subject.find_or_create_by!(name: "算数")
 math_m = Subject.find_or_create_by!(name: "数学")
@@ -323,4 +347,18 @@ units_grade7.each do |unit_data|
   end
 end
 
-puts "Seed完了: #{Grade.count}学年, #{Unit.count}単元, #{Problem.count}問題"
+# 単元ごとのステータス種別マッピング
+{
+  "分数のかけ算・わり算" => stat_calc,
+  "比と比の値"           => stat_number,
+  "速さ・時間・距離"     => stat_reading,
+  "文字と式（小6）"      => stat_logic,
+  "正の数・負の数"       => stat_calc,
+  "文字と式"             => stat_logic,
+  "方程式"               => stat_logic,
+  "比例と反比例"         => stat_number
+}.each do |title, stat_type|
+  Unit.where(title: title).update_all(stat_type_id: stat_type.id)
+end
+
+puts "Seed完了: #{Grade.count}学年, #{Unit.count}単元, #{Problem.count}問題, #{StatType.count}ステータス種別"

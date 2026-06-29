@@ -1,5 +1,7 @@
 class Student < ApplicationRecord
   has_many :answer_records, dependent: :destroy
+  has_many :student_stats, dependent: :destroy
+  has_many :goals, dependent: :destroy
 
   validates :name, presence: true
 
