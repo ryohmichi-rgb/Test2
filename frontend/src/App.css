@@ -487,15 +487,14 @@ body {
 }
 
 .ref-icon {
-  font-size: 2rem;
   line-height: 1;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7f8ff;
-  border-radius: 12px;
+  background: #fdf9f0;
+  border-radius: 14px;
   flex-shrink: 0;
 }
 

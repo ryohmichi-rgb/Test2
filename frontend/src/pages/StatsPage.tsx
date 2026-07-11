@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchStudentStats, fetchReferenceStats, updateGoal } from "../api";
 import type { StudentStat, ReferenceStat } from "../types";
+import ReferenceIcon from "../components/ReferenceIcon";
 
 const STAT_COLORS: Record<string, string> = {
   "計算力":    "#4c51bf",
@@ -9,12 +10,6 @@ const STAT_COLORS: Record<string, string> = {
   "図形力":    "#d69e2e",
   "文章読解力": "#dd6b20",
   "論理力":    "#805ad5",
-};
-
-const REF_ICONS: Record<string, string> = {
-  "数学の先生":       "👨‍🏫",
-  "高校受験（公立）": "✏️",
-  "中学卒業レベル":   "🎓",
 };
 
 const REF_MAX = 500;
@@ -211,7 +206,6 @@ export default function StatsPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {refs.map((ref) => {
-            const icon = REF_ICONS[ref.label] ?? "🎯";
             const isSettingGoal = goalRefLabel === ref.label;
             const sortedStats = [...ref.stats].sort((a, b) => b.value - a.value);
 
@@ -219,7 +213,7 @@ export default function StatsPage() {
               <div key={ref.label} className="ref-card">
                 <div className="ref-card-head">
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span className="ref-icon" aria-hidden="true">{icon}</span>
+                    <span className="ref-icon" aria-hidden="true"><ReferenceIcon label={ref.label} size={54} /></span>
                     <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "#2d3748" }}>{ref.label}</span>
                   </div>
                   {!isSettingGoal && (
