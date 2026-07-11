@@ -17,7 +17,7 @@ export default function StartPage() {
       const student = await createStudent(name.trim());
       localStorage.setItem("studentId", String(student.id));
       localStorage.setItem("studentName", student.name);
-      navigate("/grades");
+      navigate("/home");
     } catch {
       setError("エラーが発生しました。もう一度お試しください。");
     } finally {

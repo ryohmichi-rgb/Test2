@@ -470,6 +470,104 @@ body {
   border: 1px solid #e2e8f0;
 }
 
+/* ===== Home ===== */
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+@media (max-width: 420px) {
+  .home-grid { grid-template-columns: 1fr; }
+}
+
+.home-tile {
+  background: #fff;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 1.1rem 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.home-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+
+.home-tile-emoji {
+  font-size: 1.5rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.home-tile-text { display: flex; flex-direction: column; gap: 0.15rem; }
+.home-tile-label { font-weight: 700; font-size: 1rem; }
+.home-tile-desc { font-size: 0.76rem; color: #a0aec0; }
+
+/* ===== Setup card / chips ===== */
+.setup-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.setup-label { display: block; font-size: 0.85rem; font-weight: 700; color: #4a5568; margin-bottom: 0.5rem; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip {
+  background: #f7f8ff;
+  border: 2px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.88rem;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.chip:hover { border-color: #a3acd4; }
+.chip-on { background: #ebf4ff; border-color: #4c51bf; color: #4c51bf; font-weight: 700; }
+
+/* ===== Rank badge ===== */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border: 4px solid;
+  border-radius: 50%;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 0 auto;
+}
+.rank-badge-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* ===== History rows ===== */
+.history-row {
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* ===== Reference Stats ===== */
 .ref-card {
   background: #fff;

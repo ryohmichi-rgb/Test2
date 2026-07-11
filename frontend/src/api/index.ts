@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan } from "../types";
+import type { Grade, Unit, Student, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -34,6 +34,32 @@ export const fetchReferenceStats = (): Promise<ReferenceStat[]> =>
 
 export const fetchLearningPlan = (studentId: number): Promise<LearningPlan> =>
   api.get<LearningPlan>(`/students/${studentId}/plan`).then((r) => r.data);
+
+export const fetchProblemSet = (
+  scopeType: ScopeType,
+  scopeId: number | null,
+  count: number
+): Promise<ProblemSet> =>
+  api
+    .get<ProblemSet>("/problem_set", { params: { scope_type: scopeType, scope_id: scopeId, count } })
+    .then((r) => r.data);
+
+export const submitTest = (
+  studentId: number,
+  scopeType: ScopeType,
+  scopeId: number | null,
+  answers: { problem_id: number; submitted_answer: string }[]
+): Promise<TestSubmitResult> =>
+  api
+    .post<TestSubmitResult>(`/students/${studentId}/test_results`, {
+      scope_type: scopeType,
+      scope_id: scopeId,
+      answers,
+    })
+    .then((r) => r.data);
+
+export const fetchTestResults = (studentId: number): Promise<TestResult[]> =>
+  api.get<TestResult[]>(`/students/${studentId}/test_results`).then((r) => r.data);
 
 export const submitAnswer = (
   studentId: number,

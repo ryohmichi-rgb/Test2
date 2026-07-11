@@ -108,3 +108,31 @@ export interface LearningPlan {
   goals_summary: GoalSummary[];
   today_plan: PlanUnit[];
 }
+
+export type ScopeType = "grade" | "stat_type" | "unit";
+
+export interface ProblemSet {
+  scope_type: ScopeType;
+  scope_id: number | null;
+  scope_label: string;
+  available_count: number;
+  problems: Problem[];
+}
+
+export interface TestResult {
+  id: number;
+  scope_type: ScopeType;
+  scope_id: number | null;
+  scope_label: string;
+  total_questions: number;
+  correct_count: number;
+  score_percent: number;
+  rank: string;
+  created_at: string;
+}
+
+export interface TestSubmitResult extends TestResult {
+  bonus_points: number;
+  previous_score: number | null;
+  answers: { problem_id: number; is_correct: boolean; correct_answer: string }[];
+}

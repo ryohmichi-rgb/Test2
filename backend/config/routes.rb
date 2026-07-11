@@ -10,9 +10,12 @@ Rails.application.routes.draw do
         get :stats, on: :member, to: "stats#index"
         get :plan, on: :member, to: "plan#show"
         put :goals, to: "goals#upsert", on: :member
+        get :test_results, on: :member, to: "test_results#index"
+        post :test_results, on: :member, to: "test_results#create"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]
+      resource :problem_set, only: [:show], controller: "problem_sets"
     end
   end
 end

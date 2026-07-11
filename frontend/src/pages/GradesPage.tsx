@@ -25,17 +25,11 @@ export default function GradesPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <h2>{studentName}さんの学習</h2>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button className="btn-primary" onClick={() => navigate("/plan")}>
-            今日のプラン
-          </button>
-          <button className="btn-secondary" onClick={() => navigate("/stats")}>
-            ステータス
-          </button>
-        </div>
+        <button className="btn-back" onClick={() => navigate("/home")}>← ホーム</button>
+        <button className="btn-secondary" onClick={() => navigate(`/progress/${studentId}`)}>進捗</button>
       </header>
 
+      <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.25rem" }}>{studentName}さんの単元べつ演習</h2>
       <h3 className="section-title">学年を選んでください</h3>
       <div className="grade-grid">
         {grades.map((grade) => (
