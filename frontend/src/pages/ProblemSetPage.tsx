@@ -7,15 +7,19 @@ import ProblemView from "../components/ProblemView";
 const COUNTS = [5, 10, 20];
 type Phase = "setup" | "running" | "done";
 
+type Saved = { problems: Problem[]; idx: number; correctTotal: number };
+
 export default function ProblemSetPage() {
   const navigate = useNavigate();
   const studentId = Number(localStorage.getItem("studentId"));
+  const STORAGE_KEY = `problemset_${studentId}`;
 
   const [grades, setGrades] = useState<Grade[]>([]);
   const [gradeId, setGradeId] = useState<number | null>(null);
   const [count, setCount] = useState(10);
   const [phase, setPhase] = useState<Phase>("setup");
   const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState<Saved | null>(null);
 
   const [problems, setProblems] = useState<Problem[]>([]);
   const [idx, setIdx] = useState(0);
@@ -26,11 +30,30 @@ export default function ProblemSetPage() {
 
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setSaved(JSON.parse(raw));
+    } catch { /* ignore */ }
     fetchGrades().then((g) => {
       setGrades(g);
       setGradeId(g[0]?.id ?? null);
     }).finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, navigate]);
+
+  const persist = (p: Problem[], i: number, c: number) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ problems: p, idx: i, correctTotal: c }));
+  };
+  const clearSaved = () => { localStorage.removeItem(STORAGE_KEY); setSaved(null); };
+
+  const resume = () => {
+    if (!saved) return;
+    setProblems(saved.problems);
+    setIdx(saved.idx);
+    setCorrectTotal(saved.correctTotal);
+    setAnswer(""); setFeedback(null);
+    setPhase("running");
+  };
 
   const start = async () => {
     if (!gradeId) return;
@@ -39,6 +62,8 @@ export default function ProblemSetPage() {
       const set = await fetchProblemSet("grade", gradeId, count);
       setProblems(set.problems);
       setIdx(0); setAnswer(""); setFeedback(null); setCorrectTotal(0);
+      persist(set.problems, 0, 0);
+      setSaved(null);
       setPhase("running");
     } finally {
       setLoading(false);
@@ -58,9 +83,11 @@ export default function ProblemSetPage() {
   };
 
   const next = () => {
-    if (idx + 1 >= problems.length) { setPhase("done"); return; }
-    setIdx((i) => i + 1);
+    if (idx + 1 >= problems.length) { clearSaved(); setPhase("done"); return; }
+    const ni = idx + 1;
+    setIdx(ni);
     setAnswer(""); setFeedback(null);
+    persist(problems, ni, correctTotal);
   };
 
   if (loading) return <div className="loading">読み込み中...</div>;
@@ -76,6 +103,21 @@ export default function ProblemSetPage() {
         <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
           学年の範囲をまとめて練習します（1問ずつ答え合わせ）
         </p>
+
+        {saved && saved.problems.length > 0 && (
+          <div className="resume-banner">
+            <div>
+              <p style={{ fontWeight: 700, fontSize: "0.95rem" }}>やりかけの問題集があります</p>
+              <p style={{ fontSize: "0.8rem", color: "#718096" }}>
+                {saved.idx + 1} / {saved.problems.length}問目から
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button className="btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.88rem" }} onClick={resume}>続きから</button>
+              <button className="btn-hint" style={{ fontSize: "0.85rem" }} onClick={clearSaved}>やめる</button>
+            </div>
+          </div>
+        )}
 
         <div className="setup-card">
           <label className="setup-label">学年</label>

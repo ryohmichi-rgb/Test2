@@ -23,7 +23,15 @@ module Api
         score = total > 0 ? (correct.to_f / total * 100).round : 0
 
         scope = ProblemScope.new(scope_type: params[:scope_type], scope_id: params[:scope_id])
-        bonus = apply_bonus(student, graded, score)
+
+        # 自己ベスト判定（この結果を保存する前の最高点と比較）
+        best_before = student.test_results
+          .where(scope_type: params[:scope_type], scope_id: params[:scope_id].presence)
+          .maximum(:score_percent)
+        is_best = best_before.nil? || score > best_before
+
+        # ボーナスは自己ベスト更新時のみ（farming 防止）
+        bonus = is_best ? apply_bonus(student, graded, score) : 0
 
         result = student.test_results.create!(
           scope_type: params[:scope_type],
@@ -36,6 +44,7 @@ module Api
 
         render json: serialize_result(result).merge(
           bonus_points: bonus,
+          is_best: is_best,
           previous_score: result.previous&.score_percent,
           answers: graded.map { |g| g.slice(:problem_id, :is_correct, :correct_answer) }
         ), status: :created

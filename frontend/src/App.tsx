@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import ProblemSetPage from "./pages/ProblemSetPage";
 import TestPage from "./pages/TestPage";
 import TestHistoryPage from "./pages/TestHistoryPage";
+import ReviewPage from "./pages/ReviewPage";
 import PasswordGate from "./components/PasswordGate";
 import "./App.css";
 
@@ -27,6 +28,7 @@ function App() {
         <Route path="/problem-set" element={<ProblemSetPage />} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/test-history" element={<TestHistoryPage />} />
+        <Route path="/review" element={<ReviewPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

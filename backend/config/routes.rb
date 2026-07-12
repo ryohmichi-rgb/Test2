@@ -12,6 +12,8 @@ Rails.application.routes.draw do
         put :goals, to: "goals#upsert", on: :member
         get :test_results, on: :member, to: "test_results#index"
         post :test_results, on: :member, to: "test_results#create"
+        get :growth, on: :member, to: "growth#show"
+        get :review, on: :member, to: "review#index"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]

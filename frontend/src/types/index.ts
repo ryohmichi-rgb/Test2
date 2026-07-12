@@ -133,6 +133,22 @@ export interface TestResult {
 
 export interface TestSubmitResult extends TestResult {
   bonus_points: number;
+  is_best: boolean;
   previous_score: number | null;
   answers: { problem_id: number; is_correct: boolean; correct_answer: string }[];
+}
+
+export interface GrowthPoint {
+  label: string;
+  value: number;
+}
+
+export interface Growth {
+  total: GrowthPoint[];
+  by_stat: { stat_name: string; series: GrowthPoint[] }[];
+}
+
+export interface ReviewList {
+  count: number;
+  problems: Problem[];
 }

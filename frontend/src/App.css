@@ -557,6 +557,28 @@ body {
   flex-shrink: 0;
 }
 
+/* ===== Resume banner ===== */
+.resume-banner {
+  background: #fffbeb;
+  border: 1px solid #f6e05e;
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Test timer ===== */
+.test-timer {
+  font-weight: 800;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* ===== History rows ===== */
 .history-row {
   background: #fff;

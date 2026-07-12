@@ -5,6 +5,11 @@ import type { Grade, StudentStat, Problem, ScopeType, TestSubmitResult } from ".
 import ProblemView from "../components/ProblemView";
 
 const COUNTS = [5, 10, 20];
+const TIME_LIMITS = [
+  { m: 0, label: "なし" },
+  { m: 5, label: "5分" },
+  { m: 10, label: "10分" },
+];
 type Phase = "setup" | "running" | "result";
 
 type TargetOption = { id: number; label: string };
@@ -22,6 +27,8 @@ export default function TestPage() {
   const [scopeType, setScopeType] = useState<ScopeType>("grade");
   const [targetId, setTargetId] = useState<number | null>(null);
   const [count, setCount] = useState(10);
+  const [timeLimit, setTimeLimit] = useState(0); // 分（0=なし）
+  const [remaining, setRemaining] = useState(0); // 秒
   const [phase, setPhase] = useState<Phase>("setup");
 
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -66,6 +73,7 @@ export default function TestPage() {
       setProblems(set.problems);
       setAnswers(new Array(set.problems.length).fill(""));
       setIdx(0);
+      if (timeLimit > 0) setRemaining(timeLimit * 60);
       setPhase("running");
     } finally {
       setLoading(false);
@@ -77,6 +85,7 @@ export default function TestPage() {
   };
 
   const submit = async () => {
+    if (submitting) return;
     setSubmitting(true);
     try {
       const payload = problems.map((p, i) => ({ problem_id: p.id, submitted_answer: answers[i] || "" }));
@@ -87,6 +96,17 @@ export default function TestPage() {
       setSubmitting(false);
     }
   };
+
+  // 制限時間のカウントダウン（0で自動提出）
+  useEffect(() => {
+    if (phase !== "running" || timeLimit === 0) return;
+    if (remaining <= 0) { submit(); return; }
+    const t = setTimeout(() => setRemaining((r) => r - 1), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, remaining, timeLimit]);
+
+  const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   if (loading) return <div className="loading">読み込み中...</div>;
 
@@ -135,6 +155,15 @@ export default function TestPage() {
             ))}
           </div>
 
+          <label className="setup-label" style={{ marginTop: "1.25rem" }}>制限時間</label>
+          <div className="chip-row">
+            {TIME_LIMITS.map((t) => (
+              <button key={t.m} className={`chip ${timeLimit === t.m ? "chip-on" : ""}`} onClick={() => setTimeLimit(t.m)}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
           <button className="btn-primary" style={{ marginTop: "1.5rem", width: "100%" }} onClick={start} disabled={!targetId}>
             テストをはじめる
           </button>
@@ -158,6 +187,11 @@ export default function TestPage() {
           </div>
           <p className="accuracy">{result.correct_count} / {result.total_questions} 問正解</p>
 
+          {result.is_best && (
+            <p style={{ fontSize: "0.95rem", color: "#d69e2e", fontWeight: 700, marginBottom: "0.5rem" }}>
+              ★ 自己ベスト更新！
+            </p>
+          )}
           {diff != null && (
             <p style={{ fontSize: "0.9rem", color: diff >= 0 ? "#38a169" : "#e53e3e", marginBottom: "0.5rem" }}>
               前回より {diff >= 0 ? "+" : ""}{diff}点（前回 {result.previous_score}点）
@@ -190,6 +224,11 @@ export default function TestPage() {
           <span className="unit-title-small">テスト</span>
           <span className="progress-indicator">{idx + 1} / {problems.length}問</span>
         </div>
+        {timeLimit > 0 && (
+          <span className="test-timer" style={{ color: remaining <= 30 ? "#e53e3e" : "#4a5568" }}>
+            ⏱ {mmss(remaining)}
+          </span>
+        )}
       </header>
 
       <div className="progress-bar-wrap">
