@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Growth, GrowthPoint } from "../types";
+import type { Growth } from "../types";
 
 const STAT_COLORS: Record<string, string> = {
   "計算力": "#4c51bf",
@@ -10,7 +10,8 @@ const STAT_COLORS: Record<string, string> = {
 };
 const TOTAL_COLOR = "#4c51bf";
 
-type Series = { name: string; color: string; points: GrowthPoint[] };
+// 実線(実績)＋点線(目標)を1本の時間軸に描く
+type Line = { color: string; actual: number[]; target: number[] };
 
 function niceMax(v: number) {
   if (v <= 0) return 100;
@@ -18,17 +19,23 @@ function niceMax(v: number) {
   return Math.ceil(v / pow) * pow;
 }
 
-function Chart({ series, labels }: { series: Series[]; labels: string[] }) {
-  const W = 340, H = 180, padL = 30, padR = 12, padT = 14, padB = 24;
-  const innerW = W - padL - padR, innerH = H - padT - padB;
+function Chart({ lines, labelsActual, labelsTarget }: { lines: Line[]; labelsActual: string[]; labelsTarget: string[] }) {
+  const labels = [...labelsActual, ...labelsTarget];
+  const A = labelsActual.length;
   const n = labels.length;
-  const maxV = niceMax(Math.max(1, ...series.flatMap((s) => s.points.map((p) => p.value))));
+  const W = 340, H = 190, padL = 30, padR = 14, padT = 14, padB = 26;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
 
-  const x = (i: number) => padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+  const allVals = lines.flatMap((l) => [...l.actual, ...l.target]);
+  const maxV = niceMax(Math.max(1, ...allVals));
+
+  const x = (i: number) => padL + (n <= 1 ? innerW / 2 : (i / (n - 1)) * innerW);
   const y = (v: number) => padT + (1 - v / maxV) * innerH;
 
-  // x軸ラベルは最大4つに間引く
-  const labelIdx = n <= 4 ? labels.map((_, i) => i) : [0, Math.round((n - 1) / 3), Math.round((2 * (n - 1)) / 3), n - 1];
+  const labelIdx = n <= 4 ? labels.map((_, i) => i) : [0, A - 1, n - 1].filter((v, i, a) => a.indexOf(v) === i && v >= 0);
+
+  const pathFor = (pts: { i: number; v: number }[]) =>
+    pts.map((p, k) => `${k === 0 ? "M" : "L"} ${x(p.i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
 
   return (
     <div style={{ overflowX: "auto" }}>
@@ -39,18 +46,30 @@ function Chart({ series, labels }: { series: Series[]; labels: string[] }) {
             <text x={padL - 5} y={y(v) + 3} textAnchor="end" fontSize="9" fill="#a0aec0">{Math.round(v)}</text>
           </g>
         ))}
+        {/* 現在の縦線 */}
+        {A >= 1 && labelsTarget.length > 0 && (
+          <line x1={x(A - 1)} x2={x(A - 1)} y1={padT} y2={H - padB} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="2 3" />
+        )}
         {labelIdx.map((i) => (
-          <text key={i} x={x(i)} y={H - 8} textAnchor="middle" fontSize="9" fill="#a0aec0">{labels[i]}</text>
+          <text key={i} x={x(i)} y={H - 9} textAnchor="middle" fontSize="9" fill="#a0aec0">{labels[i]}</text>
         ))}
-        {series.map((s) => (
-          <g key={s.name}>
-            <path
-              d={s.points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`).join(" ")}
-              fill="none" stroke={s.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            />
-            {n === 1 && <circle cx={x(0)} cy={y(s.points[0].value)} r="4" fill="#fff" stroke={s.color} strokeWidth="2" />}
-          </g>
-        ))}
+
+        {lines.map((l, li) => {
+          const actualPts = l.actual.map((v, i) => ({ i, v }));
+          // 目標線は「現在」(実績の最後) から将来へ伸ばす
+          const targetPts = l.target.length
+            ? [{ i: A - 1, v: l.actual[A - 1] ?? 0 }, ...l.target.map((v, k) => ({ i: A + k, v }))]
+            : [];
+          return (
+            <g key={li}>
+              <path d={pathFor(actualPts)} fill="none" stroke={l.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              {targetPts.length > 0 && (
+                <path d={pathFor(targetPts)} fill="none" stroke={l.color} strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+              )}
+              {n === 1 && <circle cx={x(0)} cy={y(l.actual[0])} r="4" fill="#fff" stroke={l.color} strokeWidth="2" />}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
@@ -58,13 +77,13 @@ function Chart({ series, labels }: { series: Series[]; labels: string[] }) {
 
 export default function GrowthChart({ growth }: { growth: Growth }) {
   const [tab, setTab] = useState<"total" | "stat">("total");
-  const labels = growth.total.map((p) => p.label);
+  const hasTarget = growth.labels_target.length > 0;
 
-  const totalSeries: Series[] = [{ name: "合計学力", color: TOTAL_COLOR, points: growth.total }];
-  const statSeries: Series[] = growth.by_stat.map((s) => ({
-    name: s.stat_name,
+  const totalLines: Line[] = [{ color: TOTAL_COLOR, actual: growth.total.actual, target: growth.total.target }];
+  const statLines: Line[] = growth.by_stat.map((s) => ({
     color: STAT_COLORS[s.stat_name] ?? "#4c51bf",
-    points: s.series,
+    actual: s.actual,
+    target: s.target,
   }));
 
   return (
@@ -77,18 +96,20 @@ export default function GrowthChart({ growth }: { growth: Growth }) {
         </div>
       </div>
 
-      <Chart series={tab === "total" ? totalSeries : statSeries} labels={labels} />
+      <Chart lines={tab === "total" ? totalLines : statLines} labelsActual={growth.labels_actual} labelsTarget={growth.labels_target} />
 
-      {tab === "stat" && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 0.9rem", marginTop: "0.5rem", justifyContent: "center" }}>
-          {statSeries.map((s) => (
-            <span key={s.name} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", color: "#718096" }}>
-              <span style={{ width: 10, height: 3, background: s.color, borderRadius: 2, display: "inline-block" }} />
-              {s.name}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem 0.9rem", marginTop: "0.5rem", justifyContent: "center", alignItems: "center" }}>
+        {tab === "stat" &&
+          statLines.map((l, i) => (
+            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", color: "#718096" }}>
+              <span style={{ width: 10, height: 3, background: l.color, borderRadius: 2, display: "inline-block" }} />
+              {growth.by_stat[i].stat_name}
             </span>
           ))}
-        </div>
-      )}
+        {hasTarget && (
+          <span style={{ fontSize: "0.72rem", color: "#a0aec0" }}>実線＝今まで / 点線＝目標ペース</span>
+        )}
+      </div>
     </div>
   );
 }

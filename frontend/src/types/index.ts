@@ -138,14 +138,26 @@ export interface TestSubmitResult extends TestResult {
   answers: { problem_id: number; is_correct: boolean; correct_answer: string }[];
 }
 
-export interface GrowthPoint {
-  label: string;
-  value: number;
+export interface GrowthSeries {
+  stat_name: string;
+  actual: number[];
+  target: number[];
 }
 
 export interface Growth {
-  total: GrowthPoint[];
-  by_stat: { stat_name: string; series: GrowthPoint[] }[];
+  labels_actual: string[];
+  labels_target: string[];
+  total: { actual: number[]; target: number[] };
+  by_stat: GrowthSeries[];
+}
+
+export interface DailyQuota {
+  target_points: number;
+  earned_points: number;
+  approx_problems: number;
+  studied_today: boolean;
+  streak: number;
+  has_goal: boolean;
 }
 
 export interface ReviewList {

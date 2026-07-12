@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchGrowth, fetchReviewList } from "../api";
-import type { Growth } from "../types";
+import { fetchGrowth, fetchReviewList, fetchDailyQuota } from "../api";
+import type { Growth, DailyQuota } from "../types";
 import GrowthChart from "../components/GrowthChart";
+import DailyQuotaCard from "../components/DailyQuotaCard";
 
 type MenuItem = {
   label: string;
@@ -28,17 +29,19 @@ export default function HomePage() {
   const studentId = localStorage.getItem("studentId");
 
   const [growth, setGrowth] = useState<Growth | null>(null);
+  const [quota, setQuota] = useState<DailyQuota | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
 
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
     const id = Number(studentId);
     fetchGrowth(id).then(setGrowth).catch(() => {});
+    fetchDailyQuota(id).then(setQuota).catch(() => {});
     fetchReviewList(id).then((r) => setReviewCount(r.count)).catch(() => {});
   }, [studentId, navigate]);
 
-  // 成長曲線は活動データ（2点以上）があるときだけ表示
-  const showGrowth = growth && growth.total.length >= 2;
+  // 成長曲線は実績が2点以上、または目標ラインがあるとき表示
+  const showGrowth = growth && (growth.labels_actual.length >= 2 || growth.labels_target.length >= 1);
 
   return (
     <div className="page">
@@ -48,6 +51,8 @@ export default function HomePage() {
         </h1>
         <p style={{ color: "#718096", fontSize: "0.95rem" }}>{studentName}さん、今日は何をする？</p>
       </header>
+
+      {quota && <DailyQuotaCard quota={quota} onStart={() => navigate("/plan")} />}
 
       {showGrowth && (
         <div style={{ background: "#fff", borderRadius: 14, padding: "1.1rem 1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", marginBottom: "1.25rem" }}>

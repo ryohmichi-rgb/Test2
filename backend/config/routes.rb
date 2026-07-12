@@ -14,6 +14,7 @@ Rails.application.routes.draw do
         post :test_results, on: :member, to: "test_results#create"
         get :growth, on: :member, to: "growth#show"
         get :review, on: :member, to: "review#index"
+        get :quota, on: :member, to: "quota#show"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]

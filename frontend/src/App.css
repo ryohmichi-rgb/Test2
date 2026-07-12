@@ -557,6 +557,56 @@ body {
   flex-shrink: 0;
 }
 
+/* ===== Daily quota card ===== */
+.quota-card {
+  background: linear-gradient(135deg, #4c51bf, #667eea);
+  color: #fff;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 14px rgba(76,81,191,0.25);
+}
+.quota-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.quota-title { font-weight: 700; font-size: 1.05rem; }
+.quota-streak {
+  background: rgba(255,255,255,0.2);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.quota-bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+.quota-bar-track {
+  flex: 1;
+  height: 12px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.quota-bar-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+.quota-bar-num { font-size: 0.85rem; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.quota-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.quota-hint { font-size: 0.76rem; color: rgba(255,255,255,0.85); }
+.quota-btn {
+  background: #fff;
+  color: #4c51bf;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.quota-btn:hover:not(:disabled) { background: #ebf4ff; }
+.quota-done { font-size: 0.95rem; font-weight: 600; }
+
 /* ===== Resume banner ===== */
 .resume-banner {
   background: #fffbeb;
