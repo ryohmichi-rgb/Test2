@@ -1,6 +1,8 @@
 module Api
   module V1
     class GoalsController < ApplicationController
+      include StudentScoped
+
       def upsert
         student = Student.find(params[:id])
         goal = Goal.find_or_initialize_by(student: student, stat_type_id: goal_params[:stat_type_id])

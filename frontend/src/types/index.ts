@@ -37,6 +37,12 @@ export interface Problem {
 export interface Student {
   id: number;
   name: string;
+  username?: string;
+}
+
+export interface AuthResult {
+  token: string;
+  student: Student;
 }
 
 export interface AnswerResult {

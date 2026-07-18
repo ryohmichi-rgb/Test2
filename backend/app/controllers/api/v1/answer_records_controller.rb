@@ -2,7 +2,7 @@ module Api
   module V1
     class AnswerRecordsController < ApplicationController
       def create
-        record = AnswerRecord.new(answer_record_params)
+        record = AnswerRecord.new(answer_record_params.merge(student: current_student))
         if record.save
           render json: {
             is_correct: record.is_correct,
@@ -17,7 +17,7 @@ module Api
       private
 
       def answer_record_params
-        params.require(:answer_record).permit(:student_id, :problem_id, :submitted_answer)
+        params.require(:answer_record).permit(:problem_id, :submitted_answer)
       end
     end
   end

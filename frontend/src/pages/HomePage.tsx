@@ -40,16 +40,26 @@ export default function HomePage() {
     fetchReviewList(id).then((r) => setReviewCount(r.count)).catch(() => {});
   }, [studentId, navigate]);
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentName");
+    navigate("/");
+  };
+
   // 成長曲線は実績が2点以上、または目標ラインがあるとき表示
   const showGrowth = growth && (growth.labels_actual.length >= 2 || growth.labels_target.length >= 1);
 
   return (
     <div className="page">
-      <header style={{ marginBottom: "1.75rem" }}>
-        <h1 className="app-title" style={{ fontSize: "1.6rem", textAlign: "left", marginBottom: "0.25rem" }}>
-          まなびの広場
-        </h1>
-        <p style={{ color: "#718096", fontSize: "0.95rem" }}>{studentName}さん、今日は何をする？</p>
+      <header style={{ marginBottom: "1.75rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem" }}>
+        <div>
+          <h1 className="app-title" style={{ fontSize: "1.6rem", textAlign: "left", marginBottom: "0.25rem" }}>
+            まなびの広場
+          </h1>
+          <p style={{ color: "#718096", fontSize: "0.95rem" }}>{studentName}さん、今日は何をする？</p>
+        </div>
+        <button className="btn-hint" style={{ fontSize: "0.8rem", flexShrink: 0 }} onClick={logout}>ログアウト</button>
       </header>
 
       {quota && <DailyQuotaCard quota={quota} onStart={() => navigate("/plan")} />}

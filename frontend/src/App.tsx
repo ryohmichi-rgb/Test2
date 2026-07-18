@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import StartPage from "./pages/StartPage";
+import AuthPage from "./pages/AuthPage";
 import GradesPage from "./pages/GradesPage";
 import PracticePage from "./pages/PracticePage";
 import ProgressPage from "./pages/ProgressPage";
@@ -18,7 +18,7 @@ function App() {
     <PasswordGate>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<StartPage />} />
+        <Route path="/" element={<AuthPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/grades" element={<GradesPage />} />
         <Route path="/units/:unitId" element={<PracticePage />} />

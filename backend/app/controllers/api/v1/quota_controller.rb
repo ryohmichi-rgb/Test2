@@ -1,6 +1,8 @@
 module Api
   module V1
     class QuotaController < ApplicationController
+      include StudentScoped
+
       DEFAULT_TARGET = 30            # 目標未設定時のゆるいノルマ
       EST_POINTS_PER_PROBLEM = 15    # 目安の問題数を出すための概算
 

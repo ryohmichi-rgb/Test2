@@ -1,10 +1,19 @@
 class Student < ApplicationRecord
+  has_secure_password
+
   has_many :answer_records, dependent: :destroy
   has_many :student_stats, dependent: :destroy
   has_many :goals, dependent: :destroy
   has_many :test_results, dependent: :destroy
 
   validates :name, presence: true
+  validates :username, presence: true, uniqueness: { case_sensitive: false }
+  validates :password, length: { minimum: 4 }, allow_nil: true
+
+  # 署名付き認証トークン（パスワード変更で自動失効・30日有効）
+  generates_token_for :auth, expires_in: 30.days do
+    password_salt&.last(10)
+  end
 
   def progress_for(unit)
     problems = unit.problems

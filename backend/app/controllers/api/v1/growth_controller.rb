@@ -1,6 +1,8 @@
 module Api
   module V1
     class GrowthController < ApplicationController
+      include StudentScoped
+
       # 成長曲線。
       # - 実績: AnswerRecord から累積ポイントの時系列を再構築（過去→現在）
       # - 目標: 目標が設定されたステータスについて「現在→目標」を将来に向けて線形補間

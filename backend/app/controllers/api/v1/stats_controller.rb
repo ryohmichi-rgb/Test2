@@ -1,6 +1,8 @@
 module Api
   module V1
     class StatsController < ApplicationController
+      include StudentScoped
+
       def index
         student = Student.find(params[:id])
         stats = StudentStat.where(student: student).includes(:stat_type)

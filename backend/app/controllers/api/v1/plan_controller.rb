@@ -1,6 +1,8 @@
 module Api
   module V1
     class PlanController < ApplicationController
+      include StudentScoped
+
       ESTIMATED_POINTS_PER_UNIT = 40
       MAX_UNITS_PER_STAT = 3
 

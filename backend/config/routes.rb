@@ -3,9 +3,13 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      post "signup", to: "auth#signup"
+      post "login", to: "auth#login"
+      get "me", to: "auth#me"
+
       resources :grades, only: [:index, :show]
       resources :units, only: [:show]
-      resources :students, only: [:create, :show] do
+      resources :students, only: [:show] do
         get :progress, on: :member
         get :stats, on: :member, to: "stats#index"
         get :plan, on: :member, to: "plan#show"
