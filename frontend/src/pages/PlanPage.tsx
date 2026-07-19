@@ -71,7 +71,7 @@ export default function PlanPage() {
                 {plan.today_plan.map((unit) => {
                   const color = STAT_COLORS[unit.stat_name] ?? "#4c51bf";
                   return (
-                    <div key={unit.unit_id} className="plan-unit-card" onClick={() => navigate(`/units/${unit.unit_id}`)}>
+                    <div key={unit.unit_id} className="plan-unit-card" onClick={() => navigate(`/units/${unit.unit_id}/practice`)}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                         <div style={{ background: color, color: "#fff", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.9rem", flexShrink: 0 }}>
                           {unit.priority}

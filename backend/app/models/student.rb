@@ -5,6 +5,7 @@ class Student < ApplicationRecord
   has_many :student_stats, dependent: :destroy
   has_many :goals, dependent: :destroy
   has_many :test_results, dependent: :destroy
+  has_many :lesson_reads, dependent: :destroy
 
   validates :name, presence: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }

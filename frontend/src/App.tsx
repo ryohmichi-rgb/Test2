@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import GradesPage from "./pages/GradesPage";
 import PracticePage from "./pages/PracticePage";
+import LessonPage from "./pages/LessonPage";
 import ProgressPage from "./pages/ProgressPage";
 import StatsPage from "./pages/StatsPage";
 import PlanPage from "./pages/PlanPage";
@@ -21,7 +22,8 @@ function App() {
         <Route path="/" element={<AuthPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/grades" element={<GradesPage />} />
-        <Route path="/units/:unitId" element={<PracticePage />} />
+        <Route path="/units/:unitId" element={<LessonPage />} />
+        <Route path="/units/:unitId/practice" element={<PracticePage />} />
         <Route path="/progress/:studentId" element={<ProgressPage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/plan" element={<PlanPage />} />

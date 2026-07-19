@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchGrades } from "../api";
+import { fetchGrades, fetchLessonReads } from "../api";
 import type { Grade } from "../types";
 
 export default function GradesPage() {
   const [grades, setGrades] = useState<Grade[]>([]);
+  const [readUnits, setReadUnits] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const studentName = localStorage.getItem("studentName") || "";
@@ -18,6 +19,9 @@ export default function GradesPage() {
     fetchGrades()
       .then(setGrades)
       .finally(() => setLoading(false));
+    fetchLessonReads(Number(studentId))
+      .then((ids) => setReadUnits(new Set(ids)))
+      .catch(() => {});
   }, [navigate, studentId]);
 
   if (loading) return <div className="loading">読み込み中...</div>;
@@ -44,7 +48,8 @@ export default function GradesPage() {
                       className="unit-btn"
                       onClick={() => navigate(`/units/${unit.id}`)}
                     >
-                      {unit.title}
+                      <span>{unit.title}</span>
+                      {readUnits.has(unit.id) && <span className="read-check" title="学習ずみ">✓</span>}
                     </button>
                   </li>
                 ))}

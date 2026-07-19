@@ -15,9 +15,15 @@ export interface Unit {
   title: string;
   description: string;
   display_order: number;
+  lesson_body?: string;
   grade?: Grade;
   subject?: Subject;
   problems?: Problem[];
+}
+
+export interface LessonReadResult {
+  awarded: boolean;
+  points: number;
 }
 
 export interface Choice {

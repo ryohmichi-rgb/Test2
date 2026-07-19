@@ -19,6 +19,8 @@ Rails.application.routes.draw do
         get :growth, on: :member, to: "growth#show"
         get :review, on: :member, to: "review#index"
         get :quota, on: :member, to: "quota#show"
+        get :lesson_reads, on: :member, to: "lesson_reads#index"
+        post :lesson_reads, on: :member, to: "lesson_reads#create"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]

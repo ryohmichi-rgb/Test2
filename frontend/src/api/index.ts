@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -72,6 +72,12 @@ export const fetchReviewList = (studentId: number): Promise<ReviewList> =>
 
 export const fetchDailyQuota = (studentId: number): Promise<DailyQuota> =>
   api.get<DailyQuota>(`/students/${studentId}/quota`).then((r) => r.data);
+
+export const fetchLessonReads = (studentId: number): Promise<number[]> =>
+  api.get<{ unit_ids: number[] }>(`/students/${studentId}/lesson_reads`).then((r) => r.data.unit_ids);
+
+export const markLessonRead = (studentId: number, unitId: number): Promise<LessonReadResult> =>
+  api.post<LessonReadResult>(`/students/${studentId}/lesson_reads`, { unit_id: unitId }).then((r) => r.data);
 
 export const submitAnswer = (
   studentId: number,
