@@ -71,7 +71,7 @@ export default function PlanPage() {
                 {plan.today_plan.map((unit) => {
                   const color = STAT_COLORS[unit.stat_name] ?? "#4c51bf";
                   return (
-                    <div key={unit.unit_id} className="plan-unit-card" onClick={() => navigate(`/units/${unit.unit_id}/practice`)}>
+                    <div key={unit.unit_id} className="plan-unit-card" onClick={() => navigate(unit.lesson_read ? `/units/${unit.unit_id}/practice` : `/units/${unit.unit_id}`)}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                         <div style={{ background: color, color: "#fff", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.9rem", flexShrink: 0 }}>
                           {unit.priority}
@@ -82,12 +82,10 @@ export default function PlanPage() {
                             <span style={{ fontSize: "0.78rem", color, fontWeight: 600, background: `${color}18`, borderRadius: "4px", padding: "0.1rem 0.4rem" }}>
                               {unit.stat_name}
                             </span>
-                            {unit.is_new ? (
-                              <span style={{ fontSize: "0.78rem", color: "#805ad5" }}>未着手</span>
+                            {unit.lesson_read ? (
+                              <span style={{ fontSize: "0.78rem", color: "#38a169" }}>✓ 解説ずみ</span>
                             ) : (
-                              <span style={{ fontSize: "0.78rem", color: "#718096" }}>
-                                正答率 {Math.round((unit.accuracy ?? 0) * 100)}%
-                              </span>
+                              <span style={{ fontSize: "0.78rem", color: "#805ad5", fontWeight: 600 }}>📖 まず解説</span>
                             )}
                             <span style={{ fontSize: "0.78rem", color: "#48bb78", marginLeft: "auto" }}>
                               +{unit.estimated_points}pt 予定

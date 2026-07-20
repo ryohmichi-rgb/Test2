@@ -44,12 +44,13 @@ module Api
 
       def build_today_plan(student, goals_summary)
         plan = []
+        read_unit_ids = student.lesson_reads.pluck(:unit_id).to_set
 
         goals_summary.each do |goal|
           next if goal[:achieved]
 
           units = Unit.where(stat_type_id: goal[:stat_type_id]).includes(:problems)
-          scored_units = score_units(student, units, goal)
+          scored_units = score_units(student, units, goal, read_unit_ids)
 
           units_needed = [[(goal[:points_per_day] / ESTIMATED_POINTS_PER_UNIT).ceil, 1].max, MAX_UNITS_PER_STAT].min
 
@@ -61,7 +62,7 @@ module Api
         plan
       end
 
-      def score_units(student, units, goal)
+      def score_units(student, units, goal, read_unit_ids)
         units.map do |unit|
           next if unit.problems.empty?
 
@@ -82,9 +83,11 @@ module Api
             accuracy: accuracy&.round(2),
             total_answered: total,
             estimated_points: estimated_points,
-            is_new: total == 0
+            is_new: total == 0,
+            lesson_read: read_unit_ids.include?(unit.id)
           }
-        end.compact.sort_by { |u| u[:accuracy].nil? ? -1 : u[:accuracy] }
+        # 未読の解説を先に（学ぶ→やる）、次に正答率が低い順
+        end.compact.sort_by { |u| [u[:lesson_read] ? 1 : 0, u[:accuracy].nil? ? -1 : u[:accuracy]] }
       end
     end
   end

@@ -120,6 +120,7 @@ export interface PlanUnit {
   total_answered: number;
   estimated_points: number;
   is_new: boolean;
+  lesson_read: boolean;
   priority: number;
 }
 
