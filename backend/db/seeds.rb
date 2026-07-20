@@ -361,6 +361,76 @@ end
   Unit.where(title: title).update_all(stat_type_id: stat_type.id)
 end
 
+# 追加の問題（既存はそのまま、不足分を足す）。title で単元に紐づける。
+extra_problems = {
+  "分数のかけ算・わり算" => [
+    { question: "1/2 × 4/5 を計算しなさい。（分数は a/b の形で答えること）", answer: "2/5", hint: "分子どうし・分母どうしをかけて約分します。", difficulty: 1, problem_type: "fill_in" },
+    { question: "5/6 × 3/10 を計算しなさい。（分数は a/b の形で答えること）", answer: "1/4", hint: "先に約分できるか確認しましょう。", difficulty: 2, problem_type: "fill_in" },
+    { question: "2/9 ÷ 4/3 を計算しなさい。（分数は a/b の形で答えること）", answer: "1/6", hint: "わる数 4/3 を逆数にしてかけます。", difficulty: 2, problem_type: "fill_in" },
+    { question: "3/4 ÷ 6/7 を計算しなさい。（分数は a/b の形で答えること）", answer: "7/8", hint: "6/7 を逆数にしてかけ、約分します。", difficulty: 2, problem_type: "fill_in" },
+    { question: "2/3 × 3/4 ÷ 1/2 を計算しなさい。", answer: "1", hint: "左から順に。まず 2/3×3/4=1/2、次に ÷1/2。", difficulty: 3, problem_type: "fill_in" }
+  ],
+  "比と比の値" => [
+    { question: "8 : 12 を最も簡単な整数の比にしなさい。（a:b の形で答えること）", answer: "2:3", hint: "8と12の最大公約数4で割ります。", difficulty: 1, problem_type: "fill_in" },
+    { question: "15 : 25 を最も簡単な整数の比にしなさい。（a:b の形で答えること）", answer: "3:5", hint: "5で割りましょう。", difficulty: 1, problem_type: "fill_in" },
+    { question: "3 : 4 = 9 : □ の □ に当てはまる数を求めなさい。", answer: "12", hint: "3が9になったので3倍。4も3倍します。", difficulty: 2, problem_type: "fill_in" },
+    { question: "10 : 15 = □ : 6 の □ に当てはまる数を求めなさい。", answer: "4", hint: "10:15 を簡単にすると 2:3。それを□:6に合わせます。", difficulty: 2, problem_type: "fill_in" },
+    { question: "200円をAとBで 3 : 5 に分けます。Bは何円ですか？", answer: "125", hint: "全体を3+5=8に分け、Bは5つ分。", difficulty: 3, problem_type: "fill_in" }
+  ],
+  "速さ・時間・距離" => [
+    { question: "100kmの道のりを4時間で走ったときの速さは？（km/h）", answer: "25", hint: "速さ＝距離÷時間", difficulty: 1, problem_type: "fill_in" },
+    { question: "300mの道のりを分速60mで歩くと何分かかりますか？", answer: "5", hint: "時間＝距離÷速さ", difficulty: 1, problem_type: "fill_in" },
+    { question: "時速60kmで2.5時間走ると何km進みますか？", answer: "150", hint: "距離＝速さ×時間", difficulty: 2, problem_type: "fill_in" },
+    { question: "秒速5mは分速何mですか？", answer: "300", hint: "1分は60秒。5×60で求めます。", difficulty: 2, problem_type: "fill_in" },
+    { question: "時速4kmで3kmの道のりを歩くと何分かかりますか？", answer: "45", hint: "時間＝3÷4＝0.75時間。分に直します。", difficulty: 3, problem_type: "fill_in" }
+  ],
+  "文字と式（小6）" => [
+    { question: "1個120円のりんごを x 個買ったときの代金を式で表しなさい。", answer: "120x", hint: "（1個の値段）×（個数）。×は省略。", difficulty: 1, problem_type: "fill_in" },
+    { question: "a円の品物を3個買ったときの代金を式で表しなさい。", answer: "3a", hint: "数は文字の前に書きます。", difficulty: 1, problem_type: "fill_in" },
+    { question: "x = 4 のとき、5x の値を求めなさい。", answer: "20", hint: "5×4を計算します。", difficulty: 1, problem_type: "fill_in" },
+    { question: "x = 3 のとき、2x + 7 の値を求めなさい。", answer: "13", hint: "2×3に7を足します。", difficulty: 2, problem_type: "fill_in" },
+    { question: "1本60円の鉛筆を x 本買って500円を出したときのおつりを式で表しなさい。（スペースなし）", answer: "500-60x", hint: "おつり＝出したお金－代金。", difficulty: 3, problem_type: "fill_in" }
+  ],
+  "正の数・負の数" => [
+    { question: "（-6）+ 9 を計算しなさい。", answer: "3", hint: "符号がちがうときは絶対値の差に大きいほうの符号。", difficulty: 1, problem_type: "fill_in" },
+    { question: "7 - 10 を計算しなさい。", answer: "-3", hint: "10のほうが大きいので答えは負になります。", difficulty: 1, problem_type: "fill_in" },
+    { question: "（-2）× 5 を計算しなさい。", answer: "-10", hint: "負×正＝負", difficulty: 2, problem_type: "fill_in" },
+    { question: "（-20）÷（-4）を計算しなさい。", answer: "5", hint: "負÷負＝正", difficulty: 2, problem_type: "fill_in" }
+  ],
+  "文字と式" => [
+    { question: "5a - 2a を計算しなさい。", answer: "3a", hint: "同類項をまとめます。", difficulty: 1, problem_type: "fill_in" },
+    { question: "x ×（-4）を文字式の表し方にしなさい。", answer: "-4x", hint: "符号をつけて数を前に、×は省略。", difficulty: 1, problem_type: "fill_in" },
+    { question: "2(3x + 1) を展開しなさい。（スペースなし、例: 6x+2）", answer: "6x+2", hint: "かっこの中の各項に2をかけます。", difficulty: 2, problem_type: "fill_in" },
+    { question: "x = -3 のとき、2x + 5 の値を求めなさい。", answer: "-1", hint: "2×(-3)に5を足します。", difficulty: 2, problem_type: "fill_in" }
+  ],
+  "方程式" => [
+    { question: "x - 4 = 9 を解きなさい。", answer: "13", hint: "両辺に4を足します。", difficulty: 1, problem_type: "fill_in" },
+    { question: "5x = 35 を解きなさい。", answer: "7", hint: "両辺を5で割ります。", difficulty: 1, problem_type: "fill_in" },
+    { question: "3x + 2 = 14 を解きなさい。", answer: "4", hint: "まず2を移項、次に3で割ります。", difficulty: 2, problem_type: "fill_in" },
+    { question: "2x + 3 = x + 8 を解きなさい。", answer: "5", hint: "xを左、数を右に移項します。", difficulty: 2, problem_type: "fill_in" }
+  ],
+  "比例と反比例" => [
+    { question: "y = 5x で、x = 3 のときの y の値を求めなさい。", answer: "15", hint: "xに3を代入します。", difficulty: 1, problem_type: "fill_in" },
+    { question: "y = 24/x で、x = 6 のときの y の値を求めなさい。", answer: "4", hint: "24を6で割ります。", difficulty: 1, problem_type: "fill_in" },
+    { question: "y = -2x で、x = 4 のときの y の値を求めなさい。", answer: "-8", hint: "-2×4を計算します。", difficulty: 2, problem_type: "fill_in" },
+    { question: "y が x に比例し、x = 3 のとき y = 12 です。比例定数を求めなさい。", answer: "4", hint: "a = y ÷ x で求めます。", difficulty: 2, problem_type: "fill_in" }
+  ]
+}
+
+extra_problems.each do |title, probs|
+  unit = Unit.find_by(title: title)
+  next unless unit
+
+  probs.each do |pd|
+    Problem.find_or_create_by!(question: pd[:question], unit: unit) do |p|
+      p.answer = pd[:answer]
+      p.hint = pd[:hint]
+      p.difficulty = pd[:difficulty]
+      p.problem_type = pd[:problem_type]
+    end
+  end
+end
+
 # 単元ごとの教材（解説）Markdown。既存単元にも反映されるよう update で入れる。
 lessons = {
   "分数のかけ算・わり算" => <<~MD,
