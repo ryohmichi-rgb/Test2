@@ -78,7 +78,12 @@ export default function HomePage() {
     <div className="page">
       <header style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
         <h1 className="app-title" style={{ fontSize: "1.5rem", textAlign: "left", margin: 0 }}>まなびの広場</h1>
-        <button className="btn-hint" style={{ fontSize: "0.8rem", flexShrink: 0 }} onClick={logout}>ログアウト</button>
+        <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+          {localStorage.getItem("admin") === "1" && (
+            <button className="btn-hint" style={{ fontSize: "0.8rem" }} onClick={() => navigate("/admin")}>管理</button>
+          )}
+          <button className="btn-hint" style={{ fontSize: "0.8rem" }} onClick={logout}>ログアウト</button>
+        </div>
       </header>
 
       <MascotMessage name={studentName} quota={quota} />

@@ -1,3 +1,8 @@
+# 管理者の指定（ADMIN_USERNAME のユーザーを管理者にする。存在すれば毎回反映）
+if (admin_name = ENV["ADMIN_USERNAME"].presence)
+  Student.where("lower(username) = ?", admin_name.downcase).update_all(admin: true)
+end
+
 # ステータス種別
 stat_calc    = StatType.find_or_create_by!(name: "計算力")    { |s| s.description = "四則演算・分数・小数の正確さと速さ"; s.display_order = 1 }
 stat_number  = StatType.find_or_create_by!(name: "数的センス") { |s| s.description = "数の性質・規則性・比の理解";         s.display_order = 2 }

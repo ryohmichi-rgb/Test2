@@ -9,4 +9,5 @@ class Problem < ApplicationRecord
   validates :problem_type, inclusion: { in: %w[fill_in multiple_choice] }
 
   scope :by_difficulty, -> { order(:difficulty) }
+  scope :active_only, -> { where(active: true) }
 end

@@ -13,7 +13,7 @@ module Api
         latest_ids = student.answer_records.group(:problem_id).maximum(:id).values
         wrong_problem_ids = AnswerRecord.where(id: latest_ids, is_correct: false).pluck(:problem_id)
 
-        problems = Problem.where(id: wrong_problem_ids).includes(:choices)
+        problems = Problem.active_only.where(id: wrong_problem_ids).includes(:choices)
 
         render json: {
           count: problems.size,

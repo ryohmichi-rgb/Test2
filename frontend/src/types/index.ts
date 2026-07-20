@@ -58,6 +58,68 @@ export interface Student {
   name: string;
   username?: string;
   onboarded?: boolean;
+  admin?: boolean;
+}
+
+export interface AdminMeta {
+  grades: { id: number; name: string }[];
+  subjects: { id: number; name: string }[];
+  stat_types: { id: number; name: string }[];
+}
+
+export interface AdminUnit {
+  id: number;
+  title: string;
+  description: string;
+  lesson_body: string;
+  display_order: number;
+  active: boolean;
+  grade_id: number;
+  grade: string;
+  subject_id: number;
+  subject: string;
+  stat_type_id: number | null;
+  stat_type: string | null;
+  problem_count: number;
+  used: boolean;
+}
+
+export interface AdminChoice {
+  id?: number;
+  text: string;
+  is_correct: boolean;
+}
+
+export interface AdminProblem {
+  id: number;
+  unit_id: number;
+  question: string;
+  answer: string;
+  hint: string;
+  difficulty: number;
+  problem_type: "fill_in" | "multiple_choice";
+  active: boolean;
+  used: boolean;
+  choices: AdminChoice[];
+}
+
+export interface AdminReferenceStat {
+  id: number;
+  label: string;
+  stat_type_id: number;
+  stat_type: string;
+  value: number;
+}
+
+export interface AdminStudentSummary {
+  id: number;
+  name: string;
+  username: string;
+  admin: boolean;
+  onboarded: boolean;
+  created_at: string;
+  correct_count: number;
+  last_studied_on: string | null;
 }
 
 export interface AuthResult {

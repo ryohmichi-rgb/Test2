@@ -8,4 +8,5 @@ class Unit < ApplicationRecord
   validates :display_order, presence: true
 
   scope :ordered, -> { order(:display_order) }
+  scope :active_only, -> { where(active: true) }
 end

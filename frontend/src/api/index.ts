@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Badge, Condition } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Badge, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -90,6 +90,42 @@ export const completeOnboarding = (studentId: number): Promise<void> =>
 
 export const fetchCondition = (studentId: number): Promise<Condition> =>
   api.get<Condition>(`/students/${studentId}/condition`).then((r) => r.data);
+
+// ===== 管理（admin） =====
+export const fetchAdminMeta = (): Promise<AdminMeta> =>
+  api.get<AdminMeta>("/admin/meta").then((r) => r.data);
+
+export const fetchAdminUnits = (): Promise<AdminUnit[]> =>
+  api.get<AdminUnit[]>("/admin/units").then((r) => r.data);
+export const createAdminUnit = (unit: Partial<AdminUnit>): Promise<AdminUnit> =>
+  api.post<AdminUnit>("/admin/units", { unit }).then((r) => r.data);
+export const updateAdminUnit = (id: number, unit: Partial<AdminUnit>): Promise<AdminUnit> =>
+  api.put<AdminUnit>(`/admin/units/${id}`, { unit }).then((r) => r.data);
+export const deleteAdminUnit = (id: number): Promise<void> =>
+  api.delete(`/admin/units/${id}`).then(() => undefined);
+
+export const fetchAdminProblems = (unitId: number): Promise<AdminProblem[]> =>
+  api.get<AdminProblem[]>("/admin/problems", { params: { unit_id: unitId } }).then((r) => r.data);
+export const createAdminProblem = (problem: Partial<AdminProblem>, choices: AdminChoice[]): Promise<AdminProblem> =>
+  api.post<AdminProblem>("/admin/problems", { problem, choices }).then((r) => r.data);
+export const updateAdminProblem = (id: number, problem: Partial<AdminProblem>, choices: AdminChoice[]): Promise<AdminProblem> =>
+  api.put<AdminProblem>(`/admin/problems/${id}`, { problem, choices }).then((r) => r.data);
+export const deleteAdminProblem = (id: number): Promise<void> =>
+  api.delete(`/admin/problems/${id}`).then(() => undefined);
+
+export const fetchAdminReferenceStats = (): Promise<AdminReferenceStat[]> =>
+  api.get<AdminReferenceStat[]>("/admin/reference_stats").then((r) => r.data);
+export const createAdminReferenceStat = (reference_stat: Partial<AdminReferenceStat>): Promise<AdminReferenceStat> =>
+  api.post<AdminReferenceStat>("/admin/reference_stats", { reference_stat }).then((r) => r.data);
+export const updateAdminReferenceStat = (id: number, reference_stat: Partial<AdminReferenceStat>): Promise<AdminReferenceStat> =>
+  api.put<AdminReferenceStat>(`/admin/reference_stats/${id}`, { reference_stat }).then((r) => r.data);
+export const deleteAdminReferenceStat = (id: number): Promise<void> =>
+  api.delete(`/admin/reference_stats/${id}`).then(() => undefined);
+
+export const fetchAdminStudents = (): Promise<AdminStudentSummary[]> =>
+  api.get<AdminStudentSummary[]>("/admin/students").then((r) => r.data);
+export const deleteAdminStudent = (id: number): Promise<void> =>
+  api.delete(`/admin/students/${id}`).then(() => undefined);
 
 export const submitAnswer = (
   studentId: number,

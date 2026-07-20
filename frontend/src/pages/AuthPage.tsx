@@ -18,6 +18,7 @@ export default function AuthPage() {
     localStorage.setItem("token", res.token);
     localStorage.setItem("studentId", String(res.student.id));
     localStorage.setItem("studentName", res.student.name);
+    localStorage.setItem("admin", res.student.admin ? "1" : "");
     // 新規登録、または未オンボーディングならウィザードへ
     if (mode === "signup" || !res.student.onboarded) navigate("/onboarding");
     else navigate("/home");

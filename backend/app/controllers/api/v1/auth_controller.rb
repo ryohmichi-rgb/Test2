@@ -39,7 +39,7 @@ module Api
       end
 
       def student_json(student)
-        { id: student.id, name: student.name, username: student.username, onboarded: student.onboarded }
+        { id: student.id, name: student.name, username: student.username, onboarded: student.onboarded, admin: student.admin }
       end
     end
   end

@@ -29,6 +29,14 @@ Rails.application.routes.draw do
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]
       resource :problem_set, only: [:show], controller: "problem_sets"
+
+      namespace :admin do
+        get "meta", to: "meta#show"
+        resources :units, only: [:index, :create, :update, :destroy]
+        resources :problems, only: [:index, :create, :update, :destroy]
+        resources :reference_stats, only: [:index, :create, :update, :destroy]
+        resources :students, only: [:index, :show, :destroy]
+      end
     end
   end
 end

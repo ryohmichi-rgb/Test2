@@ -12,6 +12,11 @@ import ProblemSetPage from "./pages/ProblemSetPage";
 import TestPage from "./pages/TestPage";
 import TestHistoryPage from "./pages/TestHistoryPage";
 import ReviewPage from "./pages/ReviewPage";
+import AdminPage from "./pages/admin/AdminPage";
+import AdminUnitsPage from "./pages/admin/AdminUnitsPage";
+import AdminProblemsPage from "./pages/admin/AdminProblemsPage";
+import AdminReferenceStatsPage from "./pages/admin/AdminReferenceStatsPage";
+import AdminStudentsPage from "./pages/admin/AdminStudentsPage";
 import PasswordGate from "./components/PasswordGate";
 import "./App.css";
 
@@ -33,6 +38,11 @@ function App() {
         <Route path="/test" element={<TestPage />} />
         <Route path="/test-history" element={<TestHistoryPage />} />
         <Route path="/review" element={<ReviewPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/units" element={<AdminUnitsPage />} />
+        <Route path="/admin/units/:unitId/problems" element={<AdminProblemsPage />} />
+        <Route path="/admin/reference" element={<AdminReferenceStatsPage />} />
+        <Route path="/admin/students" element={<AdminStudentsPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

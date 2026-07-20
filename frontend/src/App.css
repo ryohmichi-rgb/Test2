@@ -630,6 +630,49 @@ body {
 .celebrate-banner .btn-primary { background: #fff; color: #2f855a; }
 .celebrate-banner .btn-primary:hover:not(:disabled) { background: #f0fff4; }
 
+/* ===== Admin ===== */
+.admin-form {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 1.25rem;
+}
+.admin-label { display: block; font-size: 0.8rem; font-weight: 600; color: #4a5568; margin: 0.6rem 0 0.2rem; }
+.admin-input {
+  width: 100%;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  margin-bottom: 0.2rem;
+}
+.admin-input:focus { outline: none; border-color: #4c51bf; }
+.admin-row { display: flex; gap: 0.75rem; }
+.admin-row > div { flex: 1; }
+.admin-row-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.admin-btn {
+  background: #f7f8ff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+  color: #4a5568;
+  cursor: pointer;
+}
+.admin-btn:hover { background: #ebf4ff; }
+.admin-btn.danger { color: #e53e3e; border-color: #fed7d7; }
+.admin-btn.danger:hover { background: #fff5f5; }
+
 /* ===== Rust / condition ===== */
 .rust-banner {
   display: flex;

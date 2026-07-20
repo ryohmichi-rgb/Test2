@@ -14,23 +14,23 @@ class ProblemScope
 
   def units
     @units ||= case scope_type
-    when "grade"     then Unit.where(grade_id: scope_id)
-    when "stat_type" then Unit.where(stat_type_id: scope_id)
-    when "unit"      then Unit.where(id: scope_id)
+    when "grade"     then Unit.active_only.where(grade_id: scope_id)
+    when "stat_type" then Unit.active_only.where(stat_type_id: scope_id)
+    when "unit"      then Unit.active_only.where(id: scope_id)
     else Unit.none
     end
   end
 
   # 範囲内の問題を count 問ランダムに抽出（count 未満なら全問）
   def sample_problems(count)
-    pool = Problem.where(unit_id: units.select(:id)).includes(:choices).to_a
+    pool = Problem.active_only.where(unit_id: units.select(:id)).includes(:choices).to_a
     count = count.to_i
     return pool.shuffle if count <= 0 || count >= pool.size
     pool.sample(count)
   end
 
   def available_count
-    Problem.where(unit_id: units.select(:id)).count
+    Problem.active_only.where(unit_id: units.select(:id)).count
   end
 
   def label
