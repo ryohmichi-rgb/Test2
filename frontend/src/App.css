@@ -609,6 +609,104 @@ body {
   font-size: 0.92em;
 }
 
+/* ===== Mascot message ===== */
+.mascot-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.mascot-bubble {
+  position: relative;
+  background: #fff;
+  border: 2px solid #ebf4ff;
+  border-radius: 14px;
+  padding: 0.7rem 1rem;
+  font-size: 0.92rem;
+  color: #2d3748;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  flex: 1;
+}
+.mascot-bubble::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 22px;
+  width: 0; height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 9px solid #ebf4ff;
+}
+
+/* ===== Goal distance ===== */
+.goal-distance {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  color: #4a5568;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 1.25rem;
+  cursor: pointer;
+}
+
+/* ===== Daily problem ===== */
+.daily-problem-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 1.25rem;
+}
+.daily-problem-head {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #4a5568;
+  margin-bottom: 0.6rem;
+}
+.daily-question {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  white-space: pre-wrap;
+}
+.daily-feedback {
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 10px;
+}
+.daily-feedback.correct { background: #f0fff4; border: 2px solid #68d391; }
+.daily-feedback.incorrect { background: #fff5f5; border: 2px solid #fc8181; }
+
+/* ===== Achievements ===== */
+.achievements {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 1.25rem;
+}
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.6rem;
+}
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.6rem 0.3rem;
+  border-radius: 10px;
+  text-align: center;
+}
+.badge-on { background: #fffbeb; border: 1px solid #f6e05e; }
+.badge-off { background: #f7fafc; border: 1px solid #edf2f7; opacity: 0.5; filter: grayscale(1); }
+.badge-emoji { font-size: 1.5rem; line-height: 1; }
+.badge-label { font-size: 0.68rem; color: #4a5568; font-weight: 600; }
+
 /* ===== Daily quota card ===== */
 .quota-card {
   background: linear-gradient(135deg, #4c51bf, #667eea);

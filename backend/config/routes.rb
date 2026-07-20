@@ -21,6 +21,8 @@ Rails.application.routes.draw do
         get :quota, on: :member, to: "quota#show"
         get :lesson_reads, on: :member, to: "lesson_reads#index"
         post :lesson_reads, on: :member, to: "lesson_reads#create"
+        get :daily_problem, on: :member, to: "daily_problems#show"
+        get :achievements, on: :member, to: "achievements#index"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]

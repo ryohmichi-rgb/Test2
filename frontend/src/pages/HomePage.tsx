@@ -1,18 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchGrowth, fetchReviewList, fetchDailyQuota } from "../api";
-import type { Growth, DailyQuota } from "../types";
+import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements } from "../api";
+import type { Growth, DailyQuota, StudentStat, Badge } from "../types";
 import GrowthChart from "../components/GrowthChart";
 import DailyQuotaCard from "../components/DailyQuotaCard";
+import MascotMessage from "../components/MascotMessage";
+import DailyProblemCard from "../components/DailyProblemCard";
+import AchievementsRow from "../components/AchievementsRow";
 
-type MenuItem = {
-  label: string;
-  desc: string;
-  emoji: string;
-  path: string;
-  color: string;
-  primary?: boolean;
-};
+type MenuItem = { label: string; desc: string; emoji: string; path: string; color: string; primary?: boolean };
 
 const MENU: MenuItem[] = [
   { label: "今日のプラン", desc: "目標から逆算した学習", emoji: "🎯", path: "/plan", color: "#4c51bf", primary: true },
@@ -31,6 +27,8 @@ export default function HomePage() {
   const [growth, setGrowth] = useState<Growth | null>(null);
   const [quota, setQuota] = useState<DailyQuota | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
+  const [stats, setStats] = useState<StudentStat[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
 
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
@@ -38,6 +36,8 @@ export default function HomePage() {
     fetchGrowth(id).then(setGrowth).catch(() => {});
     fetchDailyQuota(id).then(setQuota).catch(() => {});
     fetchReviewList(id).then((r) => setReviewCount(r.count)).catch(() => {});
+    fetchStudentStats(id).then(setStats).catch(() => {});
+    fetchAchievements(id).then(setBadges).catch(() => {});
   }, [studentId, navigate]);
 
   const logout = () => {
@@ -47,22 +47,36 @@ export default function HomePage() {
     navigate("/");
   };
 
-  // 成長曲線は実績が2点以上、または目標ラインがあるとき表示
+  // 一番近い目標（残りポイントが最小の、未達成の目標）
+  const nearestGoal = useMemo(() => {
+    const withGoal = stats.filter((s) => s.goal && s.value < s.goal.target_value);
+    if (withGoal.length === 0) return null;
+    return withGoal.reduce((a, b) =>
+      (b.goal!.target_value - b.value) < (a.goal!.target_value - a.value) ? b : a
+    );
+  }, [stats]);
+
   const showGrowth = growth && (growth.labels_actual.length >= 2 || growth.labels_target.length >= 1);
 
   return (
     <div className="page">
-      <header style={{ marginBottom: "1.75rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem" }}>
-        <div>
-          <h1 className="app-title" style={{ fontSize: "1.6rem", textAlign: "left", marginBottom: "0.25rem" }}>
-            まなびの広場
-          </h1>
-          <p style={{ color: "#718096", fontSize: "0.95rem" }}>{studentName}さん、今日は何をする？</p>
-        </div>
+      <header style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
+        <h1 className="app-title" style={{ fontSize: "1.5rem", textAlign: "left", margin: 0 }}>まなびの広場</h1>
         <button className="btn-hint" style={{ fontSize: "0.8rem", flexShrink: 0 }} onClick={logout}>ログアウト</button>
       </header>
 
+      <MascotMessage name={studentName} quota={quota} />
+
       {quota && <DailyQuotaCard quota={quota} onStart={() => navigate("/plan")} />}
+
+      {nearestGoal && nearestGoal.goal && (
+        <div className="goal-distance" onClick={() => navigate("/stats")}>
+          🎯 <strong>{nearestGoal.name}</strong> 目標まであと{" "}
+          <strong style={{ color: "#4c51bf" }}>{nearestGoal.goal.target_value - nearestGoal.value}pt</strong>
+        </div>
+      )}
+
+      <DailyProblemCard studentId={Number(studentId)} />
 
       {showGrowth && (
         <div style={{ background: "#fff", borderRadius: 14, padding: "1.1rem 1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", marginBottom: "1.25rem" }}>
@@ -70,14 +84,11 @@ export default function HomePage() {
         </div>
       )}
 
+      <AchievementsRow badges={badges} />
+
       <div className="home-grid">
         {MENU.map((item) => (
-          <button
-            key={item.path}
-            className="home-tile"
-            onClick={() => navigate(item.path)}
-            style={{ borderColor: item.primary ? item.color : "transparent" }}
-          >
+          <button key={item.path} className="home-tile" onClick={() => navigate(item.path)} style={{ borderColor: item.primary ? item.color : "transparent" }}>
             <span className="home-tile-emoji" style={{ background: `${item.color}18` }}>{item.emoji}</span>
             <span className="home-tile-text">
               <span className="home-tile-label" style={{ color: item.color }}>{item.label}</span>
@@ -87,11 +98,7 @@ export default function HomePage() {
         ))}
 
         {reviewCount > 0 && (
-          <button
-            className="home-tile"
-            onClick={() => navigate("/review")}
-            style={{ borderColor: "#e53e3e", gridColumn: "1 / -1" }}
-          >
+          <button className="home-tile" onClick={() => navigate("/review")} style={{ borderColor: "#e53e3e", gridColumn: "1 / -1" }}>
             <span className="home-tile-emoji" style={{ background: "#e53e3e18" }}>🔁</span>
             <span className="home-tile-text">
               <span className="home-tile-label" style={{ color: "#e53e3e" }}>復習（{reviewCount}問）</span>

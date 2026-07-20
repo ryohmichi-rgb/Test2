@@ -26,4 +26,17 @@ class Student < ApplicationRecord
 
     { total: total, correct: correct, accuracy: total > 0 ? (correct.to_f / total * 100).round : 0 }
   end
+
+  # 学習した日の連続数（今日やっていれば今日から、まだなら昨日から数える）
+  def study_streak(today = Date.current)
+    dates = answer_records.pluck(:created_at).map(&:to_date).uniq.to_set
+    start = dates.include?(today) ? today : today - 1
+    count = 0
+    d = start
+    while dates.include?(d)
+      count += 1
+      d -= 1
+    end
+    count
+  end
 end

@@ -36,7 +36,7 @@ module Api
           earned_points: earned_points,
           approx_problems: approx_problems,
           studied_today: earned_points > 0 || answered_on?(student, today),
-          streak: streak(student, today),
+          streak: student.study_streak(today),
           has_goal: has_goal
         }
       end
@@ -52,19 +52,6 @@ module Api
 
       def answered_on?(student, date)
         student.answer_records.where(created_at: date.all_day).exists?
-      end
-
-      # 学習した日の連続数（今日やっていれば今日から、まだなら昨日から数える）
-      def streak(student, today)
-        dates = student.answer_records.pluck(:created_at).map(&:to_date).uniq.to_set
-        start = dates.include?(today) ? today : today - 1
-        count = 0
-        d = start
-        while dates.include?(d)
-          count += 1
-          d -= 1
-        end
-        count
       end
     end
   end

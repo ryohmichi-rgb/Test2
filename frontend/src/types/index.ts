@@ -26,6 +26,13 @@ export interface LessonReadResult {
   points: number;
 }
 
+export interface Badge {
+  key: string;
+  label: string;
+  emoji: string;
+  earned: boolean;
+}
+
 export interface Choice {
   id: number;
   text: string;
