@@ -85,6 +85,9 @@ export const fetchDailyProblem = (studentId: number): Promise<Problem | null> =>
 export const fetchAchievements = (studentId: number): Promise<Badge[]> =>
   api.get<{ badges: Badge[] }>(`/students/${studentId}/achievements`).then((r) => r.data.badges);
 
+export const completeOnboarding = (studentId: number): Promise<void> =>
+  api.post(`/students/${studentId}/complete_onboarding`).then(() => undefined);
+
 export const submitAnswer = (
   studentId: number,
   problemId: number,

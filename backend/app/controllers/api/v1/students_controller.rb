@@ -5,7 +5,14 @@ module Api
 
       def show
         student = Student.find(params[:id])
-        render json: { id: student.id, name: student.name, username: student.username }
+        render json: { id: student.id, name: student.name, username: student.username, onboarded: student.onboarded }
+      end
+
+      # オンボーディング完了（またはスキップ）
+      def complete_onboarding
+        student = Student.find(params[:id])
+        student.update!(onboarded: true)
+        head :no_content
       end
 
       def progress

@@ -18,7 +18,9 @@ export default function AuthPage() {
     localStorage.setItem("token", res.token);
     localStorage.setItem("studentId", String(res.student.id));
     localStorage.setItem("studentName", res.student.name);
-    navigate("/home");
+    // 新規登録、または未オンボーディングならウィザードへ
+    if (mode === "signup" || !res.student.onboarded) navigate("/onboarding");
+    else navigate("/home");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

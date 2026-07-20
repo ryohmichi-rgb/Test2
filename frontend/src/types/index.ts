@@ -51,6 +51,7 @@ export interface Student {
   id: number;
   name: string;
   username?: string;
+  onboarded?: boolean;
 }
 
 export interface AuthResult {

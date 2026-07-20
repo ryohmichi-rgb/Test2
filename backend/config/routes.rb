@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       resources :units, only: [:show]
       resources :students, only: [:show] do
         get :progress, on: :member
+        post :complete_onboarding, on: :member
         get :stats, on: :member, to: "stats#index"
         get :plan, on: :member, to: "plan#show"
         put :goals, to: "goals#upsert", on: :member

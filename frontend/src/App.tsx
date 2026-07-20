@@ -7,6 +7,7 @@ import ProgressPage from "./pages/ProgressPage";
 import StatsPage from "./pages/StatsPage";
 import PlanPage from "./pages/PlanPage";
 import HomePage from "./pages/HomePage";
+import OnboardingPage from "./pages/OnboardingPage";
 import ProblemSetPage from "./pages/ProblemSetPage";
 import TestPage from "./pages/TestPage";
 import TestHistoryPage from "./pages/TestHistoryPage";
@@ -21,6 +22,7 @@ function App() {
       <Routes>
         <Route path="/" element={<AuthPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/grades" element={<GradesPage />} />
         <Route path="/units/:unitId" element={<LessonPage />} />
         <Route path="/units/:unitId/practice" element={<PracticePage />} />
