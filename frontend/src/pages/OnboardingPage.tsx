@@ -5,7 +5,8 @@ import type { ReferenceStat } from "../types";
 import Mascot from "../components/Mascot";
 import ReferenceIcon from "../components/ReferenceIcon";
 
-const REF_ORDER = ["中学卒業レベル", "高校受験（公立）", "数学の先生"];
+// オンボーディングでは選びやすい進路系にしぼる（全部はステータス画面で選べる）
+const ONBOARDING_LABELS = ["中学卒業レベル", "高校受験（公立）", "難関高校受験", "数学の先生"];
 
 const defaultGoalDate = () => {
   const d = new Date();
@@ -26,7 +27,10 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
     fetchReferenceStats()
-      .then((r) => setRefs([...r].sort((a, b) => REF_ORDER.indexOf(a.label) - REF_ORDER.indexOf(b.label))))
+      .then((r) => setRefs(
+        r.filter((x) => ONBOARDING_LABELS.includes(x.label))
+          .sort((a, b) => ONBOARDING_LABELS.indexOf(a.label) - ONBOARDING_LABELS.indexOf(b.label))
+      ))
       .catch(() => {});
   }, [studentId, navigate]);
 

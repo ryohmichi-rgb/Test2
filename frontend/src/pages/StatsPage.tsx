@@ -107,6 +107,36 @@ export default function StatsPage() {
         問題に正解するとステータスが上がります
       </p>
 
+      {/* 目標サマリー（目標を設定しているステータスの進捗一覧） */}
+      {stats.some((s) => s.goal) && (
+        <div className="goal-summary">
+          <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#4a5568", marginBottom: "0.75rem" }}>目標の進捗</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
+            {stats.filter((s) => s.goal).map((s) => {
+              const color = STAT_COLORS[s.name] ?? "#4c51bf";
+              const pct = Math.min((s.value / s.goal!.target_value) * 100, 100);
+              const achieved = s.value >= s.goal!.target_value;
+              return (
+                <div key={s.stat_type_id}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", marginBottom: "0.25rem" }}>
+                    <span style={{ fontWeight: 600, color }}>{s.name}</span>
+                    {achieved
+                      ? <span style={{ color: "#38a169", fontWeight: 700 }}>達成 ✓</span>
+                      : <span style={{ color: "#718096" }}>あと {s.goal!.target_value - s.value}pt</span>}
+                  </div>
+                  <div style={{ height: 8, background: "#edf2f7", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: achieved ? "#38a169" : color, borderRadius: 4, transition: "width 0.4s" }} />
+                  </div>
+                  <div style={{ fontSize: "0.72rem", color: "#a0aec0", marginTop: "0.15rem" }}>
+                    {s.value} / {s.goal!.target_value}（{new Date(s.goal!.target_date).toLocaleDateString("ja-JP", { month: "long", day: "numeric" })}まで）
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {stats.map((stat) => {
           const color = STAT_COLORS[stat.name] ?? "#4c51bf";

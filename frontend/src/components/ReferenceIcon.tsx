@@ -77,9 +77,17 @@ const ICON_MAP: Record<string, (props: { filterId: string }) => React.ReactEleme
 // ラベルにSVGキャラがあるかどうか
 export const hasReferenceIcon = (label: string) => label in ICON_MAP;
 
+// SVGキャラがないラベルの絵文字フォールバック
+const EMOJI_FALLBACK: Record<string, string> = {
+  "難関高校受験": "🏆",
+  "エンジニア": "💻",
+  "研究者": "🔬",
+  "ゲームクリエイター": "🎮",
+};
+
 export default function ReferenceIcon({ label, size = 60 }: { label: string; size?: number }) {
   const Icon = ICON_MAP[label];
-  if (!Icon) return <span style={{ fontSize: size * 0.55 }}>🎯</span>;
+  if (!Icon) return <span style={{ fontSize: size * 0.55 }}>{EMOJI_FALLBACK[label] ?? "🎯"}</span>;
 
   // ラベルからASCII安全なハッシュを作り、フィルタIDと揺れのseedに使う
   // （日本語や括弧を含むIDだと url() 参照が壊れる端末があるため）

@@ -47,6 +47,20 @@ export default function HomePage() {
     navigate("/");
   };
 
+  // 達成した目標のお祝い（一度閉じた達成は localStorage で覚えて再表示しない）
+  const [dismissed, setDismissed] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("celebrated") || "[]")); } catch { return new Set(); }
+  });
+  const achievedGoals = stats.filter(
+    (s) => s.goal && s.value >= s.goal.target_value && !dismissed.has(`${s.stat_type_id}_${s.goal.target_value}`)
+  );
+  const dismissAchieved = () => {
+    const next = new Set(dismissed);
+    achievedGoals.forEach((s) => next.add(`${s.stat_type_id}_${s.goal!.target_value}`));
+    setDismissed(next);
+    localStorage.setItem("celebrated", JSON.stringify([...next]));
+  };
+
   // 一番近い目標（残りポイントが最小の、未達成の目標）
   const nearestGoal = useMemo(() => {
     const withGoal = stats.filter((s) => s.goal && s.value < s.goal.target_value);
@@ -66,6 +80,19 @@ export default function HomePage() {
       </header>
 
       <MascotMessage name={studentName} quota={quota} />
+
+      {achievedGoals.length > 0 && (
+        <div className="celebrate-banner">
+          <button className="celebrate-close" onClick={dismissAchieved} aria-label="閉じる">×</button>
+          <p className="celebrate-title">🎉 目標達成！</p>
+          <p className="celebrate-text">
+            {achievedGoals.map((s) => s.name).join("・")} が目標に届いたよ。次の目標を決めよう！
+          </p>
+          <button className="btn-primary" style={{ padding: "0.5rem 1.25rem", fontSize: "0.9rem" }} onClick={() => navigate("/stats")}>
+            次の目標を決める →
+          </button>
+        </div>
+      )}
 
       {quota && <DailyQuotaCard quota={quota} onStart={() => navigate("/plan")} />}
 

@@ -609,6 +609,36 @@ body {
   font-size: 0.92em;
 }
 
+/* ===== Achievement celebration ===== */
+.celebrate-banner {
+  position: relative;
+  background: linear-gradient(135deg, #38a169, #48bb78);
+  color: #fff;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 14px rgba(56,161,105,0.25);
+}
+.celebrate-title { font-weight: 800; font-size: 1.05rem; margin-bottom: 0.25rem; }
+.celebrate-text { font-size: 0.9rem; margin-bottom: 0.75rem; opacity: 0.95; }
+.celebrate-close {
+  position: absolute;
+  top: 0.5rem; right: 0.7rem;
+  background: none; border: none; color: #fff;
+  font-size: 1.3rem; line-height: 1; cursor: pointer; opacity: 0.8;
+}
+.celebrate-banner .btn-primary { background: #fff; color: #2f855a; }
+.celebrate-banner .btn-primary:hover:not(:disabled) { background: #f0fff4; }
+
+/* ===== Goal summary ===== */
+.goal-summary {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 1.5rem;
+}
+
 /* ===== Onboarding ===== */
 .onboarding {
   display: flex;

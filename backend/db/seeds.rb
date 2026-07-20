@@ -15,7 +15,25 @@ stat_logic   = StatType.find_or_create_by!(name: "論理力")    { |s| s.descrip
   { label: "高校受験（公立）", stat_type: stat_logic,   value: 250 },
   { label: "中学卒業レベル",   stat_type: stat_calc,    value: 200 },
   { label: "中学卒業レベル",   stat_type: stat_number,  value: 150 },
-  { label: "中学卒業レベル",   stat_type: stat_reading, value: 150 }
+  { label: "中学卒業レベル",   stat_type: stat_reading, value: 150 },
+
+  { label: "難関高校受験",     stat_type: stat_calc,    value: 400 },
+  { label: "難関高校受験",     stat_type: stat_logic,   value: 350 },
+  { label: "難関高校受験",     stat_type: stat_reading, value: 300 },
+  { label: "難関高校受験",     stat_type: stat_number,  value: 300 },
+
+  { label: "エンジニア",       stat_type: stat_logic,   value: 450 },
+  { label: "エンジニア",       stat_type: stat_calc,    value: 400 },
+  { label: "エンジニア",       stat_type: stat_number,  value: 350 },
+
+  { label: "研究者",           stat_type: stat_logic,   value: 500 },
+  { label: "研究者",           stat_type: stat_number,  value: 450 },
+  { label: "研究者",           stat_type: stat_reading, value: 400 },
+  { label: "研究者",           stat_type: stat_calc,    value: 400 },
+
+  { label: "ゲームクリエイター", stat_type: stat_logic,   value: 350 },
+  { label: "ゲームクリエイター", stat_type: stat_shape,   value: 350 },
+  { label: "ゲームクリエイター", stat_type: stat_number,  value: 300 }
 ].each do |ref|
   ReferenceStat.find_or_create_by!(label: ref[:label], stat_type: ref[:stat_type]) do |r|
     r.value = ref[:value]
