@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements } from "../api";
-import type { Growth, DailyQuota, StudentStat, Badge } from "../types";
+import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition } from "../api";
+import type { Growth, DailyQuota, StudentStat, Badge, Condition } from "../types";
 import GrowthChart from "../components/GrowthChart";
 import DailyQuotaCard from "../components/DailyQuotaCard";
 import MascotMessage from "../components/MascotMessage";
@@ -29,6 +29,7 @@ export default function HomePage() {
   const [reviewCount, setReviewCount] = useState(0);
   const [stats, setStats] = useState<StudentStat[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
+  const [condition, setCondition] = useState<Condition | null>(null);
 
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
@@ -38,6 +39,7 @@ export default function HomePage() {
     fetchReviewList(id).then((r) => setReviewCount(r.count)).catch(() => {});
     fetchStudentStats(id).then(setStats).catch(() => {});
     fetchAchievements(id).then(setBadges).catch(() => {});
+    fetchCondition(id).then(setCondition).catch(() => {});
   }, [studentId, navigate]);
 
   const logout = () => {
@@ -91,6 +93,12 @@ export default function HomePage() {
           <button className="btn-primary" style={{ padding: "0.5rem 1.25rem", fontSize: "0.9rem" }} onClick={() => navigate("/stats")}>
             次の目標を決める →
           </button>
+        </div>
+      )}
+
+      {condition && condition.rust_percent > 0 && (
+        <div className="rust-cue" onClick={() => navigate("/stats")}>
+          🛡️ {condition.idle_days}日お休み中（さびつき −{condition.rust_percent}%）｜学習で回復するよ
         </div>
       )}
 

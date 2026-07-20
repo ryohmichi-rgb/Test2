@@ -33,6 +33,12 @@ export interface Badge {
   earned: boolean;
 }
 
+export interface Condition {
+  rust_percent: number;
+  idle_days: number;
+  last_studied_on: string | null;
+}
+
 export interface Choice {
   id: number;
   text: string;

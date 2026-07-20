@@ -630,6 +630,34 @@ body {
 .celebrate-banner .btn-primary { background: #fff; color: #2f855a; }
 .celebrate-banner .btn-primary:hover:not(:disabled) { background: #f0fff4; }
 
+/* ===== Rust / condition ===== */
+.rust-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #4a5568;
+}
+.rust-icon { font-size: 1.6rem; flex-shrink: 0; filter: grayscale(0.3); }
+
+.rust-cue {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+  color: #718096;
+  cursor: pointer;
+}
+
+/* さびつき中はバーだけ暗く（数字は下げない） */
+.stats-list.rusty .stats-bar-fill { opacity: 0.4; filter: grayscale(0.5); }
+
 /* ===== Goal summary ===== */
 .goal-summary {
   background: #fff;

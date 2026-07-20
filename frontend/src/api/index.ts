@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Badge } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Badge, Condition } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -87,6 +87,9 @@ export const fetchAchievements = (studentId: number): Promise<Badge[]> =>
 
 export const completeOnboarding = (studentId: number): Promise<void> =>
   api.post(`/students/${studentId}/complete_onboarding`).then(() => undefined);
+
+export const fetchCondition = (studentId: number): Promise<Condition> =>
+  api.get<Condition>(`/students/${studentId}/condition`).then((r) => r.data);
 
 export const submitAnswer = (
   studentId: number,

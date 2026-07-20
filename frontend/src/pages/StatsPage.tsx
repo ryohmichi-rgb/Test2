@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchStudentStats, fetchReferenceStats, updateGoal } from "../api";
-import type { StudentStat, ReferenceStat } from "../types";
+import { fetchStudentStats, fetchReferenceStats, updateGoal, fetchCondition } from "../api";
+import type { StudentStat, ReferenceStat, Condition } from "../types";
 import ReferenceIcon from "../components/ReferenceIcon";
 
 const STAT_COLORS: Record<string, string> = {
@@ -27,6 +27,7 @@ export default function StatsPage() {
 
   const [stats, setStats] = useState<StudentStat[]>([]);
   const [refs, setRefs] = useState<ReferenceStat[]>([]);
+  const [condition, setCondition] = useState<Condition | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [goalValue, setGoalValue] = useState("");
@@ -43,6 +44,7 @@ export default function StatsPage() {
     Promise.all([fetchStudentStats(studentId), fetchReferenceStats()])
       .then(([s, r]) => { setStats(s); setRefs(r); })
       .finally(() => setLoading(false));
+    fetchCondition(studentId).then(setCondition).catch(() => {});
   }, [studentId, navigate]);
 
   const startEdit = (stat: StudentStat) => {
@@ -107,6 +109,19 @@ export default function StatsPage() {
         問題に正解するとステータスが上がります
       </p>
 
+      {/* さびつき（コンディション）のナッジ。数字は下げず、状態だけ伝える */}
+      {condition && condition.rust_percent > 0 && (
+        <div className="rust-banner">
+          <span className="rust-icon">🛡️</span>
+          <div>
+            <p style={{ fontWeight: 700, fontSize: "0.9rem" }}>
+              さびつき −{condition.rust_percent}%（{condition.idle_days}日お休み中）
+            </p>
+            <p style={{ fontSize: "0.8rem", opacity: 0.9 }}>1問でも解けば元にもどるよ。実力の記録は消えません。</p>
+          </div>
+        </div>
+      )}
+
       {/* 目標サマリー（目標を設定しているステータスの進捗一覧） */}
       {stats.some((s) => s.goal) && (
         <div className="goal-summary">
@@ -137,7 +152,7 @@ export default function StatsPage() {
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div className={`stats-list ${condition && condition.rust_percent > 0 ? "rusty" : ""}`} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {stats.map((stat) => {
           const color = STAT_COLORS[stat.name] ?? "#4c51bf";
           const fillPct = Math.min((stat.value / maxValue) * 100, 100);
