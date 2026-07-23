@@ -55,3 +55,47 @@ export function playIncorrect(): void {
 export function playFinish(): void {
   play(() => { [523, 659, 784, 1046].forEach((f, i) => blip(f, i * 0.1, 0.22, "sine", 0.2)); });
 }
+
+// ===== BGM（音楽トラック） =====
+const DEFAULT_BGM_VOLUME = 0.3;
+let bgm: HTMLAudioElement | null = null;
+
+function bgmEl(): HTMLAudioElement {
+  if (!bgm) {
+    bgm = new Audio("/bgm.mp3");
+    bgm.loop = true;
+    bgm.volume = bgmVolume();
+  }
+  return bgm;
+}
+
+export function isBgmOn(): boolean {
+  return localStorage.getItem("bgm") === "on"; // 既定オフ（勝手に鳴らさない）
+}
+export function bgmVolume(): number {
+  const v = Number(localStorage.getItem("bgmVolume"));
+  return Number.isFinite(v) && v > 0 ? v : DEFAULT_BGM_VOLUME;
+}
+export function setBgmVolume(v: number): void {
+  localStorage.setItem("bgmVolume", String(v));
+  if (bgm) bgm.volume = v;
+}
+export function startBgm(): void {
+  localStorage.setItem("bgm", "on");
+  bgmEl().play().catch(() => { /* 自動再生制限などは無視 */ });
+}
+export function stopBgm(): void {
+  localStorage.setItem("bgm", "off");
+  bgmEl().pause();
+}
+export function toggleBgm(): boolean {
+  if (isBgmOn()) { stopBgm(); return false; }
+  startBgm();
+  return true;
+}
+
+// リロード後、BGMがオンなら最初の操作で自動再開（ブラウザの自動再生制限対策）
+if (typeof window !== "undefined" && isBgmOn()) {
+  const resume = () => { bgmEl().play().catch(() => {}); window.removeEventListener("pointerdown", resume); };
+  window.addEventListener("pointerdown", resume, { once: true });
+}

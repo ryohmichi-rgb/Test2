@@ -3,6 +3,8 @@
 小学6年生〜中学1年生向けの算数・数学学習サービス。
 RPG風のステータス成長システムでモチベーションを維持しながら学習を続けられる。
 
+> BGM音源: [Pixabay](https://pixabay.com/)（Pixabay Content License）
+
 ## 技術スタック
 
 | 項目 | 技術 |

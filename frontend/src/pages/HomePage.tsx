@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition } from "../api";
 import type { Growth, DailyQuota, StudentStat, Badge, Condition } from "../types";
 import GrowthChart from "../components/GrowthChart";
-import { isSoundOn, setSoundOn, playCorrect } from "../sound";
+import { isSoundOn, setSoundOn, playCorrect, isBgmOn, toggleBgm } from "../sound";
 import DailyQuotaCard from "../components/DailyQuotaCard";
 import MascotMessage from "../components/MascotMessage";
 import DailyProblemCard from "../components/DailyProblemCard";
@@ -32,6 +32,7 @@ export default function HomePage() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [condition, setCondition] = useState<Condition | null>(null);
   const [soundOn, setSoundOnState] = useState(isSoundOn());
+  const [bgmOn, setBgmOnState] = useState(isBgmOn());
 
   const toggleSound = () => {
     const next = !soundOn;
@@ -39,6 +40,7 @@ export default function HomePage() {
     setSoundOnState(next);
     if (next) playCorrect(); // オンにしたら確認の音
   };
+  const toggleBgmBtn = () => setBgmOnState(toggleBgm());
 
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
@@ -88,6 +90,9 @@ export default function HomePage() {
       <header style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
         <h1 className="app-title" style={{ fontSize: "1.5rem", textAlign: "left", margin: 0 }}>まなびの広場</h1>
         <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0, alignItems: "center" }}>
+          <button className="btn-hint" style={{ fontSize: "1rem", padding: "0.3rem 0.5rem", opacity: bgmOn ? 1 : 0.4 }} onClick={toggleBgmBtn} title={bgmOn ? "BGMを止める" : "BGMを流す"} aria-label="BGM切替">
+            🎵
+          </button>
           <button className="btn-hint" style={{ fontSize: "1rem", padding: "0.3rem 0.5rem" }} onClick={toggleSound} title={soundOn ? "音を消す" : "音を出す"} aria-label="サウンド切替">
             {soundOn ? "🔊" : "🔇"}
           </button>
