@@ -3,7 +3,7 @@
 小学6年生〜中学1年生向けの算数・数学学習サービス。
 RPG風のステータス成長システムでモチベーションを維持しながら学習を続けられる。
 
-> BGM音源: [Pixabay](https://pixabay.com/)（Pixabay Content License）
+> BGM音源: [Study Jazz / study music](https://pixabay.com/ja/music/%E3%83%A2%E3%83%80%E3%83%B3%E3%82%B8%E3%83%A3%E3%82%BA-study-jazz-study-music-564277/) — [Pixabay](https://pixabay.com/)（Pixabay Content License）
 
 ## 技術スタック
 
