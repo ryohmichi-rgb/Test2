@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchDailyProblem, submitAnswer } from "../api";
 import type { Problem, AnswerResult } from "../types";
 import ProblemView from "./ProblemView";
+import { playCorrect, playIncorrect } from "../sound";
 
 export default function DailyProblemCard({ studentId }: { studentId: number }) {
   const [problem, setProblem] = useState<Problem | null>(null);
@@ -22,7 +23,9 @@ export default function DailyProblemCard({ studentId }: { studentId: number }) {
     if (!answer.trim() || submitting) return;
     setSubmitting(true);
     try {
-      setFeedback(await submitAnswer(studentId, problem.id, answer.trim()));
+      const res = await submitAnswer(studentId, problem.id, answer.trim());
+      (res.is_correct ? playCorrect : playIncorrect)();
+      setFeedback(res);
     } finally {
       setSubmitting(false);
     }

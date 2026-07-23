@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchGrades, fetchProblemSet, submitAnswer } from "../api";
 import type { Grade, Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";
+import { playCorrect, playIncorrect } from "../sound";
 
 const COUNTS = [5, 10, 20];
 type Phase = "setup" | "running" | "done";
@@ -75,6 +76,7 @@ export default function ProblemSetPage() {
     setSubmitting(true);
     try {
       const res = await submitAnswer(studentId, problems[idx].id, answer.trim());
+      (res.is_correct ? playCorrect : playIncorrect)();
       setFeedback(res);
       if (res.is_correct) setCorrectTotal((c) => c + 1);
     } finally {

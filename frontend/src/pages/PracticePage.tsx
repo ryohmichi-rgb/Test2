@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchUnit, submitAnswer } from "../api";
 import type { Unit, Problem, AnswerResult } from "../types";
+import { playCorrect, playIncorrect } from "../sound";
 
 type ProblemState = {
   answered: boolean;
@@ -50,6 +51,7 @@ export default function PracticePage() {
     setSubmitting(true);
     try {
       const result = await submitAnswer(studentId, current.id, answer);
+      (result.is_correct ? playCorrect : playIncorrect)();
       const newStates = [...states];
       newStates[currentIndex] = { answered: true, result, userAnswer: answer };
       setStates(newStates);

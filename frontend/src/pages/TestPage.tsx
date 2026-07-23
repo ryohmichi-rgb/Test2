@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchGrades, fetchStudentStats, fetchProblemSet, submitTest } from "../api";
 import type { Grade, StudentStat, Problem, ScopeType, TestSubmitResult } from "../types";
 import ProblemView from "../components/ProblemView";
+import { playFinish } from "../sound";
 
 const COUNTS = [5, 10, 20];
 const TIME_LIMITS = [
@@ -90,6 +91,7 @@ export default function TestPage() {
     try {
       const payload = problems.map((p, i) => ({ problem_id: p.id, submitted_answer: answers[i] || "" }));
       const res = await submitTest(studentId, scopeType, targetId, payload);
+      playFinish();
       setResult(res);
       setPhase("result");
     } finally {

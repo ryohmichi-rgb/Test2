@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchReviewList, submitAnswer } from "../api";
 import type { Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";
+import { playCorrect, playIncorrect } from "../sound";
 
 export default function ReviewPage() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export default function ReviewPage() {
     setSubmitting(true);
     try {
       const res = await submitAnswer(studentId, problems[idx].id, answer.trim());
+      (res.is_correct ? playCorrect : playIncorrect)();
       setFeedback(res);
       if (res.is_correct) setFixed((f) => f + 1);
     } finally {

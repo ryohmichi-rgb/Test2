@@ -345,6 +345,7 @@ flowchart TD
 | 共通 | `components/MascotMessage.tsx` | 応援メッセージを話す手描き風マスコット |
 | 共通 | `components/DailyProblemCard.tsx` | ホームで解ける「今日の一問」 |
 | 共通 | `components/AchievementsRow.tsx` | 実績バッジ一覧 |
+| 共通 | `sound.ts` | 効果音（Web Audio APIで合成、音源ファイル不要）。正解/不正解/完了。ホームでオン/オフ |
 | 共通 | `components/ReferenceIcon.tsx` | 参考ステータスの手描き風SVGアイコン |
 | 共通 | `components/PasswordGate.tsx` | 開発中アクセス制限 |
 | API | `api/index.ts` | 全APIラッパー |
