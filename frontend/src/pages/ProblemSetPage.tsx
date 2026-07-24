@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchGrades, fetchProblemSet, submitAnswer } from "../api";
 import type { Grade, Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";
+import AskTeacher from "../components/AskTeacher";
 import { playCorrect, playIncorrect } from "../sound";
 
 const COUNTS = [5, 10, 20];
@@ -208,6 +209,7 @@ export default function ProblemSetPage() {
                 {submitting ? "..." : "答える"}
               </button>
             </div>
+            <AskTeacher studentId={studentId} problemId={problem.id} />
           </>
         )}
       </div>

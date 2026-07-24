@@ -25,6 +25,8 @@ Rails.application.routes.draw do
         get :daily_problem, on: :member, to: "daily_problems#show"
         get :achievements, on: :member, to: "achievements#index"
         get :condition, on: :member, to: "condition#show"
+        get :ai_usage, on: :member, to: "ai_teacher#usage"
+        post :ask_teacher, on: :member, to: "ai_teacher#ask"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]

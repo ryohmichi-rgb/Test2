@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchReviewList, submitAnswer } from "../api";
 import type { Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";
+import AskTeacher from "../components/AskTeacher";
 import { playCorrect, playIncorrect } from "../sound";
 
 export default function ReviewPage() {
@@ -113,6 +114,7 @@ export default function ReviewPage() {
                 {submitting ? "..." : "答える"}
               </button>
             </div>
+            <AskTeacher studentId={studentId} problemId={problem.id} />
           </>
         )}
       </div>

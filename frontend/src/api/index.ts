@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Badge, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Badge, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, AskTeacherResult } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -126,6 +126,23 @@ export const fetchAdminStudents = (): Promise<AdminStudentSummary[]> =>
   api.get<AdminStudentSummary[]>("/admin/students").then((r) => r.data);
 export const deleteAdminStudent = (id: number): Promise<void> =>
   api.delete(`/admin/students/${id}`).then(() => undefined);
+
+export const fetchAiUsage = (studentId: number): Promise<AiUsage> =>
+  api.get<AiUsage>(`/students/${studentId}/ai_usage`).then((r) => r.data);
+
+export const askTeacher = (
+  studentId: number,
+  problemId: number,
+  kind: AskKind,
+  question?: string
+): Promise<AskTeacherResult> =>
+  api
+    .post<AskTeacherResult>(`/students/${studentId}/ask_teacher`, {
+      problem_id: problemId,
+      kind,
+      question,
+    })
+    .then((r) => r.data);
 
 export const submitAnswer = (
   studentId: number,

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchUnit, submitAnswer } from "../api";
 import type { Unit, Problem, AnswerResult } from "../types";
+import AskTeacher from "../components/AskTeacher";
 import { playCorrect, playIncorrect } from "../sound";
 
 type ProblemState = {
@@ -182,6 +183,8 @@ export default function PracticePage() {
                 <p>{current.hint}</p>
               </div>
             )}
+
+            <AskTeacher studentId={studentId} problemId={current.id} />
           </div>
         )}
       </div>

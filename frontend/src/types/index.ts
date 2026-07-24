@@ -53,6 +53,20 @@ export interface Problem {
   choices?: Choice[];
 }
 
+export type AskKind = "hint" | "approach" | "why" | "free";
+
+export interface AiUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
+export interface AskTeacherResult extends AiUsage {
+  answer: string | null;
+  error?: string;
+  exhausted?: boolean;
+}
+
 export interface Student {
   id: number;
   name: string;

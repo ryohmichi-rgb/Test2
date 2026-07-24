@@ -6,6 +6,7 @@ class Student < ApplicationRecord
   has_many :goals, dependent: :destroy
   has_many :test_results, dependent: :destroy
   has_many :lesson_reads, dependent: :destroy
+  has_many :ai_usages, dependent: :destroy
 
   validates :name, presence: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }
@@ -44,6 +45,21 @@ class Student < ApplicationRecord
   def rust_percent(today = Date.current)
     return 0 unless last_studied_on
     [[(idle_days(today) - RUST_GRACE_DAYS) * RUST_PER_DAY, 0].max, RUST_MAX].min
+  end
+
+  # 「先生に聞く」の1日あたり上限（環境変数で調整可・既定20回）
+  def self.ai_daily_limit
+    ENV.fetch("AI_DAILY_LIMIT", "20").to_i
+  end
+
+  # 今日のAI利用回数（通算：問題ごとではない）
+  def ai_used_today
+    ai_usages.today.count
+  end
+
+  # 今日あと何回聞けるか
+  def ai_remaining_today
+    [self.class.ai_daily_limit - ai_used_today, 0].max
   end
 
   # 学習した日の連続数（今日やっていれば今日から、まだなら昨日から数える）

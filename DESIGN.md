@@ -26,6 +26,7 @@ RPG風のステータス成長でモチベーションを維持しながら継�
 | 今日のプラン | 目標から逆算した今日やるべき単元 | PlanPage |
 | 成長曲線 | 実績＋目標ペースの折れ線 | HomePage（GrowthChart） |
 | 今日のノルマ | 必要ポイント・進捗・連続学習日数 | HomePage（DailyQuotaCard） |
+| 先生に聞く（生成AI） | その問題の文脈でClaudeがヒント・解き方・理由を返す（答えは丸投げしない・1日上限つき） | Practice/ProblemSet/Review/DailyProblem（AskTeacher） |
 
 ### ステータス（学力）の5種
 
@@ -57,6 +58,8 @@ erDiagram
     students ||--o{ goals : ""
     students ||--o{ test_results : ""
     students ||--o{ lesson_reads : ""
+    students ||--o{ ai_usages : ""
+    problems ||--o{ ai_usages : ""
     stat_types ||--o{ student_stats : ""
     stat_types ||--o{ goals : ""
     stat_types ||--o{ reference_stats : ""
@@ -139,6 +142,11 @@ erDiagram
         fk student_id
         fk unit_id
     }
+    ai_usages {
+        string kind "hint/approach/why/free"
+        fk student_id
+        fk problem_id "null許容"
+    }
 ```
 
 ### テーブル補足
@@ -156,6 +164,7 @@ erDiagram
 - **units.active / problems.active** … 無効化フラグ。`false` は新しい出題（演習・問題集・テスト・今日の一問・復習・単元一覧）から除外。回答履歴は保持。
 - **units.lesson_body** … 単元の教材（Markdown）。フロントで `react-markdown` により描画。
 - **lesson_reads** … 教材の読了記録。`(student_id, unit_id)` で一意。初回読了の判定＋既読表示に使う。
+- **ai_usages** … 「先生に聞く」（生成AI）の利用ログ。1レコード＝1回の質問。`(student_id, created_at)` に索引を張り、その日の利用回数を数えてレート制限に使う。`problem_id` は文脈にした問題（削除されても残せるよう `null` 許容）。`kind` は `hint / approach / why / free`。
 
 > 注: `student_stats` は現在値のみ保持。成長曲線の過去分は `answer_records` から再構築する（後述）。
 
@@ -269,6 +278,16 @@ erDiagram
 - **削除は未使用のみ**（回答履歴のある問題・単元は削除不可 → 無効化で対応）。参考ステータス・生徒は削除可（管理者自身は不可）。
 - 管理機能: 単元/教材（追加・編集・無効化・削除）、問題（追加・編集・選択肢編集・無効化・削除）、参考ステータス（CRUD）、生徒（一覧・状況・削除）。
 
+### 3.13 先生に聞く（生成AI連携）
+
+問題を解く画面で「先生に聞く」→ **その問題の文脈つき**で Claude がヒント・解き方・理由を返す（`AskTeacher` コンポーネント）。
+
+- **経路**：APIキーは絶対にフロントに出さない。フロント → Railsバックエンド（`ClaudeTeacher` サービスが `Net::HTTP` で Claude API を呼ぶ） → 返答。キーは環境変数 `ANTHROPIC_API_KEY` のみ。
+- **モデル/コスト**：既定は `claude-haiku-4-5`（速い・安い）。`ANTHROPIC_MODEL` でコードを触らず差し替え可。返答は `AI_MAX_TOKENS`（既定400≒日本語200〜300字）で短く。
+- **安全ガードレール**（システムプロンプトで固定）：①その問題についてだけ答える ②**最終的な数値の答えは言わない**（丸投げしない・考え方に誘導） ③小中学生向けにやさしく・範囲を超えない ④学習と無関係な質問はやさしく断る ⑤短く・励ます口調。
+- **レート制限**：`ai_usages` にログを残し、1人あたり **1日 `AI_DAILY_LIMIT`（既定20）回**まで。上限到達時は消費せず「今日はここまで！また明日ね」。**成功時のみ**回数を消費する（APIエラーで無駄に減らさない）。
+- **UI**：`Practice / ProblemSet / Review / DailyProblem` の4画面に共通コンポーネントで設置。**テスト画面には出さない**（実力測定のため）。プリセット（ヒント/解き方/なぜ？）＋自由入力。返答は都度1回・ストリーミングなし（「先生が考え中…」表示）。パネルに「今日はあと○回」を表示。
+
 ---
 
 ## 4. API一覧
@@ -296,6 +315,8 @@ erDiagram
 | GET | `/students/:id/daily_problem` | 今日の一問（ランダム1問） |
 | GET | `/students/:id/achievements` | 実績バッジ（獲得判定つき） |
 | GET | `/students/:id/condition` | さびつき状態（未学習日数から算出） |
+| GET | `/students/:id/ai_usage` | 「先生に聞く」の今日の利用状況（used/limit/remaining） |
+| POST | `/students/:id/ask_teacher` | その問題の文脈で先生に質問（problem_id/kind/question） |
 | GET | `/grades` | 学年一覧（単元込み） |
 | GET | `/units/:id` | 単元詳細（教材・問題込み） |
 | POST | `/answer_records` | 回答送信（即採点＋ポイント加算） |
@@ -345,6 +366,8 @@ flowchart TD
 | 共通 | `components/MascotMessage.tsx` | 応援メッセージを話す手描き風マスコット |
 | 共通 | `components/DailyProblemCard.tsx` | ホームで解ける「今日の一問」 |
 | 共通 | `components/AchievementsRow.tsx` | 実績バッジ一覧 |
+| 共通 | `components/AskTeacher.tsx` | 「先生に聞く」（生成AI）。問題を解く4画面で共用（テストは除く） |
+| サービス | `services/claude_teacher.rb` | Claude API を `Net::HTTP` で呼ぶ（バックエンド。キーは環境変数） |
 | 共通 | `sound.ts` | 効果音（Web Audio APIで合成、音源不要／正解・不正解・完了）＋ BGM（`public/bgm.mp3` をループ）。ホームでそれぞれオン/オフ |
 | 共通 | `components/ReferenceIcon.tsx` | 参考ステータスの手描き風SVGアイコン |
 | 共通 | `components/PasswordGate.tsx` | 開発中アクセス制限 |

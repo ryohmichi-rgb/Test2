@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchDailyProblem, submitAnswer } from "../api";
 import type { Problem, AnswerResult } from "../types";
 import ProblemView from "./ProblemView";
+import AskTeacher from "./AskTeacher";
 import { playCorrect, playIncorrect } from "../sound";
 
 export default function DailyProblemCard({ studentId }: { studentId: number }) {
@@ -64,6 +65,7 @@ export default function DailyProblemCard({ studentId }: { studentId: number }) {
           <button className="btn-primary" style={{ width: "100%", padding: "0.55rem" }} onClick={check} disabled={submitting || !answer.trim()}>
             {submitting ? "..." : "答える"}
           </button>
+          <AskTeacher studentId={studentId} problemId={problem.id} />
         </>
       )}
     </div>
