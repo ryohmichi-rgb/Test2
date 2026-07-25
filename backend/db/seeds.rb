@@ -62,21 +62,21 @@ units_grade6 = [
     display_order: 1,
     problems: [
       {
-        question: "2/3 × 3/4 を計算しなさい。（分数は a/b の形で答えること）",
+        question: '$\frac{2}{3} \times \frac{3}{4}$ を計算しなさい。（分数は a/b の形で答えること）',
         answer: "1/2",
         hint: "分子どうし、分母どうしをかけて、約分しましょう。",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "3/5 × 5/6 を計算しなさい。（分数は a/b の形で答えること）",
+        question: '$\frac{3}{5} \times \frac{5}{6}$ を計算しなさい。（分数は a/b の形で答えること）',
         answer: "1/2",
         hint: "かける前に約分できるか確認しましょう。",
         difficulty: 2,
         problem_type: "fill_in"
       },
       {
-        question: "4/7 ÷ 2/3 を計算しなさい。（分数は a/b の形で答えること）",
+        question: '$\frac{4}{7} \div \frac{2}{3}$ を計算しなさい。（分数は a/b の形で答えること）',
         answer: "6/7",
         hint: "わり算はわる数を逆数にしてかけ算に直します。",
         difficulty: 2,
@@ -149,16 +149,16 @@ units_grade6 = [
     display_order: 4,
     problems: [
       {
-        question: "1本80円の鉛筆をx本買ったときの代金を式で表しなさい。",
+        question: '1本80円の鉛筆を $x$ 本買ったときの代金を式で表しなさい。',
         answer: "80x",
         hint: "（1本の値段）×（本数）",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "x = 5 のとき、3x + 2 の値を求めなさい。",
+        question: '$x = 5$ のとき、$3x + 2$ の値を求めなさい。',
         answer: "17",
-        hint: "xに5を代入して計算しましょう。",
+        hint: '$x$ に5を代入して計算しましょう。',
         difficulty: 2,
         problem_type: "fill_in"
       }
@@ -193,28 +193,28 @@ units_grade7 = [
     display_order: 1,
     problems: [
       {
-        question: "（-3）+（-5）を計算しなさい。",
+        question: '$(-3) + (-5)$ を計算しなさい。',
         answer: "-8",
         hint: "負の数どうしの足し算は、絶対値を足して負をつけます。",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "（-4）-（-7）を計算しなさい。",
+        question: '$(-4) - (-7)$ を計算しなさい。',
         answer: "3",
         hint: "引き算は、引く数の符号を変えて足し算にします。",
         difficulty: 2,
         problem_type: "fill_in"
       },
       {
-        question: "（-3）×（-4）を計算しなさい。",
+        question: '$(-3) \times (-4)$ を計算しなさい。',
         answer: "12",
         hint: "負×負＝正",
         difficulty: 2,
         problem_type: "fill_in"
       },
       {
-        question: "（-12）÷（+3）を計算しなさい。",
+        question: '$(-12) \div (+3)$ を計算しなさい。',
         answer: "-4",
         hint: "負÷正＝負",
         difficulty: 2,
@@ -242,30 +242,30 @@ units_grade7 = [
     display_order: 2,
     problems: [
       {
-        question: "a × 3 を文字式の表し方にしなさい。",
+        question: '$a \times 3$ を文字式の表し方にしなさい。',
         answer: "3a",
         hint: "数は文字の前に書き、×の記号は省略します。",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "2x + 3x を計算しなさい。",
+        question: '$2x + 3x$ を計算しなさい。',
         answer: "5x",
         hint: "同類項をまとめましょう。",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "3(2x - 4) を展開しなさい。（スペースなし、例: 6x-12）",
+        question: '$3(2x - 4)$ を展開しなさい。（スペースなし、例: 6x-12）',
         answer: "6x-12",
         hint: "かっこの中の各項に3をかけます。",
         difficulty: 2,
         problem_type: "fill_in"
       },
       {
-        question: "x = -2 のとき、4x - 1 の値を求めなさい。",
+        question: '$x = -2$ のとき、$4x - 1$ の値を求めなさい。',
         answer: "-9",
-        hint: "xに-2を代入して計算しましょう。",
+        hint: '$x$ に $-2$ を代入して計算しましょう。',
         difficulty: 2,
         problem_type: "fill_in"
       }
@@ -278,28 +278,28 @@ units_grade7 = [
     display_order: 3,
     problems: [
       {
-        question: "x + 5 = 12 を解きなさい。",
+        question: '$x + 5 = 12$ を解きなさい。',
         answer: "7",
         hint: "両辺から5を引きましょう。",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "3x = 18 を解きなさい。",
+        question: '$3x = 18$ を解きなさい。',
         answer: "6",
         hint: "両辺を3で割りましょう。",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "2x - 3 = 7 を解きなさい。",
+        question: '$2x - 3 = 7$ を解きなさい。',
         answer: "5",
         hint: "まず両辺に3を足して、次に両辺を2で割りましょう。",
         difficulty: 2,
         problem_type: "fill_in"
       },
       {
-        question: "4x + 1 = 2x + 9 を解きなさい。",
+        question: '$4x + 1 = 2x + 9$ を解きなさい。',
         answer: "4",
         hint: "文字を左辺、数を右辺にまとめましょう。",
         difficulty: 3,
@@ -308,7 +308,7 @@ units_grade7 = [
       {
         question: "ある数を3倍して5をひくと16になる。ある数を求めなさい。",
         answer: "7",
-        hint: "ある数をxとおいて方程式を立てましょう。3x - 5 = 16",
+        hint: 'ある数を $x$ とおいて方程式を立てましょう。$3x - 5 = 16$',
         difficulty: 3,
         problem_type: "fill_in"
       }
@@ -321,23 +321,23 @@ units_grade7 = [
     display_order: 4,
     problems: [
       {
-        question: "y = 3x で、x = 4 のときの y の値を求めなさい。",
+        question: '$y = 3x$ で、$x = 4$ のときの $y$ の値を求めなさい。',
         answer: "12",
-        hint: "xに4を代入しましょう。",
+        hint: '$x$ に4を代入しましょう。',
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "y が x に比例し、x = 2 のとき y = 10 です。比例定数を求めなさい。",
+        question: '$y$ が $x$ に比例し、$x = 2$ のとき $y = 10$ です。比例定数を求めなさい。',
         answer: "5",
-        hint: "y = ax の a を求めます。a = y ÷ x",
+        hint: '$y = ax$ の $a$ を求めます。$a = y \div x$',
         difficulty: 2,
         problem_type: "fill_in"
       },
       {
-        question: "y = 12/x で、x = 3 のときの y の値を求めなさい。",
+        question: '$y = \frac{12}{x}$ で、$x = 3$ のときの $y$ の値を求めなさい。',
         answer: "4",
-        hint: "xに3を代入しましょう。",
+        hint: '$x$ に3を代入しましょう。',
         difficulty: 2,
         problem_type: "fill_in"
       }
@@ -387,11 +387,11 @@ end
 # 追加の問題（既存はそのまま、不足分を足す）。title で単元に紐づける。
 extra_problems = {
   "分数のかけ算・わり算" => [
-    { question: "1/2 × 4/5 を計算しなさい。（分数は a/b の形で答えること）", answer: "2/5", hint: "分子どうし・分母どうしをかけて約分します。", difficulty: 1, problem_type: "fill_in" },
-    { question: "5/6 × 3/10 を計算しなさい。（分数は a/b の形で答えること）", answer: "1/4", hint: "先に約分できるか確認しましょう。", difficulty: 2, problem_type: "fill_in" },
-    { question: "2/9 ÷ 4/3 を計算しなさい。（分数は a/b の形で答えること）", answer: "1/6", hint: "わる数 4/3 を逆数にしてかけます。", difficulty: 2, problem_type: "fill_in" },
-    { question: "3/4 ÷ 6/7 を計算しなさい。（分数は a/b の形で答えること）", answer: "7/8", hint: "6/7 を逆数にしてかけ、約分します。", difficulty: 2, problem_type: "fill_in" },
-    { question: "2/3 × 3/4 ÷ 1/2 を計算しなさい。", answer: "1", hint: "左から順に。まず 2/3×3/4=1/2、次に ÷1/2。", difficulty: 3, problem_type: "fill_in" }
+    { question: '$\frac{1}{2} \times \frac{4}{5}$ を計算しなさい。（分数は a/b の形で答えること）', answer: "2/5", hint: "分子どうし・分母どうしをかけて約分します。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$\frac{5}{6} \times \frac{3}{10}$ を計算しなさい。（分数は a/b の形で答えること）', answer: "1/4", hint: "先に約分できるか確認しましょう。", difficulty: 2, problem_type: "fill_in" },
+    { question: '$\frac{2}{9} \div \frac{4}{3}$ を計算しなさい。（分数は a/b の形で答えること）', answer: "1/6", hint: 'わる数 $\frac{4}{3}$ を逆数にしてかけます。', difficulty: 2, problem_type: "fill_in" },
+    { question: '$\frac{3}{4} \div \frac{6}{7}$ を計算しなさい。（分数は a/b の形で答えること）', answer: "7/8", hint: '$\frac{6}{7}$ を逆数にしてかけ、約分します。', difficulty: 2, problem_type: "fill_in" },
+    { question: '$\frac{2}{3} \times \frac{3}{4} \div \frac{1}{2}$ を計算しなさい。', answer: "1", hint: '左から順に。まず $\frac{2}{3} \times \frac{3}{4} = \frac{1}{2}$、次に $\div \frac{1}{2}$。', difficulty: 3, problem_type: "fill_in" }
   ],
   "比と比の値" => [
     { question: "8 : 12 を最も簡単な整数の比にしなさい。（a:b の形で答えること）", answer: "2:3", hint: "8と12の最大公約数4で割ります。", difficulty: 1, problem_type: "fill_in" },
@@ -408,35 +408,35 @@ extra_problems = {
     { question: "時速4kmで3kmの道のりを歩くと何分かかりますか？", answer: "45", hint: "時間＝3÷4＝0.75時間。分に直します。", difficulty: 3, problem_type: "fill_in" }
   ],
   "文字と式（小6）" => [
-    { question: "1個120円のりんごを x 個買ったときの代金を式で表しなさい。", answer: "120x", hint: "（1個の値段）×（個数）。×は省略。", difficulty: 1, problem_type: "fill_in" },
-    { question: "a円の品物を3個買ったときの代金を式で表しなさい。", answer: "3a", hint: "数は文字の前に書きます。", difficulty: 1, problem_type: "fill_in" },
-    { question: "x = 4 のとき、5x の値を求めなさい。", answer: "20", hint: "5×4を計算します。", difficulty: 1, problem_type: "fill_in" },
-    { question: "x = 3 のとき、2x + 7 の値を求めなさい。", answer: "13", hint: "2×3に7を足します。", difficulty: 2, problem_type: "fill_in" },
-    { question: "1本60円の鉛筆を x 本買って500円を出したときのおつりを式で表しなさい。（スペースなし）", answer: "500-60x", hint: "おつり＝出したお金－代金。", difficulty: 3, problem_type: "fill_in" }
+    { question: '1個120円のりんごを $x$ 個買ったときの代金を式で表しなさい。', answer: "120x", hint: "（1個の値段）×（個数）。×は省略。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$a$ 円の品物を3個買ったときの代金を式で表しなさい。', answer: "3a", hint: "数は文字の前に書きます。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$x = 4$ のとき、$5x$ の値を求めなさい。', answer: "20", hint: '$5 \times 4$ を計算します。', difficulty: 1, problem_type: "fill_in" },
+    { question: '$x = 3$ のとき、$2x + 7$ の値を求めなさい。', answer: "13", hint: '$2 \times 3$ に7を足します。', difficulty: 2, problem_type: "fill_in" },
+    { question: '1本60円の鉛筆を $x$ 本買って500円を出したときのおつりを式で表しなさい。（スペースなし）', answer: "500-60x", hint: "おつり＝出したお金－代金。", difficulty: 3, problem_type: "fill_in" }
   ],
   "正の数・負の数" => [
-    { question: "（-6）+ 9 を計算しなさい。", answer: "3", hint: "符号がちがうときは絶対値の差に大きいほうの符号。", difficulty: 1, problem_type: "fill_in" },
-    { question: "7 - 10 を計算しなさい。", answer: "-3", hint: "10のほうが大きいので答えは負になります。", difficulty: 1, problem_type: "fill_in" },
-    { question: "（-2）× 5 を計算しなさい。", answer: "-10", hint: "負×正＝負", difficulty: 2, problem_type: "fill_in" },
-    { question: "（-20）÷（-4）を計算しなさい。", answer: "5", hint: "負÷負＝正", difficulty: 2, problem_type: "fill_in" }
+    { question: '$(-6) + 9$ を計算しなさい。', answer: "3", hint: "符号がちがうときは絶対値の差に大きいほうの符号。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$7 - 10$ を計算しなさい。', answer: "-3", hint: "10のほうが大きいので答えは負になります。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$(-2) \times 5$ を計算しなさい。', answer: "-10", hint: "負×正＝負", difficulty: 2, problem_type: "fill_in" },
+    { question: '$(-20) \div (-4)$ を計算しなさい。', answer: "5", hint: "負÷負＝正", difficulty: 2, problem_type: "fill_in" }
   ],
   "文字と式" => [
-    { question: "5a - 2a を計算しなさい。", answer: "3a", hint: "同類項をまとめます。", difficulty: 1, problem_type: "fill_in" },
-    { question: "x ×（-4）を文字式の表し方にしなさい。", answer: "-4x", hint: "符号をつけて数を前に、×は省略。", difficulty: 1, problem_type: "fill_in" },
-    { question: "2(3x + 1) を展開しなさい。（スペースなし、例: 6x+2）", answer: "6x+2", hint: "かっこの中の各項に2をかけます。", difficulty: 2, problem_type: "fill_in" },
-    { question: "x = -3 のとき、2x + 5 の値を求めなさい。", answer: "-1", hint: "2×(-3)に5を足します。", difficulty: 2, problem_type: "fill_in" }
+    { question: '$5a - 2a$ を計算しなさい。', answer: "3a", hint: "同類項をまとめます。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$x \times (-4)$ を文字式の表し方にしなさい。', answer: "-4x", hint: "符号をつけて数を前に、×は省略。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$2(3x + 1)$ を展開しなさい。（スペースなし、例: 6x+2）', answer: "6x+2", hint: "かっこの中の各項に2をかけます。", difficulty: 2, problem_type: "fill_in" },
+    { question: '$x = -3$ のとき、$2x + 5$ の値を求めなさい。', answer: "-1", hint: '$2 \times (-3)$ に5を足します。', difficulty: 2, problem_type: "fill_in" }
   ],
   "方程式" => [
-    { question: "x - 4 = 9 を解きなさい。", answer: "13", hint: "両辺に4を足します。", difficulty: 1, problem_type: "fill_in" },
-    { question: "5x = 35 を解きなさい。", answer: "7", hint: "両辺を5で割ります。", difficulty: 1, problem_type: "fill_in" },
-    { question: "3x + 2 = 14 を解きなさい。", answer: "4", hint: "まず2を移項、次に3で割ります。", difficulty: 2, problem_type: "fill_in" },
-    { question: "2x + 3 = x + 8 を解きなさい。", answer: "5", hint: "xを左、数を右に移項します。", difficulty: 2, problem_type: "fill_in" }
+    { question: '$x - 4 = 9$ を解きなさい。', answer: "13", hint: "両辺に4を足します。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$5x = 35$ を解きなさい。', answer: "7", hint: "両辺を5で割ります。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$3x + 2 = 14$ を解きなさい。', answer: "4", hint: "まず2を移項、次に3で割ります。", difficulty: 2, problem_type: "fill_in" },
+    { question: '$2x + 3 = x + 8$ を解きなさい。', answer: "5", hint: "xを左、数を右に移項します。", difficulty: 2, problem_type: "fill_in" }
   ],
   "比例と反比例" => [
-    { question: "y = 5x で、x = 3 のときの y の値を求めなさい。", answer: "15", hint: "xに3を代入します。", difficulty: 1, problem_type: "fill_in" },
-    { question: "y = 24/x で、x = 6 のときの y の値を求めなさい。", answer: "4", hint: "24を6で割ります。", difficulty: 1, problem_type: "fill_in" },
-    { question: "y = -2x で、x = 4 のときの y の値を求めなさい。", answer: "-8", hint: "-2×4を計算します。", difficulty: 2, problem_type: "fill_in" },
-    { question: "y が x に比例し、x = 3 のとき y = 12 です。比例定数を求めなさい。", answer: "4", hint: "a = y ÷ x で求めます。", difficulty: 2, problem_type: "fill_in" }
+    { question: '$y = 5x$ で、$x = 3$ のときの $y$ の値を求めなさい。', answer: "15", hint: '$x$ に3を代入します。', difficulty: 1, problem_type: "fill_in" },
+    { question: '$y = \frac{24}{x}$ で、$x = 6$ のときの $y$ の値を求めなさい。', answer: "4", hint: "24を6で割ります。", difficulty: 1, problem_type: "fill_in" },
+    { question: '$y = -2x$ で、$x = 4$ のときの $y$ の値を求めなさい。', answer: "-8", hint: '$-2 \times 4$ を計算します。', difficulty: 2, problem_type: "fill_in" },
+    { question: '$y$ が $x$ に比例し、$x = 3$ のとき $y = 12$ です。比例定数を求めなさい。', answer: "4", hint: '$a = y \div x$ で求めます。', difficulty: 2, problem_type: "fill_in" }
   ]
 }
 

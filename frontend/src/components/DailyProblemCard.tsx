@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchDailyProblem, submitAnswer } from "../api";
 import type { Problem, AnswerResult } from "../types";
 import ProblemView from "./ProblemView";
+import MathText from "./MathText";
 import AskTeacher from "./AskTeacher";
 import { playCorrect, playIncorrect } from "../sound";
 
@@ -48,7 +49,7 @@ export default function DailyProblemCard({ studentId }: { studentId: number }) {
         </div>
       ) : (
         <>
-          <p className="daily-question">{problem.question}</p>
+          <p className="daily-question"><MathText>{problem.question}</MathText></p>
           {problem.problem_type === "multiple_choice" ? (
             <ProblemView problem={problem} value={answer} onChange={setAnswer} />
           ) : (

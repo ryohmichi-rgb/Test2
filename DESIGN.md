@@ -264,6 +264,23 @@ erDiagram
 > ⚠️ **seeds.rb のヒアドキュメントは必ずリテラル（`<<~'MD'`）にする。**
 > 補間あり（`<<~MD`）だと `\frac` が改ページ文字、`\times` がタブに化けて数式が壊れる。
 
+#### 問題文の数式
+
+問題文・選択肢・ヒント（`problems.question` / `choices.text` / `problems.hint`）も
+`$...$` で数式にできる。描画は `MathText`（Markdownは解釈しない軽量版）。
+テストを含む問題画面すべてに効く。
+
+- **表示だけを数式化する。** 答え合わせは `problems.answer` の平文比較のままなので、
+  判定ロジックは一切変わらない。
+- **入力の書き方の説明は数式にしない。** 「（分数は a/b の形で答えること）」
+  「（スペースなし、例: 6x-12）」などは、子どもが実際にキーボードで打つ形。
+  数式で組むと打つべき文字と見た目がずれるので平文のままにする。
+- **比（`3 : 4 = 9 : □`）や単位つきの文章題は平文のまま。** 全角のままで十分読める。
+
+> ⚠️ **seeds.rb の問題文で LaTeX を書くときは Ruby のシングルクォートを使う。**
+> `"$\frac{2}{3}$"` はダブルクォートなので `\f` が改ページ文字に化ける。
+> `'$\frac{2}{3}$'` と書くこと。
+
 ### 3.9 ホームのモチベーション要素
 
 - **応援メッセージ**: 時間帯・ノルマ達成状況・連続日数からフロントで文面を生成（マスコットが吹き出しで話す）。
@@ -383,6 +400,7 @@ flowchart TD
 | 共通 | `components/AchievementsRow.tsx` | 実績バッジ一覧 |
 | 共通 | `components/AskTeacher.tsx` | 「先生に聞く」（生成AI）。問題を解く4画面で共用（テストは除く） |
 | 共通 | `components/MarkdownView.tsx` | Markdown＋数式（KaTeX）の描画。教材ページで使用 |
+| 共通 | `components/MathText.tsx` | 問題文・選択肢・ヒント内の `$...$` だけを数式化（Markdownは解釈しない軽量版） |
 | サービス | `services/claude_teacher.rb` | Claude API を `Net::HTTP` で呼ぶ（バックエンド。キーは環境変数） |
 | 共通 | `sound.ts` | 効果音（Web Audio APIで合成、音源不要／正解・不正解・完了）＋ BGM（`public/bgm.mp3` をループ）。ホームでそれぞれオン/オフ |
 | 共通 | `components/ReferenceIcon.tsx` | 参考ステータスの手描き風SVGアイコン |
@@ -398,9 +416,15 @@ flowchart TD
 | 遅延読み込み | 理由 |
 |--------------|------|
 | `LessonPage` | `react-markdown` と KaTeX が重い。教材を開いたときだけ読み込む |
+| `PracticePage` / `ProblemSetPage` / `TestPage` / `ReviewPage` | 問題文の数式で KaTeX を使う。ログイン直後には要らない |
+| `DailyProblemCard`（ホーム内） | 同上。ホームの初期表示をブロックさせない |
 | `admin/*`（5画面） | 管理者しか使わない。生徒には読み込ませない |
 
-初回JS **487kB → 354kB**（gzip 148→110kB）。KaTeXを足したうえで軽くなっている。
+初回JS **487kB → 332kB**（gzip 148→105kB）。KaTeXを2箇所で使いながら軽くなっている。
+
+> KaTeX を `manualChunks` で共有チャンクに切り出すのも試したが不採用。各チャンクは
+> 使う分だけ tree-shaking されており、共有化すると単一画面しか開かない利用者の転送量が
+> 増えた（問題画面のみ: 591→851kB）。両方開く場合の合計はほぼ同じ（982 vs 983kB）。
 
 ---
 

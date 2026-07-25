@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { fetchUnit, submitAnswer } from "../api";
 import type { Unit, Problem, AnswerResult } from "../types";
 import AskTeacher from "../components/AskTeacher";
+import MathText from "../components/MathText";
 import { playCorrect, playIncorrect } from "../sound";
 
 type ProblemState = {
@@ -125,7 +126,7 @@ export default function PracticePage() {
           {"★".repeat(current.difficulty)}{"☆".repeat(5 - current.difficulty)}
         </div>
 
-        <p className="problem-question">{current.question}</p>
+        <p className="problem-question"><MathText>{current.question}</MathText></p>
 
         {currentState.answered ? (
           <div className={`answer-feedback ${currentState.result?.is_correct ? "correct" : "incorrect"}`}>
@@ -145,7 +146,7 @@ export default function PracticePage() {
                     className={`choice-btn ${selectedChoice === choice.text ? "selected" : ""}`}
                     onClick={() => setSelectedChoice(choice.text)}
                   >
-                    {choice.text}
+                    <MathText>{choice.text}</MathText>
                   </button>
                 ))}
               </div>
@@ -180,7 +181,7 @@ export default function PracticePage() {
             {showHint && current.hint && (
               <div className="hint-box">
                 <span className="hint-label">ヒント</span>
-                <p>{current.hint}</p>
+                <p><MathText>{current.hint}</MathText></p>
               </div>
             )}
 

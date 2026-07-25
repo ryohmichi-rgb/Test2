@@ -1,4 +1,5 @@
 import type { Problem } from "../types";
+import MathText from "./MathText";
 
 type Props = {
   problem: Problem;
@@ -17,7 +18,7 @@ export default function ProblemView({ problem, value, onChange, disabled, onEnte
       <div className="difficulty-stars">
         {"★".repeat(problem.difficulty)}{"☆".repeat(5 - problem.difficulty)}
       </div>
-      <p className="problem-question">{problem.question}</p>
+      <p className="problem-question"><MathText>{problem.question}</MathText></p>
 
       {isMultipleChoice ? (
         <div className="choices-grid">
@@ -28,7 +29,7 @@ export default function ProblemView({ problem, value, onChange, disabled, onEnte
               onClick={() => !disabled && onChange(choice.text)}
               disabled={disabled}
             >
-              {choice.text}
+              <MathText>{choice.text}</MathText>
             </button>
           ))}
         </div>

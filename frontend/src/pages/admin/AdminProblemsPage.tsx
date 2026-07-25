@@ -66,6 +66,11 @@ export default function AdminProblemsPage() {
           <h3 style={{ fontWeight: 700, marginBottom: "0.75rem" }}>{draft.id ? "問題を編集" : "新しい問題"}</h3>
           <label className="admin-label">問題文</label>
           <textarea className="admin-input" rows={3} value={draft.question ?? ""} onChange={(e) => setDraft({ ...draft, question: e.target.value })} />
+          <p className="admin-hint">
+            数式は $ ではさむと きれいに表示されます。例: <code>{"$\\frac{2}{3} \\times \\frac{3}{4}$ を計算しなさい。"}</code>
+            <br />
+            答えの入力形式（例:「分数は a/b の形で答えること」）は $ で囲まず、そのまま書いてください。
+          </p>
           <label className="admin-label">答え</label>
           <input className="admin-input" value={draft.answer ?? ""} onChange={(e) => setDraft({ ...draft, answer: e.target.value })} />
           <label className="admin-label">ヒント</label>

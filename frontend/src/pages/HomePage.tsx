@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition } from "../api";
 import type { Growth, DailyQuota, StudentStat, Badge, Condition } from "../types";
@@ -6,8 +6,10 @@ import GrowthChart from "../components/GrowthChart";
 import { isSoundOn, setSoundOn, playCorrect, isBgmOn, toggleBgm } from "../sound";
 import DailyQuotaCard from "../components/DailyQuotaCard";
 import MascotMessage from "../components/MascotMessage";
-import DailyProblemCard from "../components/DailyProblemCard";
 import AchievementsRow from "../components/AchievementsRow";
+
+// 「今日の一問」は問題文の数式で KaTeX を使う。ホームの初期表示をブロックしないよう遅延読み込み。
+const DailyProblemCard = lazy(() => import("../components/DailyProblemCard"));
 
 type MenuItem = { label: string; desc: string; emoji: string; path: string; color: string; primary?: boolean };
 
@@ -133,7 +135,9 @@ export default function HomePage() {
         </div>
       )}
 
-      <DailyProblemCard studentId={Number(studentId)} />
+      <Suspense fallback={null}>
+        <DailyProblemCard studentId={Number(studentId)} />
+      </Suspense>
 
       {showGrowth && (
         <div style={{ background: "#fff", borderRadius: 14, padding: "1.1rem 1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", marginBottom: "1.25rem" }}>

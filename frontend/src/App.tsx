@@ -2,23 +2,25 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import GradesPage from "./pages/GradesPage";
-import PracticePage from "./pages/PracticePage";
 import ProgressPage from "./pages/ProgressPage";
 import StatsPage from "./pages/StatsPage";
 import PlanPage from "./pages/PlanPage";
 import HomePage from "./pages/HomePage";
 import OnboardingPage from "./pages/OnboardingPage";
-import ProblemSetPage from "./pages/ProblemSetPage";
-import TestPage from "./pages/TestPage";
 import TestHistoryPage from "./pages/TestHistoryPage";
-import ReviewPage from "./pages/ReviewPage";
 import PasswordGate from "./components/PasswordGate";
 import "./App.css";
 
 // 遅延読み込み（初回に読むJSを軽くする）
 // - 教材ページ: react-markdown と KaTeX が重いので、開いたときだけ読み込む
+// - 問題を解く4画面: 問題文の数式で KaTeX を使う。ログイン直後には要らない
 // - 管理ページ: 管理者しか使わないので、生徒には読み込ませない
+// KaTeX はこれらの共有チャンクに入り、主バンドルからは外れる。
 const LessonPage = lazy(() => import("./pages/LessonPage"));
+const PracticePage = lazy(() => import("./pages/PracticePage"));
+const ProblemSetPage = lazy(() => import("./pages/ProblemSetPage"));
+const TestPage = lazy(() => import("./pages/TestPage"));
+const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
 const AdminUnitsPage = lazy(() => import("./pages/admin/AdminUnitsPage"));
 const AdminProblemsPage = lazy(() => import("./pages/admin/AdminProblemsPage"));
