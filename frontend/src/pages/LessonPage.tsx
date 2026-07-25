@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
+import MarkdownView from "../components/MarkdownView";
 import { fetchUnit, markLessonRead } from "../api";
 import type { Unit } from "../types";
 
@@ -40,7 +40,7 @@ export default function LessonPage() {
 
       <div className="lesson-body">
         {unit.lesson_body
-          ? <ReactMarkdown>{unit.lesson_body}</ReactMarkdown>
+          ? <MarkdownView>{unit.lesson_body}</MarkdownView>
           : <p style={{ color: "#a0aec0" }}>この単元の解説は準備中です。</p>}
       </div>
 

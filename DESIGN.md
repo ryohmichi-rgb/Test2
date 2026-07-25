@@ -249,6 +249,21 @@ erDiagram
 - 2回目以降は `{ awarded: false }` を返し、加点しない（読むだけ稼ぎの防止）。
 - 既読の単元IDは `GET /students/:id/lesson_reads` で取得し、単元一覧に ✓ を表示。
 
+#### 教材の数式（KaTeX）と図
+
+教材本文（`units.lesson_body`）は Markdown ＋ **KaTeX** で書く。`MarkdownView` が
+`remark-math` → `rehype-katex` で描画する。分数・ルート・累乗をきれいに組版でき、
+算数・数学の教材として読みやすくなる。
+
+- **インライン**: `$\frac{2}{3} \times \frac{3}{4}$`
+- **別行立て**（大きく中央寄せ）: `$$` を**独立した行**に書く。
+  1行に `$$...$$` と書くとインライン扱いになり大きくならない。
+- **図**: Markdown の `![説明](URL)` で貼る。`.lesson-body img` で画面幅に収める。
+- 長い数式は `.katex-display` を横スクロールさせ、ページ全体は横に伸ばさない。
+
+> ⚠️ **seeds.rb のヒアドキュメントは必ずリテラル（`<<~'MD'`）にする。**
+> 補間あり（`<<~MD`）だと `\frac` が改ページ文字、`\times` がタブに化けて数式が壊れる。
+
 ### 3.9 ホームのモチベーション要素
 
 - **応援メッセージ**: 時間帯・ノルマ達成状況・連続日数からフロントで文面を生成（マスコットが吹き出しで話す）。
@@ -367,12 +382,25 @@ flowchart TD
 | 共通 | `components/DailyProblemCard.tsx` | ホームで解ける「今日の一問」 |
 | 共通 | `components/AchievementsRow.tsx` | 実績バッジ一覧 |
 | 共通 | `components/AskTeacher.tsx` | 「先生に聞く」（生成AI）。問題を解く4画面で共用（テストは除く） |
+| 共通 | `components/MarkdownView.tsx` | Markdown＋数式（KaTeX）の描画。教材ページで使用 |
 | サービス | `services/claude_teacher.rb` | Claude API を `Net::HTTP` で呼ぶ（バックエンド。キーは環境変数） |
 | 共通 | `sound.ts` | 効果音（Web Audio APIで合成、音源不要／正解・不正解・完了）＋ BGM（`public/bgm.mp3` をループ）。ホームでそれぞれオン/オフ |
 | 共通 | `components/ReferenceIcon.tsx` | 参考ステータスの手描き風SVGアイコン |
 | 共通 | `components/PasswordGate.tsx` | 開発中アクセス制限 |
 | API | `api/index.ts` | 全APIラッパー |
 | 型 | `types/index.ts` | 共通型定義 |
+
+### バンドル分割（初回JSを軽くする）
+
+`App.tsx` で `React.lazy` により、重い/使う人が限られる画面を別チャンクにしている。
+`<Suspense>` のフォールバックは既存の「読み込み中...」表示。
+
+| 遅延読み込み | 理由 |
+|--------------|------|
+| `LessonPage` | `react-markdown` と KaTeX が重い。教材を開いたときだけ読み込む |
+| `admin/*`（5画面） | 管理者しか使わない。生徒には読み込ませない |
+
+初回JS **487kB → 354kB**（gzip 148→110kB）。KaTeXを足したうえで軽くなっている。
 
 ---
 

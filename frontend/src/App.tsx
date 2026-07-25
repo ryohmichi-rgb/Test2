@@ -1,8 +1,8 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import GradesPage from "./pages/GradesPage";
 import PracticePage from "./pages/PracticePage";
-import LessonPage from "./pages/LessonPage";
 import ProgressPage from "./pages/ProgressPage";
 import StatsPage from "./pages/StatsPage";
 import PlanPage from "./pages/PlanPage";
@@ -12,18 +12,24 @@ import ProblemSetPage from "./pages/ProblemSetPage";
 import TestPage from "./pages/TestPage";
 import TestHistoryPage from "./pages/TestHistoryPage";
 import ReviewPage from "./pages/ReviewPage";
-import AdminPage from "./pages/admin/AdminPage";
-import AdminUnitsPage from "./pages/admin/AdminUnitsPage";
-import AdminProblemsPage from "./pages/admin/AdminProblemsPage";
-import AdminReferenceStatsPage from "./pages/admin/AdminReferenceStatsPage";
-import AdminStudentsPage from "./pages/admin/AdminStudentsPage";
 import PasswordGate from "./components/PasswordGate";
 import "./App.css";
+
+// 遅延読み込み（初回に読むJSを軽くする）
+// - 教材ページ: react-markdown と KaTeX が重いので、開いたときだけ読み込む
+// - 管理ページ: 管理者しか使わないので、生徒には読み込ませない
+const LessonPage = lazy(() => import("./pages/LessonPage"));
+const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
+const AdminUnitsPage = lazy(() => import("./pages/admin/AdminUnitsPage"));
+const AdminProblemsPage = lazy(() => import("./pages/admin/AdminProblemsPage"));
+const AdminReferenceStatsPage = lazy(() => import("./pages/admin/AdminReferenceStatsPage"));
+const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
 
 function App() {
   return (
     <PasswordGate>
     <BrowserRouter>
+      <Suspense fallback={<div className="loading">読み込み中...</div>}>
       <Routes>
         <Route path="/" element={<AuthPage />} />
         <Route path="/home" element={<HomePage />} />
@@ -45,6 +51,7 @@ function App() {
         <Route path="/admin/students" element={<AdminStudentsPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
     </PasswordGate>
   );
