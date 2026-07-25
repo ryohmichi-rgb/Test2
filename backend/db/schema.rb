@@ -10,18 +10,31 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_27_135334) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_26_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "ai_usages", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "kind", default: "hint", null: false
+    t.bigint "problem_id"
+    t.bigint "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["problem_id"], name: "index_ai_usages_on_problem_id"
+    t.index ["student_id", "created_at"], name: "index_ai_usages_on_student_id_and_created_at"
+    t.index ["student_id"], name: "index_ai_usages_on_student_id"
+  end
 
   create_table "answer_records", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "is_correct"
+    t.integer "points_awarded", default: 0, null: false
     t.bigint "problem_id", null: false
     t.bigint "student_id", null: false
     t.string "submitted_answer"
     t.datetime "updated_at", null: false
     t.index ["problem_id"], name: "index_answer_records_on_problem_id"
+    t.index ["student_id", "problem_id", "created_at"], name: "index_answer_records_on_student_problem_time"
     t.index ["student_id"], name: "index_answer_records_on_student_id"
   end
 
@@ -34,6 +47,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_27_135334) do
     t.index ["problem_id"], name: "index_choices_on_problem_id"
   end
 
+  create_table "goals", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "stat_type_id", null: false
+    t.bigint "student_id", null: false
+    t.date "target_date"
+    t.integer "target_value"
+    t.datetime "updated_at", null: false
+    t.index ["stat_type_id"], name: "index_goals_on_stat_type_id"
+    t.index ["student_id"], name: "index_goals_on_student_id"
+  end
+
   create_table "grades", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "display_order"
@@ -41,7 +65,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_27_135334) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "lesson_reads", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "student_id", null: false
+    t.bigint "unit_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["student_id", "unit_id"], name: "index_lesson_reads_on_student_id_and_unit_id", unique: true
+    t.index ["student_id"], name: "index_lesson_reads_on_student_id"
+    t.index ["unit_id"], name: "index_lesson_reads_on_unit_id"
+  end
+
   create_table "problems", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
     t.string "answer"
     t.datetime "created_at", null: false
     t.integer "difficulty"
@@ -53,10 +88,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_27_135334) do
     t.index ["unit_id"], name: "index_problems_on_unit_id"
   end
 
-  create_table "students", force: :cascade do |t|
+  create_table "reference_stats", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "label"
+    t.bigint "stat_type_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "value"
+    t.index ["stat_type_id"], name: "index_reference_stats_on_stat_type_id"
+  end
+
+  create_table "stat_types", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "display_order"
     t.string "name"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "student_stats", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "stat_type_id", null: false
+    t.bigint "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "value"
+    t.index ["stat_type_id"], name: "index_student_stats_on_stat_type_id"
+    t.index ["student_id"], name: "index_student_stats_on_student_id"
+  end
+
+  create_table "students", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.boolean "onboarded", default: false, null: false
+    t.string "password_digest"
+    t.datetime "updated_at", null: false
+    t.string "username"
+    t.index ["username"], name: "index_students_on_username", unique: true
   end
 
   create_table "subjects", force: :cascade do |t|
@@ -65,22 +132,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_27_135334) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "test_results", force: :cascade do |t|
+    t.integer "bonus_points", default: 0, null: false
+    t.integer "correct_count"
+    t.datetime "created_at", null: false
+    t.integer "scope_id"
+    t.string "scope_label"
+    t.string "scope_type"
+    t.integer "score_percent"
+    t.bigint "student_id", null: false
+    t.integer "total_questions"
+    t.datetime "updated_at", null: false
+    t.index ["student_id", "scope_type", "created_at"], name: "index_test_results_on_student_id_and_scope_type_and_created_at"
+    t.index ["student_id"], name: "index_test_results_on_student_id"
+  end
+
   create_table "units", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.text "description"
     t.integer "display_order"
     t.bigint "grade_id", null: false
+    t.text "lesson_body"
+    t.bigint "stat_type_id"
     t.bigint "subject_id", null: false
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["grade_id"], name: "index_units_on_grade_id"
+    t.index ["stat_type_id"], name: "index_units_on_stat_type_id"
     t.index ["subject_id"], name: "index_units_on_subject_id"
   end
 
+  add_foreign_key "ai_usages", "problems"
+  add_foreign_key "ai_usages", "students"
   add_foreign_key "answer_records", "problems"
   add_foreign_key "answer_records", "students"
   add_foreign_key "choices", "problems"
+  add_foreign_key "goals", "stat_types"
+  add_foreign_key "goals", "students"
+  add_foreign_key "lesson_reads", "students"
+  add_foreign_key "lesson_reads", "units"
   add_foreign_key "problems", "units"
+  add_foreign_key "reference_stats", "stat_types"
+  add_foreign_key "student_stats", "stat_types"
+  add_foreign_key "student_stats", "students"
+  add_foreign_key "test_results", "students"
   add_foreign_key "units", "grades"
+  add_foreign_key "units", "stat_types"
   add_foreign_key "units", "subjects"
 end

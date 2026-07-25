@@ -4,6 +4,7 @@ import type { Problem, AnswerResult } from "../types";
 import ProblemView from "./ProblemView";
 import MathText from "./MathText";
 import AskTeacher from "./AskTeacher";
+import PointsEarned from "./PointsEarned";
 import { playCorrect, playIncorrect } from "../sound";
 
 export default function DailyProblemCard({ studentId }: { studentId: number }) {
@@ -43,6 +44,7 @@ export default function DailyProblemCard({ studentId }: { studentId: number }) {
         <div className={`daily-feedback ${feedback.is_correct ? "correct" : "incorrect"}`}>
           <p style={{ fontSize: "1.4rem", marginBottom: "0.25rem" }}>{feedback.is_correct ? "◎" : "✕"}</p>
           <p style={{ fontSize: "0.9rem", marginBottom: "0.75rem" }}>{feedback.explanation}</p>
+          <PointsEarned result={feedback} />
           <button className="btn-secondary" style={{ padding: "0.4rem 1rem", fontSize: "0.85rem" }} onClick={load}>
             もう一問 →
           </button>

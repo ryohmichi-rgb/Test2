@@ -13,7 +13,18 @@ export default function DailyQuotaCard({ quota, onStart }: { quota: DailyQuota; 
         )}
       </div>
 
-      {done ? (
+      {quota.exhausted ? (
+        // 満点で解ける問題を今のところ全部やりきった状態。
+        // 達成できないノルマを出し続けても意味がないので、ねぎらいと次の見通しを出す。
+        <p className="quota-done">
+          🎉 いまの問題はぜんぶクリア！
+          {quota.returning_count > 0 && (
+            <span className="quota-returning">
+              少し時間がたつと {quota.returning_count}問 が復習としてもどってくるよ
+            </span>
+          )}
+        </p>
+      ) : done ? (
         <p className="quota-done">✓ 今日のノルマ達成！このちょうしで続けよう</p>
       ) : (
         <>

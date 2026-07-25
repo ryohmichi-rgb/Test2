@@ -4,6 +4,7 @@ import { fetchGrades, fetchProblemSet, submitAnswer } from "../api";
 import type { Grade, Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";
 import AskTeacher from "../components/AskTeacher";
+import PointsEarned from "../components/PointsEarned";
 import { playCorrect, playIncorrect } from "../sound";
 
 const COUNTS = [5, 10, 20];
@@ -61,7 +62,8 @@ export default function ProblemSetPage() {
     if (!gradeId) return;
     setLoading(true);
     try {
-      const set = await fetchProblemSet("grade", gradeId, count);
+      // 練習なので、まだ解けていない問題を優先して出してもらう
+      const set = await fetchProblemSet("grade", gradeId, count, "practice");
       setProblems(set.problems);
       setIdx(0); setAnswer(""); setFeedback(null); setCorrectTotal(0);
       persist(set.problems, 0, 0);
@@ -196,6 +198,7 @@ export default function ProblemSetPage() {
             <div className={`answer-feedback ${feedback.is_correct ? "correct" : "incorrect"}`} style={{ marginTop: "1rem" }}>
               <p className="feedback-emoji">{feedback.is_correct ? "◎" : "✕"}</p>
               <p className="feedback-text">{feedback.explanation}</p>
+              <PointsEarned result={feedback} />
               <button className="btn-primary" onClick={next}>
                 {idx + 1 < problems.length ? "次の問題へ →" : "結果を見る"}
               </button>

@@ -41,7 +41,8 @@ module Api
           scope_label: scope.label,
           total_questions: total,
           correct_count: correct,
-          score_percent: score
+          score_percent: score,
+          bonus_points: bonus
         )
 
         render json: serialize_result(result).merge(

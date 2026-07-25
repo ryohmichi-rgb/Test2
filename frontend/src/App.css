@@ -1197,3 +1197,29 @@ body {
 .hint-box .katex {
   font-size: 1.1em;
 }
+
+/* 獲得ポイント表示（解き直しの減額も知らせる） */
+.points-earned {
+  font-size: 0.95rem;
+  color: #276749;
+  margin: 0 0 0.75rem;
+}
+.points-earned strong {
+  font-size: 1.1rem;
+}
+.points-earned-note {
+  display: block;
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 400;
+  margin-top: 0.15rem;
+  line-height: 1.5;
+}
+/* 「いまの問題はぜんぶクリア」のときの補足 */
+.quota-returning {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.85;
+  margin-top: 0.3rem;
+}

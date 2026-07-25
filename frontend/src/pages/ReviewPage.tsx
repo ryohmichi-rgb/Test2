@@ -4,6 +4,7 @@ import { fetchReviewList, submitAnswer } from "../api";
 import type { Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";
 import AskTeacher from "../components/AskTeacher";
+import PointsEarned from "../components/PointsEarned";
 import { playCorrect, playIncorrect } from "../sound";
 
 export default function ReviewPage() {
@@ -101,6 +102,7 @@ export default function ReviewPage() {
             <div className={`answer-feedback ${feedback.is_correct ? "correct" : "incorrect"}`} style={{ marginTop: "1rem" }}>
               <p className="feedback-emoji">{feedback.is_correct ? "◎" : "✕"}</p>
               <p className="feedback-text">{feedback.explanation}</p>
+              <PointsEarned result={feedback} />
               <button className="btn-primary" onClick={next}>
                 {idx + 1 < problems.length ? "次の問題へ →" : "結果を見る"}
               </button>

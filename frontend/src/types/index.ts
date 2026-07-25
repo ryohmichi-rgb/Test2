@@ -145,6 +145,9 @@ export interface AnswerResult {
   is_correct: boolean;
   correct_answer: string;
   explanation: string;
+  points: number;
+  /** 同じ問題の解き直しでポイントが減額されたか（黙って減らさず知らせる） */
+  is_repeat: boolean;
 }
 
 export interface UnitProgress {
@@ -261,6 +264,10 @@ export interface DailyQuota {
   studied_today: boolean;
   streak: number;
   has_goal: boolean;
+  /** 満点で解ける問題が尽きた状態（全問を最近やりきった） */
+  exhausted: boolean;
+  /** 復帰待ちの問題数（「あと○問もどってくる」の表示用） */
+  returning_count: number;
 }
 
 export interface ReviewList {

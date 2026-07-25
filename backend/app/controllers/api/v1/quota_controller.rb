@@ -29,6 +29,13 @@ module Api
           end
 
         earned_points = points_earned_on(student, today)
+
+        # 今「満点」で解ける問題の合計。全部解き終わった直後は 0 になりうる。
+        # 達成できないノルマを出し続けないよう、ここで上限を切る。
+        capacity = full_point_capacity(student)
+        target_points = [target_points, capacity].min
+        exhausted = capacity.zero?
+
         approx_problems = target_points > 0 ? [(target_points.to_f / EST_POINTS_PER_PROBLEM).ceil, 1].max : 0
 
         render json: {
@@ -37,17 +44,35 @@ module Api
           approx_problems: approx_problems,
           studied_today: earned_points > 0 || answered_on?(student, today),
           streak: student.study_streak(today),
-          has_goal: has_goal
+          has_goal: has_goal,
+          # 満点で解ける問題が尽きた状態。フロントは「やりきった」表示に切り替える。
+          exhausted: exhausted,
+          returning_count: exhausted ? returning_soon(student) : 0
         }
       end
 
       private
 
+      # 回答時に確定したポイントを合計するだけ（ルールは AnswerRecord 側に集約）
       def points_earned_on(student, date)
+        student.answer_records.where(created_at: date.all_day).sum(:points_awarded)
+      end
+
+      # 未挑戦・要復習・回復済みの問題を満点換算した合計
+      def full_point_capacity(student)
+        ProblemScope.all_problems
+          .full_point_problems_for(student)
+          .sum { |p| AnswerRecord.full_points_for(p.difficulty) }
+      end
+
+      # 明日以降に満点へ復帰する問題数（「あと○問もどってくるよ」の表示用）
+      def returning_soon(student)
+        threshold = AnswerRecord::RECOVERY_DAYS.days.ago
         student.answer_records
-          .where(is_correct: true, created_at: date.all_day)
-          .includes(problem: :unit)
-          .sum { |r| AnswerRecord::POINTS_BY_DIFFICULTY[r.problem.difficulty] || 10 }
+          .where(is_correct: true)
+          .where(created_at: threshold..)
+          .distinct
+          .count(:problem_id)
       end
 
       def answered_on?(student, date)

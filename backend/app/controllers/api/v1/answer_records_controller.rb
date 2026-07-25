@@ -7,6 +7,9 @@ module Api
           render json: {
             is_correct: record.is_correct,
             correct_answer: record.problem.answer,
+            points: record.points_awarded,
+            # 解き直しで減額されたか。黙って減ると不具合に見えるのでフロントで知らせる。
+            is_repeat: record.repeat?,
             explanation: record.is_correct ? "正解です！" : "惜しい！正解は「#{record.problem.answer}」です。"
           }, status: :created
         else

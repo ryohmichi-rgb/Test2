@@ -3,7 +3,7 @@ module Api
     class LessonReadsController < ApplicationController
       include StudentScoped
 
-      LESSON_POINTS = 5
+      LESSON_POINTS = LessonRead::POINTS
 
       # GET /api/v1/students/:id/lesson_reads → 既読の unit_id 一覧
       def index

@@ -38,13 +38,18 @@ export const fetchReferenceStats = (): Promise<ReferenceStat[]> =>
 export const fetchLearningPlan = (studentId: number): Promise<LearningPlan> =>
   api.get<LearningPlan>(`/students/${studentId}/plan`).then((r) => r.data);
 
+// mode="practice" … 練習。同じ問題ばかり出ないよう優先度をつけて選ばれる（問題集）
+// mode 未指定     … 範囲全体からランダム（テスト。実力測定なので解ける問題も含める）
 export const fetchProblemSet = (
   scopeType: ScopeType,
   scopeId: number | null,
-  count: number
+  count: number,
+  mode?: "practice"
 ): Promise<ProblemSet> =>
   api
-    .get<ProblemSet>("/problem_set", { params: { scope_type: scopeType, scope_id: scopeId, count } })
+    .get<ProblemSet>("/problem_set", {
+      params: { scope_type: scopeType, scope_id: scopeId, count, mode },
+    })
     .then((r) => r.data);
 
 export const submitTest = (

@@ -10,6 +10,8 @@ function buildMessage(name: string, quota: DailyQuota | null): string {
   const remaining = Math.max(quota.target_points - quota.earned_points, 0);
   const done = quota.target_points > 0 && quota.earned_points >= quota.target_points;
 
+  // 満点で解ける問題をやりきった状態。「あと0pt」と言わないようにする。
+  if (quota.exhausted) return `${name}さん、いまの問題はぜんぶクリア！よくがんばったね🎉`;
   if (done) return `今日のノルマ達成！${name}さん、すごい！🎉`;
   if (quota.studied_today) return `いいちょうし！あと${remaining}ptでノルマ達成だよ。`;
   if (quota.streak >= 3) return `${greeting}！${quota.streak}日れんぞく中。今日も続けよう！🔥`;

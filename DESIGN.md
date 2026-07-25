@@ -90,7 +90,7 @@ erDiagram
         text question
         string answer
         text hint
-        int difficulty "1-3"
+        int difficulty "1-5"
         string problem_type "fill_in/multiple_choice"
         bool active "無効化で出題除外"
         fk unit_id
@@ -110,6 +110,7 @@ erDiagram
     answer_records {
         string submitted_answer
         bool is_correct
+        int points_awarded "回答時に確定した獲得pt"
         fk student_id
         fk problem_id
     }
@@ -136,6 +137,7 @@ erDiagram
         int total_questions
         int correct_count
         int score_percent
+        int bonus_points "高得点ボーナス（成長曲線で合算）"
         fk student_id
     }
     lesson_reads {
@@ -156,8 +158,11 @@ erDiagram
 - **goals** … `(student_id, stat_type_id)` で一意。目標値＋期限。
 - **reference_stats** … 目標の目安（参考値）。`label` でグルーピング。中学卒業レベル/高校受験（公立）/難関高校受験/数学の先生/エンジニア/研究者/ゲームクリエイター など。
 - **test_results** … テスト結果の履歴。`scope_type` は `grade | stat_type | unit`、`scope_id` はその対象ID。
+  `bonus_points` は高得点ボーナス（自己ベスト更新時のみ）。成長曲線でこの値も合算する。
+- **answer_records.points_awarded** … その回答で実際に入ったポイント。解き直しの逓減を含めて
+  **回答時に確定**させる（3.13）。今日のノルマ・成長曲線はこの列をSUMするだけでよい。
 - **problem.problem_type** … `fill_in`（記述）または `multiple_choice`（選択）。選択の場合のみ `choices` を持つ。
-- **difficulty** … 1〜3。ポイント計算に使う。
+- **difficulty** … 1〜5。ポイント計算に使う（満点は 10/15/20/25/30pt）。
 - **students.username / password_digest** … 認証用。`username` は一意（ログインID）、`password_digest` は bcrypt（`has_secure_password`）。
 - **students.onboarded** … 初回オンボーディング済みか。`false` の間だけウィザードを表示。
 - **students.admin** … 管理者か。`ADMIN_USERNAME` 環境変数のユーザーを seed が管理者にする。
@@ -166,7 +171,8 @@ erDiagram
 - **lesson_reads** … 教材の読了記録。`(student_id, unit_id)` で一意。初回読了の判定＋既読表示に使う。
 - **ai_usages** … 「先生に聞く」（生成AI）の利用ログ。1レコード＝1回の質問。`(student_id, created_at)` に索引を張り、その日の利用回数を数えてレート制限に使う。`problem_id` は文脈にした問題（削除されても残せるよう `null` 許容）。`kind` は `hint / approach / why / free`。
 
-> 注: `student_stats` は現在値のみ保持。成長曲線の過去分は `answer_records` から再構築する（後述）。
+> 注: `student_stats` は現在値のみ保持。成長曲線の過去分は履歴テーブル
+> （`answer_records` ＋ `test_results.bonus_points` ＋ `lesson_reads`）から再構築する（3.4）。
 
 ---
 
@@ -191,10 +197,15 @@ erDiagram
 
 `AnswerRecord` 作成時、正解なら問題の単元に紐づくステータスへ加算する。
 
-- 加算量は難易度依存: `POINTS_BY_DIFFICULTY = { 1 => 10, 2 => 15, 3 => 20 }`
+- 満点は難易度依存: `POINTS_BY_DIFFICULTY = { 1 => 10, 2 => 15, 3 => 20, 4 => 25, 5 => 30 }`
 - 実装: `AnswerRecord` の `after_create :update_student_stat, if: :is_correct?`
 - 演習・問題集・テスト・復習すべて `AnswerRecord` を作るので、どのモードでも同じ経路でステータスが伸びる。
-- 再挑戦でも毎回加算される（farming対策は "テストのボーナス" 側で行う。3.2参照）。
+- **同じ問題の解き直しは減額される**（farming対策。3.13参照）。
+
+**ポイントは回答時に確定し `answer_records.points_awarded` に保存する。**
+「何回目か」「前回正解から何日か」に依存するルールなので、あとから再計算すると
+過去の成長曲線まで書き変わってしまう。読み出し側（今日のノルマ・成長曲線）はこの列を
+SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約される。
 
 ### 3.2 テスト採点とボーナス
 
@@ -207,19 +218,28 @@ erDiagram
    - 90%以上 → +100pt / 80〜89% → +50pt
    - ボーナスはテストに出たステータスへ均等配分
 5. `test_results` に保存し、`rank`・前回比較・`is_best` を返す
+   （ボーナス額は `test_results.bonus_points` に記録する。成長曲線で合算するため）
 
 **ランク**: `S: 90%+ / A: 80%+ / B: 60%+ / C: 60%未満`
 
 ### 3.3 今日のノルマ（`GET /students/:id/quota`）
 
 - **必要ポイント**: 各目標について `max(目標値 - 現在値, 0) / 残り日数`（残り日数で均等割り・切り上げ）を合計。目標未設定なら既定値 `30pt`。
-- **今日の獲得ポイント**: 今日作成された正解 `AnswerRecord` の難易度ポイント合計。
+- **今日の獲得ポイント**: 今日の `answer_records.points_awarded` の合計。
+- **上限クリップ**: 必要ポイントは「今日満点で解ける問題の合計」を超えない（3.13）。
+  ゼロなら `exhausted: true` を返し、フロントは「やりきった」表示に切り替える。
 - **目安の問題数**: `必要pt / 15`（切り上げ、最低1）。
 - **連続学習日数（ストリーク）**: 回答があった日の連続数。今日やっていれば今日から、まだなら昨日から遡って数える。
 
 ### 3.4 成長曲線（`GET /students/:id/growth`）
 
-- **実績（過去→現在）**: 正解 `AnswerRecord` を日付順に累積し、日ごとの累積ポイントを出す。最後に実際の現在値（ボーナス込み）を「現在」点として付ける。
+- **実績（過去→現在）**: ポイントの出どころ**3系統すべて**を日付順に累積する。最後に現在値（`student_stats`）を「現在」点として付ける。
+  1. 問題の正解 … `answer_records.points_awarded`
+  2. テストの高得点ボーナス … `test_results.bonus_points`（配分先は範囲のステータスから復元）
+  3. 教材の初回読了 … `lesson_reads`（1件 = `LessonRead::POINTS`）
+
+  > どれかを落とすと折れ線が実際より低く伸び、最後の「現在」だけが跳ね上がる。
+  > 以前はボーナスと読了が抜けていたため段差が出ていた。
 - **目標ライン（現在→将来）**: 目標が設定されたステータスについて、`現在値 → 目標値` を目標日まで線形補間。将来のマイルストーン日（各目標の期限）で期待値を出す。
   - 合計ビュー: 全ステータスの期待値を合成した1本。
   - ステータス別ビュー: 目標があるステータスのみ点線を表示。
@@ -320,6 +340,56 @@ erDiagram
 - **レート制限**：`ai_usages` にログを残し、1人あたり **1日 `AI_DAILY_LIMIT`（既定20）回**まで。上限到達時は消費せず「今日はここまで！また明日ね」。**成功時のみ**回数を消費する（APIエラーで無駄に減らさない）。
 - **UI**：`Practice / ProblemSet / Review / DailyProblem` の4画面に共通コンポーネントで設置。**テスト画面には出さない**（実力測定のため）。プリセット（ヒント/解き方/なぜ？）＋自由入力。返答は都度1回・ストリーミングなし（「先生が考え中…」表示）。パネルに「今日はあと○回」を表示。
 
+### 3.13 farming対策と出題の重複回避
+
+ポイントはこのアプリの背骨（ポイント → ステータス → 目標・成長曲線・ノルマ・実績）なので、
+同じ問題を繰り返して稼げてしまうと、その上に乗る機能すべての意味が薄くなる。
+**「前回正解から14日」という1つの基準で、加点と出題の両方を制御する。**
+
+#### 加点（`AnswerRecord`）
+
+| 状況 | ポイント |
+|------|----------|
+| 初回の正解 | 満点 |
+| 前回正解から **14日未満** の解き直し | **満点の20%**（最低1pt） |
+| 前回正解から **14日以上** あいた解き直し | 満点に復帰 |
+| 不正解 | 0pt |
+
+14日あければ満点に戻るのは意図的。忘れた頃の復習は farming ではなく正しい勉強なので、
+評価されるべきという考え方（間隔反復）。定数は `REPEAT_RATE` / `RECOVERY_DAYS`。
+
+減額されたことは回答フィードバックで必ず伝える（`is_repeat`）。黙って減ると不具合に見えるため。
+
+#### 出題（`ProblemScope#sample_problems_for`）
+
+次の優先度で埋め、足りなければ下の層へ落ちる。各層の中はシャッフル。
+
+1. **未挑戦**
+2. 最新の回答が**不正解**（＝復習すべき問題）
+3. 正解済みで**14日経過**（満点に復帰している）
+4. 正解済みで**14日以内**（最後の手段。加点も20%）
+
+適用範囲:
+
+| 画面 | 重複回避 | 理由 |
+|------|----------|------|
+| 問題集（`mode=practice`） | ✅ | 練習なので解けない問題を優先すべき |
+| 今日の一問 | ✅ | 毎日同じ問題が出るのを防ぐ |
+| テスト | ❌ ランダムのまま | 実力測定。解ける問題を除くと点が実態より高く出て、履歴の比較もできない |
+| 単元べつ演習 | ❌ 全問を順に | 「この単元をやる」が目的 |
+| 復習 | ❌ | 定義上すべて再挑戦（加点は上表に従う） |
+
+#### 今日のノルマとの関係
+
+問題数が少ないうちは「全問を最近やりきった」状態になりうる。そのとき満点で取れる問題は
+ゼロなので、ノルマをそのまま出すと**達成不能なノルマを毎日提示する**ことになり、
+逓減した20%を大量に解かせる——つまり止めたいはずの farming を促してしまう。
+
+そこで `target_points` を**今日満点で解ける問題の合計**でクリップし、
+ゼロなら `exhausted: true` を返して「やりきった」表示に切り替える
+（「少し時間がたつと○問が復習としてもどってくるよ」）。
+なお連続学習日数は「回答した日」で判定しているので、この状態でも途切れない。
+
 ---
 
 ## 4. API一覧
@@ -353,7 +423,7 @@ erDiagram
 | GET | `/units/:id` | 単元詳細（教材・問題込み） |
 | POST | `/answer_records` | 回答送信（即採点＋ポイント加算） |
 | GET | `/reference_stats` | 参考ステータス |
-| GET | `/problem_set?scope_type=&scope_id=&count=` | 動的問題セット |
+| GET | `/problem_set?scope_type=&scope_id=&count=&mode=` | 動的問題セット（`mode=practice` で重複回避つき／未指定はランダム＝テスト用） |
 | — | `/admin/*`（管理者のみ） | meta / units / problems / reference_stats / students のCRUD |
 
 ---
