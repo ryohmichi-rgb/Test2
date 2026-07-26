@@ -1,10 +1,20 @@
 import { useState } from "react";
 import { fetchAiUsage, askTeacher } from "../api";
 import type { AskKind } from "../types";
+import MathText from "./MathText";
 
 // 「先生に聞く」— 問題を解く画面で共通に使う。今解いている問題を渡すと、
 // その問題の文脈つきで Claude がヒント・解き方・理由を返す（答えは丸投げしない）。
 // テスト画面では使わない（実力測定のため）。
+
+// 先生（Claude）の返答をMathTextで描ける形にならす保険。
+// 記法はシステムプロンプトで指定している（claude_teacher.rb）が、生成AIなので
+// たまに外れる。外れたときに画面へ記号が出ないよう、ここで最低限だけ整える。
+//   $$…$$ → $…$   MathTextは行内の `$…$` だけを組版するので、$$ だと $ が残る
+//   **太字** → 太字  MathTextはMarkdownを解釈しないので ** がそのまま見えてしまう
+function normalizeAnswer(text: string): string {
+  return text.replace(/\$\$/g, "$").replace(/\*\*(.+?)\*\*/g, "$1");
+}
 
 const PRESETS: { kind: AskKind; label: string; emoji: string }[] = [
   { kind: "hint", label: "ヒント", emoji: "💡" },
@@ -95,7 +105,14 @@ export default function AskTeacher({ studentId, problemId }: { studentId: number
           </div>
 
           {loading && <p className="ask-teacher-thinking">先生が考え中…</p>}
-          {answer && <div className="ask-teacher-answer">{answer}</div>}
+          {/* 返答にも数式が入る（問題文が数式なので先生もLaTeXで返す）。
+              MathText は `$...$` だけを組版する軽量版なので、Markdownは使わせない約束を
+              システムプロンプト側（claude_teacher.rb）で担保している。 */}
+          {answer && (
+            <div className="ask-teacher-answer">
+              <MathText>{normalizeAnswer(answer)}</MathText>
+            </div>
+          )}
           {error && <p className="ask-teacher-error">{error}</p>}
         </div>
       )}

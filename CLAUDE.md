@@ -50,6 +50,9 @@
 - 成長曲線の過去分は `answer_records` から再構築する（`student_stats` は現在値のみ）。
 - 数式は KaTeX（`$...$` / 独立行の `$$`）。教材は `MarkdownView`、問題文・選択肢・ヒントは
   `MathText`（Markdownを解釈しない軽量版）で描画する。
+- **生成AIの返答も数式を含む。** 記法は `claude_teacher.rb` のシステムプロンプトで
+  「行内の `$...$` のみ・Markdown禁止」に固定し、`AskTeacher` で `MathText` に通す。
+  指示が外れたとき用の正規化（`$$`→`$`、`**`除去）も `AskTeacher` 側に置く。
 - **`seeds.rb` で LaTeX を書くときは必ず Ruby のリテラル文字列にする**
   （ヒアドキュメントは `<<~'MD'`、1行文字列はシングルクォート）。
   ダブルクォート／補間ありだと `\frac` が改ページ文字、`\times` がタブに化けて数式が壊れる。
