@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         get :condition, on: :member, to: "condition#show"
         get :ai_usage, on: :member, to: "ai_teacher#usage"
         post :ask_teacher, on: :member, to: "ai_teacher#ask"
+        put :password, on: :member, to: "passwords#update"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]
@@ -37,7 +38,9 @@ Rails.application.routes.draw do
         resources :units, only: [:index, :create, :update, :destroy]
         resources :problems, only: [:index, :create, :update, :destroy]
         resources :reference_stats, only: [:index, :create, :update, :destroy]
-        resources :students, only: [:index, :show, :destroy]
+        resources :students, only: [:index, :show, :destroy] do
+          post :reset_password, on: :member
+        end
       end
     end
   end

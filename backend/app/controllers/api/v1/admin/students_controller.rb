@@ -8,7 +8,10 @@ module Api
           correct_counts = AnswerRecord.where(is_correct: true).group(:student_id).count
           last_dates = AnswerRecord.group(:student_id).maximum(:created_at)
 
-          render json: students.map do |s|
+          # 注意: `render json: students.map do |s| ... end` と書くと do...end が map ではなく
+          # render に結合し、整形されていない生のレコード（password_digest を含む）が
+          # そのまま返ってしまう。必ず変数に受けてから render すること。
+          payload = students.map do |s|
             {
               id: s.id, name: s.name, username: s.username,
               admin: s.admin, onboarded: s.onboarded,
@@ -17,6 +20,8 @@ module Api
               last_studied_on: last_dates[s.id]&.to_date
             }
           end
+
+          render json: payload
         end
 
         def show
@@ -31,6 +36,17 @@ module Api
             stats: stats.map { |st| { name: st.stat_type.name, value: st.value } },
             test_count: student.test_results.count
           }
+        end
+
+        # POST /api/v1/admin/students/:id/reset_password
+        # パスワードを忘れた生徒の救済。新しいパスワードを生成して**この応答でだけ**返す
+        # （保存はハッシュのみなので、あとから取り出すことはできない）。
+        # パスワードが変わると認証トークンも失効するので、その生徒は自動的にログアウトされる。
+        def reset_password
+          student = Student.find(params[:id])
+          new_password = Student.generate_password
+          student.update!(password: new_password)
+          render json: { password: new_password }
         end
 
         def destroy

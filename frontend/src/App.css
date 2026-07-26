@@ -1223,3 +1223,37 @@ body {
   opacity: 0.85;
   margin-top: 0.3rem;
 }
+
+/* 再発行したパスワードの表示（一度だけ見せる） */
+.issued-password {
+  background: #fffbeb;
+  border: 2px solid #f6e05e;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.issued-password-title {
+  font-size: 0.85rem;
+  color: #744210;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.issued-password-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #2d3748;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  user-select: all;
+  word-break: break-all;
+}
+.issued-password-note {
+  font-size: 0.76rem;
+  color: #975a16;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}

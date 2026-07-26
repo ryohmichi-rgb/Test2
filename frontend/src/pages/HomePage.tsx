@@ -55,13 +55,6 @@ export default function HomePage() {
     fetchCondition(id).then(setCondition).catch(() => {});
   }, [studentId, navigate]);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("studentId");
-    localStorage.removeItem("studentName");
-    navigate("/");
-  };
-
   // 達成した目標のお祝い（一度閉じた達成は localStorage で覚えて再表示しない）
   const [dismissed, setDismissed] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem("celebrated") || "[]")); } catch { return new Set(); }
@@ -101,7 +94,7 @@ export default function HomePage() {
           {localStorage.getItem("admin") === "1" && (
             <button className="btn-hint" style={{ fontSize: "0.8rem" }} onClick={() => navigate("/admin")}>管理</button>
           )}
-          <button className="btn-hint" style={{ fontSize: "0.8rem" }} onClick={logout}>ログアウト</button>
+          <button className="btn-hint" style={{ fontSize: "0.8rem" }} onClick={() => navigate("/settings")}>せってい</button>
         </div>
       </header>
 

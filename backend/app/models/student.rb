@@ -12,6 +12,15 @@ class Student < ApplicationRecord
   validates :username, presence: true, uniqueness: { case_sensitive: false }
   validates :password, length: { minimum: 4 }, allow_nil: true
 
+  # 再発行用のパスワードを作る。
+  # 子どもが読み上げ・入力する前提なので、紛らわしい文字（0/o、1/l/i など）は使わない。
+  PASSWORD_CHARS = (("a".."z").to_a - %w[l i o] + ("2".."9").to_a).freeze
+  PASSWORD_LENGTH = 8
+
+  def self.generate_password
+    Array.new(PASSWORD_LENGTH) { PASSWORD_CHARS.sample }.join
+  end
+
   # 署名付き認証トークン（パスワード変更で自動失効・30日有効）
   generates_token_for :auth, expires_in: 30.days do
     password_salt&.last(10)

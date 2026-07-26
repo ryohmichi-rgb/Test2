@@ -131,6 +131,22 @@ export const fetchAdminStudents = (): Promise<AdminStudentSummary[]> =>
   api.get<AdminStudentSummary[]>("/admin/students").then((r) => r.data);
 export const deleteAdminStudent = (id: number): Promise<void> =>
   api.delete(`/admin/students/${id}`).then(() => undefined);
+// パスワードを忘れた生徒の救済。新しいパスワードはこの応答でしか受け取れない
+export const resetStudentPassword = (id: number): Promise<{ password: string }> =>
+  api.post<{ password: string }>(`/admin/students/${id}/reset_password`).then((r) => r.data);
+
+// 生徒が自分でパスワードを変える。変更でトークンが失効するので新しいトークンが返る
+export const changePassword = (
+  studentId: number,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ token: string }> =>
+  api
+    .put<{ token: string }>(`/students/${studentId}/password`, {
+      current_password: currentPassword,
+      new_password: newPassword,
+    })
+    .then((r) => r.data);
 
 export const fetchAiUsage = (studentId: number): Promise<AiUsage> =>
   api.get<AiUsage>(`/students/${studentId}/ai_usage`).then((r) => r.data);

@@ -188,6 +188,21 @@ erDiagram
 - `/students/:id/*` は `StudentScoped` concern で **ログイン中の本人のみ**に制限（他人のIDは403）。
 - `/answer_records` はリクエストの `student_id` を信用せず、ログイン中の本人に強制する。
 
+**パスワードの再発行（管理者）**: メールを扱わないので「本人確認メールを送る」方式は取れない。
+代わりに **管理者（保護者）が再発行する**。`POST /admin/students/:id/reset_password` が
+`Student.generate_password` で新しいパスワードを作り、**その応答でだけ平文を返す**
+（保存はハッシュのみなので、あとから取り出す手段はない）。管理画面は一度だけ表示する。
+- 生成規則: 8文字・英小文字＋数字。**紛らわしい `l` `i` `o` `0` `1` は使わない**（子どもが読み間違える）。
+- アカウント削除と違い、**回答履歴・ステータスは残る**。忘れた子を消さずに救済できる。
+
+**パスワードの変更（本人）**: `PUT /students/:id/password`。いまのパスワードの一致を必須にする
+（トークンを盗まれても勝手に変えられないため）。最低4文字（`Student` のバリデーションと同じ）。
+
+- パスワードが変わると `generates_token_for :auth` の署名（`password_salt` を含む）が変わり、
+  **発行済みトークンは自動的に失効する**。つまり再発行すると、その子の他端末のログインも切れる。
+- 自分で変えた場合はそのまま使い続けたいので、変更APIの応答で**新しいトークンを返し**、
+  フロントは localStorage の `token` を差し替える（＝ログアウトされない）。
+
 **オンボーディング**: `onboarded=false` の間だけ初回ウィザード（`/onboarding`）を表示。
 - 遷移: 新規登録直後は `/onboarding`、ログイン時は `onboarded ? /home : /onboarding`（認証レスポンスの `onboarded` で判定）。
 - 3ステップ: ①ようこそ ②参考ステータスから目標を選ぶ（既存 `PUT goals` を流用・期限は3ヶ月後）③おすすめ単元（プラン先頭）の教材へ。
@@ -402,6 +417,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | POST | `/login` | ログイン（username/password）→ トークン発行 |
 | GET | `/me` | トークンから現在のユーザー |
 | GET | `/students/:id` | 生徒情報（本人のみ） |
+| PUT | `/students/:id/password` | パスワード変更（本人。いまのパスワード必須・新トークンを返す） |
 | POST | `/students/:id/complete_onboarding` | オンボーディング完了（`onboarded=true`） |
 | GET | `/students/:id/stats` | ステータス一覧（目標込み） |
 | PUT | `/students/:id/goals` | 目標の設定・更新 |
@@ -424,6 +440,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | POST | `/answer_records` | 回答送信（即採点＋ポイント加算） |
 | GET | `/reference_stats` | 参考ステータス |
 | GET | `/problem_set?scope_type=&scope_id=&count=&mode=` | 動的問題セット（`mode=practice` で重複回避つき／未指定はランダム＝テスト用） |
+| POST | `/admin/students/:id/reset_password` | パスワード再発行（管理者。平文はこの応答でだけ返す） |
 | — | `/admin/*`（管理者のみ） | meta / units / problems / reference_stats / students のCRUD |
 
 ---
@@ -446,6 +463,7 @@ flowchart TD
     Home --> History["TestHistoryPage テスト履歴"]
     Home --> Stats["StatsPage ステータス/目標"]
     Home --> Review["ReviewPage 復習"]
+    Home --> Settings["SettingsPage せってい: パスワード変更/ログアウト"]
     Plan -->|単元カード| Practice
 ```
 
@@ -459,7 +477,8 @@ flowchart TD
 
 | 種別 | ファイル | 役割 |
 |------|----------|------|
-| ページ | `pages/*.tsx` | 各画面（Auth / Onboarding / Home / Grades / Lesson / Practice / ProblemSet / Test / TestHistory / Review / Stats / Plan） |
+| ページ | `pages/*.tsx` | 各画面（Auth / Onboarding / Home / Grades / Lesson / Practice / ProblemSet / Test / TestHistory / Review / Stats / Plan / Settings） |
+| ページ | `pages/SettingsPage.tsx` | せってい。パスワード変更（新トークンを保存し直す）とログアウト |
 | 共通 | `components/Mascot.tsx` | 手描き風マスコット（ホーム・オンボーディングで共用） |
 | 共通 | `api/client.ts` | axios。トークン自動付与＋401ハンドリング |
 | 共通 | `components/ProblemView.tsx` | 1問の表示（記述/選択）。演習・問題集・テスト・復習で共用 |
@@ -506,4 +525,4 @@ flowchart TD
 - テストの制限時間バリエーション、farming対策の精緻化
 - ノルマ達成日連続（現在は「学習した日」の連続）
 - 成長曲線のスナップショットテーブル化（現在は AnswerRecord から再構築）
-- 認証の拡充（パスワードリセット・保護者アカウント・メール認証など。現在は ID+パスワードのコア認証のみ）
+- 認証の拡充（保護者アカウント・メール認証など。パスワードの再発行/変更は実装ずみ）

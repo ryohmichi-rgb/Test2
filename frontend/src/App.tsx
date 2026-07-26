@@ -8,6 +8,7 @@ import PlanPage from "./pages/PlanPage";
 import HomePage from "./pages/HomePage";
 import OnboardingPage from "./pages/OnboardingPage";
 import TestHistoryPage from "./pages/TestHistoryPage";
+import SettingsPage from "./pages/SettingsPage";
 import PasswordGate from "./components/PasswordGate";
 import "./App.css";
 
@@ -45,6 +46,7 @@ function App() {
         <Route path="/problem-set" element={<ProblemSetPage />} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/test-history" element={<TestHistoryPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/units" element={<AdminUnitsPage />} />
