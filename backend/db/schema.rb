@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_26_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,6 +88,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000001) do
     t.index ["unit_id"], name: "index_problems_on_unit_id"
   end
 
+  create_table "ranks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "display_order", null: false
+    t.integer "exam_question_count", default: 10, null: false
+    t.string "name", null: false
+    t.integer "pass_percent", default: 80, null: false
+    t.integer "threshold_points", null: false
+    t.datetime "updated_at", null: false
+    t.index ["display_order"], name: "index_ranks_on_display_order", unique: true
+  end
+
   create_table "reference_stats", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "label"
@@ -105,6 +116,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000001) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "student_badges", force: :cascade do |t|
+    t.string "badge_key", null: false
+    t.datetime "created_at", null: false
+    t.datetime "earned_at", null: false
+    t.bigint "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["student_id", "badge_key"], name: "index_student_badges_on_student_id_and_badge_key", unique: true
+    t.index ["student_id"], name: "index_student_badges_on_student_id"
+  end
+
   create_table "student_stats", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "stat_type_id", null: false
@@ -118,11 +139,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000001) do
   create_table "students", force: :cascade do |t|
     t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
+    t.integer "last_exam_points"
     t.string "name"
     t.boolean "onboarded", default: false, null: false
     t.string "password_digest"
+    t.bigint "rank_id"
+    t.string "title_key"
     t.datetime "updated_at", null: false
     t.string "username"
+    t.index ["rank_id"], name: "index_students_on_rank_id"
     t.index ["username"], name: "index_students_on_username", unique: true
   end
 
@@ -174,8 +199,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000001) do
   add_foreign_key "lesson_reads", "units"
   add_foreign_key "problems", "units"
   add_foreign_key "reference_stats", "stat_types"
+  add_foreign_key "student_badges", "students"
   add_foreign_key "student_stats", "stat_types"
   add_foreign_key "student_stats", "students"
+  add_foreign_key "students", "ranks"
   add_foreign_key "test_results", "students"
   add_foreign_key "units", "grades"
   add_foreign_key "units", "stat_types"

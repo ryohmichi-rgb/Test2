@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition } from "../api";
-import type { Growth, DailyQuota, StudentStat, Badge, Condition } from "../types";
+import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition, fetchRankStatus } from "../api";
+import type { Growth, DailyQuota, StudentStat, Badge, Condition, RankStatus } from "../types";
 import GrowthChart from "../components/GrowthChart";
 import { isSoundOn, setSoundOn, playCorrect, isBgmOn, toggleBgm } from "../sound";
 import DailyQuotaCard from "../components/DailyQuotaCard";
 import MascotMessage from "../components/MascotMessage";
 import AchievementsRow from "../components/AchievementsRow";
+import RankCard from "../components/RankCard";
 
 // 「今日の一問」は問題文の数式で KaTeX を使う。ホームの初期表示をブロックしないよう遅延読み込み。
 const DailyProblemCard = lazy(() => import("../components/DailyProblemCard"));
@@ -32,6 +33,9 @@ export default function HomePage() {
   const [reviewCount, setReviewCount] = useState(0);
   const [stats, setStats] = useState<StudentStat[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
+  const [newBadges, setNewBadges] = useState<Badge[]>([]);
+  const [title, setTitle] = useState<string | null>(null);
+  const [rank, setRank] = useState<RankStatus | null>(null);
   const [condition, setCondition] = useState<Condition | null>(null);
   const [soundOn, setSoundOnState] = useState(isSoundOn());
   const [bgmOn, setBgmOnState] = useState(isBgmOn());
@@ -51,8 +55,17 @@ export default function HomePage() {
     fetchDailyQuota(id).then(setQuota).catch(() => {});
     fetchReviewList(id).then((r) => setReviewCount(r.count)).catch(() => {});
     fetchStudentStats(id).then(setStats).catch(() => {});
-    fetchAchievements(id).then(setBadges).catch(() => {});
+    // newly_earned はサーバが「今この取得で初めて条件を満たした」ものだけを返す。
+    // 一度返すと獲得済みとして保存されるので、リロードしても二度は出ない。
+    fetchAchievements(id)
+      .then((a) => {
+        setBadges(a.badges);
+        setTitle(a.title);
+        setNewBadges(a.badges.filter((b) => a.newly_earned.includes(b.key)));
+      })
+      .catch(() => {});
     fetchCondition(id).then(setCondition).catch(() => {});
+    fetchRankStatus(id).then(setRank).catch(() => {});
   }, [studentId, navigate]);
 
   // 達成した目標のお祝い（一度閉じた達成は localStorage で覚えて再表示しない）
@@ -99,6 +112,23 @@ export default function HomePage() {
       </header>
 
       <MascotMessage name={studentName} quota={quota} />
+
+      {rank && <RankCard status={rank} title={title} />}
+
+      {newBadges.length > 0 && (
+        <div className="celebrate-banner">
+          <button className="celebrate-close" onClick={() => setNewBadges([])} aria-label="閉じる">×</button>
+          <p className="celebrate-title">🎉 新しいバッジ！</p>
+          <p className="celebrate-text">
+            {newBadges.map((b) => `${b.emoji} ${b.label}`).join("・")} を手に入れたよ
+          </p>
+          {newBadges.some((b) => b.title) && (
+            <button className="btn-primary" style={{ padding: "0.5rem 1.25rem", fontSize: "0.9rem" }} onClick={() => navigate("/stats")}>
+              称号を えらぶ →
+            </button>
+          )}
+        </div>
+      )}
 
       {achievedGoals.length > 0 && (
         <div className="celebrate-banner">

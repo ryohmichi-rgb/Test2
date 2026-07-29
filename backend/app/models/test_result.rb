@@ -1,9 +1,16 @@
 class TestResult < ApplicationRecord
   belongs_to :student
 
+  # ユーザーがテストの範囲として選べるもの
   SCOPE_TYPES = %w[grade stat_type unit].freeze
+  # 記録として保存されうるもの。昇格試験は範囲として選ばせないが結果は履歴に残す。
+  RECORDED_SCOPE_TYPES = (SCOPE_TYPES + %w[promotion]).freeze
 
-  validates :scope_type, inclusion: { in: SCOPE_TYPES }
+  validates :scope_type, inclusion: { in: RECORDED_SCOPE_TYPES }
+
+  def promotion?
+    scope_type == "promotion"
+  end
   validates :total_questions, :correct_count, :score_percent, presence: true
 
   scope :recent_first, -> { order(created_at: :desc) }

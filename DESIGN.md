@@ -59,6 +59,8 @@ erDiagram
     students ||--o{ test_results : ""
     students ||--o{ lesson_reads : ""
     students ||--o{ ai_usages : ""
+    students ||--o{ student_badges : ""
+    ranks ||--o{ students : ""
     problems ||--o{ ai_usages : ""
     stat_types ||--o{ student_stats : ""
     stat_types ||--o{ goals : ""
@@ -106,6 +108,21 @@ erDiagram
         string password_digest "bcrypt"
         bool onboarded "初回案内ずみ"
         bool admin "管理者"
+        fk rank_id "現在の総合ランク（null=最下位）"
+        int last_exam_points "昇格試験に落ちた時点の合計pt"
+        string title_key "選択中の称号（バッジのkey）"
+    }
+    ranks {
+        string name "10級〜初段"
+        int threshold_points "到達に要る合計pt"
+        int exam_question_count "昇格試験の問題数"
+        int pass_percent "合格ライン(%)"
+        int display_order
+    }
+    student_badges {
+        string badge_key
+        datetime earned_at
+        fk student_id
     }
     answer_records {
         string submitted_answer
@@ -131,7 +148,7 @@ erDiagram
         fk stat_type_id
     }
     test_results {
-        string scope_type "grade/stat_type/unit"
+        string scope_type "grade/stat_type/unit/promotion"
         int scope_id
         string scope_label
         int total_questions
@@ -157,7 +174,7 @@ erDiagram
 - **student_stats** … `(student_id, stat_type_id)` で一意。現在値のみを持つ（履歴は持たない）。
 - **goals** … `(student_id, stat_type_id)` で一意。目標値＋期限。
 - **reference_stats** … 目標の目安（参考値）。`label` でグルーピング。中学卒業レベル/高校受験（公立）/難関高校受験/数学の先生/エンジニア/研究者/ゲームクリエイター など。
-- **test_results** … テスト結果の履歴。`scope_type` は `grade | stat_type | unit`、`scope_id` はその対象ID。
+- **test_results** … テスト結果の履歴。`scope_type` は `grade | stat_type | unit`（選べる範囲）に加え、昇格試験の記録用に `promotion`（`scope_id` はランクID）。`SCOPE_TYPES` は選べる範囲、`RECORDED_SCOPE_TYPES` は保存されうる範囲。
   `bonus_points` は高得点ボーナス（自己ベスト更新時のみ）。成長曲線でこの値も合算する。
 - **answer_records.points_awarded** … その回答で実際に入ったポイント。解き直しの逓減を含めて
   **回答時に確定**させる（3.13）。今日のノルマ・成長曲線はこの列をSUMするだけでよい。
@@ -170,6 +187,19 @@ erDiagram
 - **units.lesson_body** … 単元の教材（Markdown）。フロントで `react-markdown` により描画。
 - **lesson_reads** … 教材の読了記録。`(student_id, unit_id)` で一意。初回読了の判定＋既読表示に使う。
 - **ai_usages** … 「先生に聞く」（生成AI）の利用ログ。1レコード＝1回の質問。`(student_id, created_at)` に索引を張り、その日の利用回数を数えてレート制限に使う。`problem_id` は文脈にした問題（削除されても残せるよう `null` 許容）。`kind` は `hint / approach / why / free`。
+
+- **ranks** … 総合ランクの定義（10級〜初段の11段階）。しきい値と昇格試験のパラメータを持つ。
+  seed で `display_order` をキーに更新するので、調整は seed の書き換えだけで効く。
+- **students.rank_id** … 現在の総合ランク。**`null` は「最下位ランク」**として扱う（`Student#current_rank`）。
+  こうすることで既存生徒のバックフィルが要らない。
+- **students.last_exam_points** … 昇格試験に落ちた時点の合計ポイント。ここから
+  `PromotionExam::RETRY_POINTS` 伸ばすと再挑戦できる。合格すると `null` に戻る。
+- **student_badges** … 獲得したバッジの記録。`(student_id, badge_key)` で一意。
+  **定義そのものはコード側（`BadgeCatalog`）**にある（条件が「連続日数」「単元制覇」
+  「直近20問の正答率」など列で表せないため）。ここに残すのは獲得した事実と日時だけで、
+  それがないと「今まさに取った」瞬間を検出できずお祝いが出せない。
+- **students.title_key** … 選択中の称号。称号を持つバッジの `key` を指す。
+  バッジ未獲得なら名乗れない（`Student#title` が `null` を返す）。
 
 > 注: `student_stats` は現在値のみ保持。成長曲線の過去分は履歴テーブル
 > （`answer_records` ＋ `test_results.bonus_points` ＋ `lesson_reads`）から再構築する（3.4）。
@@ -411,6 +441,57 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 
 ---
 
+### 3.15 総合ランクと昇格試験
+
+目標（ステータスごと・150〜500pt）は遠い。**あいだにランクを置いて、達成感を刻む。**
+
+- **単位は総合ランク1本**。全ステータスの合計ポイントで判定する（`Student#total_points`）。
+  ステータス別の目標はそのまま残す。
+- **11段階**: 10級 → 1級 → 初段。しきい値は 0 / 30 / 80 / 150 / 250 / 400 / 600 / 850 / 1150 / 1500 / 2000pt。
+  最初の昇格が2〜3問で来るので、始めてすぐ成功体験がある。参考目標の合計が500〜1750ptなので、
+  その道中に昇格イベントが並ぶ。
+- **到達しただけでは上がらない。昇格試験に合格して初めて昇格する。**
+- **降格はしない**。さびつきは表示だけで earned 値を守る方針と揃える。
+
+**昇格試験**（`PromotionExam`）
+
+| 項目 | 内容 |
+|------|------|
+| 出題範囲 | **その子が学んだ単元**（回答履歴のある単元。`ProblemScope.learned_by`） |
+| 問題数 | `ranks.exam_question_count`（既定10。範囲の問題が少なければその数） |
+| 合格 | `ranks.pass_percent`（既定80%）以上 |
+| 制限時間 | なし |
+| 報酬 | ランクが上がること。**テストの高得点ボーナスは付けない**（`BONUS_POINTS = 0`） |
+| 記録 | `test_results` に `scope_type: "promotion"` で残る（テスト履歴に「昇格試験（9級）」） |
+
+出題範囲を学年ではなく**学習履歴**で絞っているのは、生徒に学年を持たせていないため。
+学年で縛るより正確でもある（先取りした分は範囲に入り、まだ触っていない領域は出ない）。
+
+**落ちたときの再挑戦**: 不合格時点の合計ポイントを `students.last_exam_points` に記録し、
+そこから `RETRY_POINTS`（20pt）伸ばすと再挑戦できる。待ち時間も連打もなく、
+「落ちた → 少し学習 → もう一度」のループになる。
+
+> ⚠️ **スナップショットは採点が終わって加点が反映されたあとに取ること。**
+> 昇格試験の回答も `AnswerRecord` を通るのでポイントが入る。先に取ると試験自身の得点で
+> 条件を満たしてしまい、落ちた直後に再挑戦できてしまう。
+
+> 補足: 同じ理由で、試験の得点が次のランクの到達条件を押し上げるため、合格後にそのまま
+> 次の試験へ進めることがある。ただし解き直しは満点の20%しか入らないので連鎖は必ず止まる
+> （実測: 1単元9問だけの学習で 7級／184pt で頭打ち）。
+
+### 3.16 実績バッジと称号
+
+- **バッジは15種**。累計正解数・連続日数・正答率・単元制覇・教材読了・復習ゼロ・ランク到達をカバーする。
+- **定義はコード側（`BadgeCatalog`）**。条件が列で表せないため。DBに残すのは獲得した事実（`student_badges`）。
+- **獲得日時を残すのは、取った瞬間を検出してお祝いを出すため。**
+  `GET /achievements` は判定をやり直したうえで、新規獲得ぶんを `newly_earned` で返す。
+  一度返すと保存されるので、リロードしても二度は祝わない。
+- **称号**は「称号つきバッジ」を獲得するとアンロックされ、その中から**1つ選んで**ホームに表示する
+  （`students.title_key`）。未獲得の称号は名乗れない。ランク到達バッジに称号を付けていないのは、
+  ランク自体が別枠で表示されるため。
+
+---
+
 ## 4. API一覧
 
 すべて `/api/v1` 配下。`signup` / `login` 以外は `Authorization: Bearer <token>` が必須。
@@ -435,7 +516,11 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | GET | `/students/:id/lesson_reads` | 既読の単元ID一覧 |
 | POST | `/students/:id/lesson_reads` | 教材読了（初回+5pt） |
 | GET | `/students/:id/daily_problem` | 今日の一問（ランダム1問） |
-| GET | `/students/:id/achievements` | 実績バッジ（獲得判定つき） |
+| GET | `/students/:id/achievements` | 実績バッジ（獲得判定・獲得日時・新規獲得・称号の選択肢） |
+| PUT | `/students/:id/title` | 称号を選ぶ／外す（未獲得は422） |
+| GET | `/students/:id/rank` | 総合ランクの状況（次まで何pt・昇格試験に挑戦できるか） |
+| GET | `/students/:id/promotion_exam` | 昇格試験の問題を取り出す（挑戦できないときは422） |
+| POST | `/students/:id/promotion_exam` | 昇格試験の提出（採点＋昇格判定） |
 | GET | `/students/:id/condition` | さびつき状態（未学習日数から算出） |
 | GET | `/students/:id/ai_usage` | 「先生に聞く」の今日の利用状況（used/limit/remaining） |
 | POST | `/students/:id/ask_teacher` | その問題の文脈で先生に質問（problem_id/kind/question） |
@@ -468,6 +553,7 @@ flowchart TD
     Home --> Stats["StatsPage ステータス/目標"]
     Home --> Review["ReviewPage 復習"]
     Home --> Settings["SettingsPage せってい: パスワード変更/ログアウト"]
+    Home -->|昇格試験に挑戦できる| Exam["PromotionExamPage 昇格試験"]
     Plan -->|単元カード| Practice
 ```
 
@@ -491,6 +577,8 @@ flowchart TD
 | 共通 | `components/MascotMessage.tsx` | 応援メッセージを話す手描き風マスコット |
 | 共通 | `components/DailyProblemCard.tsx` | ホームで解ける「今日の一問」 |
 | 共通 | `components/AchievementsRow.tsx` | 実績バッジ一覧 |
+| 共通 | `components/RankCard.tsx` | 総合ランク・称号・昇格試験への導線（ホームとステータスで共用） |
+| ページ | `pages/PromotionExamPage.tsx` | 昇格試験（説明→出題→合否）。範囲も問題数も選べない |
 | 共通 | `components/AskTeacher.tsx` | 「先生に聞く」（生成AI）。問題を解く4画面で共用（テストは除く） |
 | 共通 | `components/MarkdownView.tsx` | Markdown＋数式（KaTeX）の描画。教材ページで使用 |
 | 共通 | `components/MathText.tsx` | 問題文・選択肢・ヒント内の `$...$` だけを数式化（Markdownは解釈しない軽量版） |
@@ -525,6 +613,7 @@ flowchart TD
 
 - 教科の追加（現在は算数・数学。`subjects` で拡張可能な構造）
 - ステータスの追加（`stat_types` にレコードを足すだけ）
+- ランクの管理画面（今は seed のみ。しきい値・合格ラインを画面から変えられるように）
 - 途中保存のバックエンド永続化（現在は端末内 localStorage）
 - テストの制限時間バリエーション、farming対策の精緻化
 - ノルマ達成日連続（現在は「学習した日」の連続）

@@ -28,6 +28,10 @@ Rails.application.routes.draw do
         get :ai_usage, on: :member, to: "ai_teacher#usage"
         post :ask_teacher, on: :member, to: "ai_teacher#ask"
         put :password, on: :member, to: "passwords#update"
+        get :rank, on: :member, to: "promotion_exams#status"
+        get :promotion_exam, on: :member, to: "promotion_exams#show"
+        post :promotion_exam, on: :member, to: "promotion_exams#create"
+        put :title, on: :member, to: "titles#update"
       end
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]

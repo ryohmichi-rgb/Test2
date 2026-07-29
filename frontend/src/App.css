@@ -1257,3 +1257,243 @@ body {
   line-height: 1.6;
   margin-bottom: 0.75rem;
 }
+
+/* ===== 総合ランク・昇格試験・称号 ===== */
+
+.rank-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
+}
+
+.rank-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.rank-badge {
+  background: linear-gradient(135deg, #4c51bf, #6b46c1);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.rank-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #805ad5;
+  background: #805ad51a;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
+.rank-points {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #718096;
+  font-weight: 700;
+}
+
+.rank-bar {
+  height: 8px;
+  background: #edf2f7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4c51bf, #805ad5);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.rank-note {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+/* 昇格試験に挑戦できる状態。カード下段だけを目立たせる（上段のランク章・称号は残す） */
+.rank-ready {
+  background: linear-gradient(135deg, #d69e2e, #dd6b20);
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 10px;
+  padding: 0.85rem 0.75rem;
+}
+
+.rank-ready-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+.rank-ready-text {
+  font-size: 0.85rem;
+  opacity: 0.95;
+  margin-bottom: 0.7rem;
+}
+
+.rank-ready .btn-primary {
+  background: #fff;
+  color: #dd6b20;
+}
+
+/* --- 昇格試験ページ --- */
+
+.exam-intro {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.exam-intro-emoji { font-size: 2.5rem; }
+
+.exam-intro h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0.4rem 0 1rem;
+}
+
+.exam-intro-list {
+  list-style: none;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #4a5568;
+  line-height: 1.9;
+  margin-bottom: 0.9rem;
+}
+
+.exam-intro-list li::before { content: "・"; }
+
+.exam-intro-note {
+  font-size: 0.8rem;
+  color: #718096;
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+
+.exam-progress {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #4a5568;
+}
+
+.exam-bar {
+  height: 6px;
+  background: #edf2f7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.exam-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d69e2e, #dd6b20);
+  transition: width 0.3s ease;
+}
+
+.exam-nav {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+.exam-nav button { flex: 1; padding: 0.6rem; }
+
+.exam-result {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.75rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.exam-result.passed { border-top: 5px solid #38a169; }
+.exam-result.failed { border-top: 5px solid #4c51bf; }
+
+.exam-result-mark { font-size: 3rem; }
+
+.exam-result h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0.3rem 0 0.6rem;
+}
+
+.exam-result-score {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4a5568;
+  margin-bottom: 0.6rem;
+}
+
+.exam-result-note {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-bottom: 1.25rem;
+}
+
+/* --- 称号えらび --- */
+
+.title-picker {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1.25rem;
+}
+
+.title-picker-head {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4a5568;
+  margin-bottom: 0.3rem;
+}
+
+.title-picker-note {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  margin-bottom: 0.7rem;
+}
+
+.title-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.title-chip {
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  color: #4a5568;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.title-chip.on {
+  border-color: #805ad5;
+  background: #805ad51a;
+  color: #805ad5;
+}
+
+.title-chip.locked {
+  color: #a0aec0;
+  background: #f7fafc;
+  cursor: not-allowed;
+  font-weight: 400;
+}

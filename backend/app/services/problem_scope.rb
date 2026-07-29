@@ -5,11 +5,28 @@ class ProblemScope
 
   def initialize(scope_type:, scope_id:)
     @scope_type = scope_type.to_s
-    @scope_id = scope_id.presence && scope_id.to_i
+    # scope_id は単一IDのほか、複数の単元IDの配列も受ける（昇格試験の「学んだ単元」用）。
+    @scope_id = if scope_id.is_a?(Array)
+      scope_id.map(&:to_i)
+    else
+      scope_id.presence && scope_id.to_i
+    end
   end
 
   def valid?
     TestResult::SCOPE_TYPES.include?(scope_type) && units.exists?
+  end
+
+  # 生徒が実際に学んだ（1問以上答えた）単元だけを対象にするスコープ。昇格試験で使う。
+  # 生徒に学年を持たせていないので、「まだ習っていない学年の問題が出る」のを
+  # 学年ではなく学習履歴で防いでいる（先取りした分はちゃんと範囲に入る）。
+  def self.learned_by(student)
+    unit_ids = Unit.active_only
+      .joins(problems: :answer_records)
+      .where(answer_records: { student_id: student.id })
+      .distinct
+      .pluck(:id)
+    new(scope_type: "unit", scope_id: unit_ids)
   end
 
   # 全問を対象にするスコープ（今日の一問・ノルマの上限計算で使う）。
@@ -68,6 +85,8 @@ class ProblemScope
   end
 
   def label
+    return "学んだ単元" if scope_id.is_a?(Array)
+
     case scope_type
     when "grade"     then Grade.find_by(id: scope_id)&.name.to_s
     when "stat_type" then "#{StatType.find_by(id: scope_id)&.name}テスト"

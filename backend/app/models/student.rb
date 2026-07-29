@@ -1,12 +1,15 @@
 class Student < ApplicationRecord
   has_secure_password
 
+  belongs_to :rank, optional: true
+
   has_many :answer_records, dependent: :destroy
   has_many :student_stats, dependent: :destroy
   has_many :goals, dependent: :destroy
   has_many :test_results, dependent: :destroy
   has_many :lesson_reads, dependent: :destroy
   has_many :ai_usages, dependent: :destroy
+  has_many :student_badges, dependent: :destroy
 
   validates :name, presence: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }
@@ -69,6 +72,25 @@ class Student < ApplicationRecord
   # 今日あと何回聞けるか
   def ai_remaining_today
     [self.class.ai_daily_limit - ai_used_today, 0].max
+  end
+
+  # ===== ランクと称号 =====
+
+  # 全ステータスの合計ポイント。総合ランクの判定はこれ1本で行う。
+  def total_points
+    student_stats.sum(:value)
+  end
+
+  # rank_id が NULL の生徒は最下位ランク扱い（既存生徒のバックフィルを不要にするため）
+  def current_rank
+    rank || Rank.lowest
+  end
+
+  # 選択中の称号名。バッジを持っていなければ名乗れない（獲得後に外れることはない）。
+  def title
+    return nil if title_key.blank?
+    return nil unless student_badges.exists?(badge_key: title_key)
+    BadgeCatalog.find(title_key)&.title
   end
 
   # 学習した日の連続数（今日やっていれば今日から、まだなら昨日から数える）

@@ -62,7 +62,7 @@ module Api
           record = AnswerRecord.create!(
             student: student,
             problem: problem,
-            submitted_answer: a[:submitted_answer].to_s
+            submitted_answer: AnswerRecord.normalize_submitted(a[:submitted_answer])
           )
           {
             problem_id: problem.id,

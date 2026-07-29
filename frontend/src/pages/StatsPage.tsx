@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchStudentStats, fetchReferenceStats, updateGoal, fetchCondition } from "../api";
-import type { StudentStat, ReferenceStat, Condition } from "../types";
+import { fetchStudentStats, fetchReferenceStats, updateGoal, fetchCondition, fetchRankStatus, fetchAchievements, updateTitle } from "../api";
+import type { StudentStat, ReferenceStat, Condition, RankStatus, TitleOption } from "../types";
 import ReferenceIcon from "../components/ReferenceIcon";
+import RankCard from "../components/RankCard";
 
 const STAT_COLORS: Record<string, string> = {
   "計算力":    "#4c51bf",
@@ -39,13 +40,32 @@ export default function StatsPage() {
   const [refSaving, setRefSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
+  const [rank, setRank] = useState<RankStatus | null>(null);
+  const [titles, setTitles] = useState<TitleOption[]>([]);
+  const [titleKey, setTitleKey] = useState<string | null>(null);
+  const [title, setTitle] = useState<string | null>(null);
+
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
     Promise.all([fetchStudentStats(studentId), fetchReferenceStats()])
       .then(([s, r]) => { setStats(s); setRefs(r); })
       .finally(() => setLoading(false));
     fetchCondition(studentId).then(setCondition).catch(() => {});
+    fetchRankStatus(studentId).then(setRank).catch(() => {});
+    fetchAchievements(studentId)
+      .then((a) => { setTitles(a.titles); setTitleKey(a.title_key); setTitle(a.title); })
+      .catch(() => {});
   }, [studentId, navigate]);
+
+  // 称号の付け替え。同じものをもう一度押すと外れる。
+  const pickTitle = async (key: string) => {
+    const next = titleKey === key ? null : key;
+    try {
+      const res = await updateTitle(studentId, next);
+      setTitleKey(res.title_key);
+      setTitle(res.title);
+    } catch { /* 未獲得の称号はサーバ側で弾かれる。表示は変えない */ }
+  };
 
   const startEdit = (stat: StudentStat) => {
     setEditingId(stat.stat_type_id);
@@ -108,6 +128,31 @@ export default function StatsPage() {
       <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "1.75rem" }}>
         問題に正解するとステータスが上がります
       </p>
+
+      {/* 総合ランク（全ステータスの合計ポイント）と称号 */}
+      {rank && <RankCard status={rank} title={title} />}
+
+      {titles.length > 0 && (
+        <div className="title-picker">
+          <h3 className="title-picker-head">称号</h3>
+          <p className="title-picker-note">
+            バッジを手に入れると名乗れるようになるよ。えらぶとホームに出ます。
+          </p>
+          <div className="title-chips">
+            {titles.map((t) => (
+              <button
+                key={t.key}
+                className={`title-chip ${titleKey === t.key ? "on" : ""} ${t.earned ? "" : "locked"}`}
+                disabled={!t.earned}
+                onClick={() => pickTitle(t.key)}
+                title={t.earned ? "" : t.hint}
+              >
+                {t.earned ? `${t.emoji} ${t.title}` : `🔒 ${t.hint}`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* さびつき（コンディション）のナッジ。数字は下げず、状態だけ伝える */}
       {condition && condition.rust_percent > 0 && (

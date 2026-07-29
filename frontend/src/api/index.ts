@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Badge, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, AskTeacherResult } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, AskTeacherResult, Achievements, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -87,8 +87,31 @@ export const markLessonRead = (studentId: number, unitId: number): Promise<Lesso
 export const fetchDailyProblem = (studentId: number): Promise<Problem | null> =>
   api.get<{ problem: Problem | null }>(`/students/${studentId}/daily_problem`).then((r) => r.data.problem);
 
-export const fetchAchievements = (studentId: number): Promise<Badge[]> =>
-  api.get<{ badges: Badge[] }>(`/students/${studentId}/achievements`).then((r) => r.data.badges);
+export const fetchAchievements = (studentId: number): Promise<Achievements> =>
+  api.get<Achievements>(`/students/${studentId}/achievements`).then((r) => r.data);
+
+export const updateTitle = (studentId: number, titleKey: string | null) =>
+  api
+    .put<{ title_key: string | null; title: string | null }>(`/students/${studentId}/title`, {
+      title_key: titleKey,
+    })
+    .then((r) => r.data);
+
+// ===== 総合ランクと昇格試験 =====
+
+export const fetchRankStatus = (studentId: number): Promise<RankStatus> =>
+  api.get<RankStatus>(`/students/${studentId}/rank`).then((r) => r.data);
+
+export const fetchPromotionExam = (studentId: number): Promise<PromotionExamSet> =>
+  api.get<PromotionExamSet>(`/students/${studentId}/promotion_exam`).then((r) => r.data);
+
+export const submitPromotionExam = (
+  studentId: number,
+  answers: { problem_id: number; submitted_answer: string }[]
+): Promise<PromotionExamResult> =>
+  api
+    .post<PromotionExamResult>(`/students/${studentId}/promotion_exam`, { answers })
+    .then((r) => r.data);
 
 export const completeOnboarding = (studentId: number): Promise<void> =>
   api.post(`/students/${studentId}/complete_onboarding`).then(() => undefined);

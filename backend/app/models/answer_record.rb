@@ -31,6 +31,18 @@ class AnswerRecord < ApplicationRecord
     POINTS_BY_DIFFICULTY[difficulty] || DEFAULT_POINTS
   end
 
+  # 一括提出（テスト・昇格試験）で空欄のまま出されたときの記録内容。
+  # 制限時間切れの自動提出や、わからない問題を飛ばした場合に起きる。
+  # submitted_answer は presence 必須なので、空欄をそのまま渡すと 500 になってしまう。
+  # 「答えなかった」＝不正解として残すのが実態に合う。
+  # （1問ずつ答える通常経路では空欄はクライアント側のバグなので、従来どおり弾く）
+  BLANK_ANSWER = "（未回答）".freeze
+
+  def self.normalize_submitted(value)
+    text = value.to_s.strip
+    text.empty? ? BLANK_ANSWER : text
+  end
+
   # この回答が「解き直し」で減額されたか（フィードバック表示に使う）
   def repeat?
     return false unless is_correct? && problem

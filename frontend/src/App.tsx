@@ -22,6 +22,8 @@ const PracticePage = lazy(() => import("./pages/PracticePage"));
 const ProblemSetPage = lazy(() => import("./pages/ProblemSetPage"));
 const TestPage = lazy(() => import("./pages/TestPage"));
 const ReviewPage = lazy(() => import("./pages/ReviewPage"));
+// 昇格試験も問題文で KaTeX を使うので遅延読み込みにする
+const PromotionExamPage = lazy(() => import("./pages/PromotionExamPage"));
 const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
 const AdminUnitsPage = lazy(() => import("./pages/admin/AdminUnitsPage"));
 const AdminProblemsPage = lazy(() => import("./pages/admin/AdminProblemsPage"));
@@ -48,6 +50,7 @@ function App() {
         <Route path="/test-history" element={<TestHistoryPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/review" element={<ReviewPage />} />
+        <Route path="/promotion-exam" element={<PromotionExamPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/units" element={<AdminUnitsPage />} />
         <Route path="/admin/units/:unitId/problems" element={<AdminProblemsPage />} />

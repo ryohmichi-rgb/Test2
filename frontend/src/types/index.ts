@@ -30,7 +30,71 @@ export interface Badge {
   key: string;
   label: string;
   emoji: string;
+  /** 獲得のしかた（未獲得のバッジで「あと何をすれば」を見せる） */
+  hint: string;
+  /** 称号を持つバッジなら称号名。持たなければ null */
+  title: string | null;
   earned: boolean;
+  earned_at: string | null;
+}
+
+/** 称号の選択肢（称号を持つバッジだけ） */
+export interface TitleOption {
+  key: string;
+  title: string;
+  label: string;
+  emoji: string;
+  hint: string;
+  earned: boolean;
+}
+
+export interface Achievements {
+  badges: Badge[];
+  /** この取得で新たに獲得したバッジ（お祝い用） */
+  newly_earned: string[];
+  title_key: string | null;
+  title: string | null;
+  titles: TitleOption[];
+}
+
+export interface Rank {
+  id: number;
+  name: string;
+  threshold_points: number;
+  display_order: number;
+}
+
+/** 総合ランクの状況（昇格試験に挑戦できるかどうかを含む） */
+export interface RankStatus {
+  current_rank: Rank;
+  next_rank: Rank | null;
+  total_points: number;
+  points_to_next: number;
+  /** 次のランクのしきい値に届いているか */
+  reached: boolean;
+  /** 再挑戦までに必要な残りポイント（0なら待ちなし） */
+  retry_points_needed: number;
+  /** いま昇格試験に挑戦できるか */
+  available: boolean;
+  question_count: number;
+  pass_percent: number | null;
+  scope_label: string;
+}
+
+export interface PromotionExamSet {
+  rank: Rank;
+  pass_percent: number;
+  scope_label: string;
+  problems: Problem[];
+}
+
+export interface PromotionExamResult {
+  passed: boolean;
+  score_percent: number;
+  correct_count: number;
+  total_questions: number;
+  answers: { problem_id: number; is_correct: boolean; correct_answer: string }[];
+  status: RankStatus;
 }
 
 export interface Condition {
