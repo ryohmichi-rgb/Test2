@@ -113,7 +113,7 @@ export default function HomePage() {
 
       <MascotMessage name={studentName} quota={quota} />
 
-      {rank && <RankCard status={rank} title={title} />}
+      {rank?.current_rank && <RankCard status={rank} title={title} />}
 
       {newBadges.length > 0 && (
         <div className="celebrate-banner">

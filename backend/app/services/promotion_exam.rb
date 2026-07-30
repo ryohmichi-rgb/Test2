@@ -22,8 +22,9 @@ class PromotionExam
 
   attr_reader :student
 
+  # ranks が1件もない環境（seed 前）でも 500 にせず「ランクなし」として扱う。
   def current_rank = student.current_rank
-  def next_rank    = current_rank.next_rank
+  def next_rank    = current_rank&.next_rank
   def total_points = student.total_points
 
   # 次のランクのしきい値に届いているか
@@ -38,7 +39,7 @@ class PromotionExam
   end
 
   def available?
-    reached? && retry_points_needed.zero? && problem_pool.any?
+    current_rank.present? && reached? && retry_points_needed.zero? && problem_pool.any?
   end
 
   def scope

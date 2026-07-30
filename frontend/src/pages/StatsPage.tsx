@@ -130,7 +130,7 @@ export default function StatsPage() {
       </p>
 
       {/* 総合ランク（全ステータスの合計ポイント）と称号 */}
-      {rank && <RankCard status={rank} title={title} />}
+      {rank?.current_rank && <RankCard status={rank} title={title} />}
 
       {titles.length > 0 && (
         <div className="title-picker">

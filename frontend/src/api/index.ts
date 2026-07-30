@@ -87,8 +87,17 @@ export const markLessonRead = (studentId: number, unitId: number): Promise<Lesso
 export const fetchDailyProblem = (studentId: number): Promise<Problem | null> =>
   api.get<{ problem: Problem | null }>(`/students/${studentId}/daily_problem`).then((r) => r.data.problem);
 
+// 応答の形が欠けていても画面を落とさないよう、ここで既定値を埋めてから返す。
+// フロント(Vercel)とバックエンド(Railway)はデプロイ時間が違うので、新しいフロントが
+// 一時的に古いバックエンド（titles / newly_earned を返さない）を叩くことがある。
 export const fetchAchievements = (studentId: number): Promise<Achievements> =>
-  api.get<Achievements>(`/students/${studentId}/achievements`).then((r) => r.data);
+  api.get<Partial<Achievements>>(`/students/${studentId}/achievements`).then((r) => ({
+    badges: r.data.badges ?? [],
+    newly_earned: r.data.newly_earned ?? [],
+    title_key: r.data.title_key ?? null,
+    title: r.data.title ?? null,
+    titles: r.data.titles ?? [],
+  }));
 
 export const updateTitle = (studentId: number, titleKey: string | null) =>
   api
