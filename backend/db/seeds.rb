@@ -454,6 +454,103 @@ extra_problems.each do |title, probs|
   end
 end
 
+# 難易度の上のほう（3〜5）の問題。習熟度に応じた出題を効かせるには、
+# 単元ごとに難易度の幅が要る（幅がないと「中心難易度」を決めても選びようがない）。
+# 注意: LaTeX を含む文字列は必ずシングルクォート。ダブルクォートだと \frac が
+# 改ページ文字、\times がタブに化ける。
+advanced_problems = {
+  "分数のかけ算・わり算" => [
+    { question: '$\frac{9}{10} \times \frac{4}{3} \div 2$ を計算しなさい。（分数は a/b の形で答えること）',
+      answer: "3/5", hint: '前から順に計算します。÷2 は $\times \frac{1}{2}$ と同じです。', difficulty: 4, problem_type: "fill_in" },
+    { question: '$\frac{3}{4}$ Lのジュースを、1人に $\frac{1}{8}$ Lずつ分けると何人に分けられますか？',
+      answer: "6", hint: "「いくつ分か」を求めるのでわり算です。", difficulty: 4, problem_type: "fill_in" },
+    { question: '面積が $\frac{5}{6}$ m² の長方形の花だんがあります。たての長さが $\frac{2}{3}$ m のとき、横の長さは何mですか？（分数は a/b の形で答えること）',
+      answer: "5/4", hint: "横 = 面積 ÷ たて です。", difficulty: 5, problem_type: "fill_in" }
+  ],
+  "比と比の値" => [
+    { question: '$A : B = 2 : 3$、$B : C = 4 : 5$ のとき、$A : C$ を最も簡単な整数の比で答えなさい。（a:b の形で答えること）',
+      answer: "8:15", hint: "Bの数をそろえます。2:3 は 8:12、4:5 は 12:15 にできます。", difficulty: 4, problem_type: "fill_in" },
+    { question: '兄と弟の所持金の比は $5 : 3$ です。兄が弟より400円多いとき、兄の所持金は何円ですか？',
+      answer: "1000", hint: "比の差の2が400円にあたります。", difficulty: 4, problem_type: "fill_in" },
+    { question: '420円を $A : B : C = 2 : 3 : 5$ の割合で分けます。Bは何円ですか？',
+      answer: "126", hint: "全部で 2+3+5=10 にあたります。1にあたる金額から求めます。", difficulty: 5, problem_type: "fill_in" }
+  ],
+  "速さ・時間・距離" => [
+    { question: '時速72kmは秒速何mですか？',
+      answer: "20", hint: "72km=72000m、1時間=3600秒です。", difficulty: 4, problem_type: "fill_in" },
+    { question: '4kmの道のりを、はじめの2kmは分速50m、残りの2kmは分速80mで歩きました。合わせて何分かかりましたか？',
+      answer: "65", hint: "前半と後半の時間をそれぞれ出してから足します。", difficulty: 4, problem_type: "fill_in" },
+    { question: '家から学校までの1.2kmを、分速60mで歩くかわりに分速80mで走ると、何分早く着きますか？',
+      answer: "5", hint: "それぞれかかる時間を出して、その差を求めます。", difficulty: 5, problem_type: "fill_in" }
+  ],
+  "文字と式（小6）" => [
+    { question: '1個 $a$ 円のパンを5個と、1本 $b$ 円のジュースを3本買ったときの代金を式で表しなさい。（スペースなし）',
+      answer: "5a+3b", hint: "パンの代金とジュースの代金を足します。", difficulty: 4, problem_type: "fill_in" },
+    { question: '$x = 6$ のとき、$\frac{x}{2} + 4$ の値を求めなさい。',
+      answer: "7", hint: '$x$ に6を入れてから、わり算を先に計算します。', difficulty: 4, problem_type: "fill_in" },
+    { question: '$x = 6$、$y = 2$ のとき、$\frac{x}{y} + 4y$ の値を求めなさい。',
+      answer: "11", hint: "それぞれの文字に数を入れてから計算します。", difficulty: 5, problem_type: "fill_in" }
+  ],
+  "正の数・負の数" => [
+    { question: '$(-2)^3$ を計算しなさい。',
+      answer: "-8", hint: '$(-2) \times (-2) \times (-2)$ です。負の数を3回かけると符号は負になります。', difficulty: 3, problem_type: "fill_in" },
+    { question: '$(-3) \times 4 + 6$ を計算しなさい。',
+      answer: "-6", hint: "かけ算を先に計算します。", difficulty: 3, problem_type: "fill_in" },
+    { question: '$(-2)^2 \times (-3)$ を計算しなさい。',
+      answer: "-12", hint: '$(-2)^2$ は $(-2) \times (-2) = 4$ です。', difficulty: 4, problem_type: "fill_in" },
+    { question: '$12 \div (-4) - (-5)$ を計算しなさい。',
+      answer: "2", hint: "わり算を先に。うしろは「−（−5）」なので+5になります。", difficulty: 4, problem_type: "fill_in" },
+    { question: '$(-3)^2 - 4 \times (-2) + (-6) \div 3$ を計算しなさい。',
+      answer: "15", hint: "累乗 → かけ算・わり算 → たし算・ひき算 の順に計算します。", difficulty: 5, problem_type: "fill_in" }
+  ],
+  "文字と式" => [
+    { question: '$5x - 2(x - 3)$ を計算しなさい。（スペースなし、例: 4x+5）',
+      answer: "3x+6", hint: "かっこを外すとき、−2をかけることに注意します。", difficulty: 3, problem_type: "fill_in" },
+    { question: '$-3(2x - 5)$ を展開しなさい。（スペースなし、例: 4x+5）',
+      answer: "-6x+15", hint: "かっこの中の両方に −3 をかけます。", difficulty: 3, problem_type: "fill_in" },
+    { question: '$2(3x - 1) - 3(x - 4)$ を計算しなさい。（スペースなし、例: 4x+5）',
+      answer: "3x+10", hint: "先に両方のかっこを外してから、同じ文字どうしをまとめます。", difficulty: 4, problem_type: "fill_in" },
+    { question: '$x = -2$ のとき、$x^2 - 3x$ の値を求めなさい。',
+      answer: "10", hint: '$x^2$ は $(-2) \times (-2)$ です。負の数の代入はかっこをつけて考えます。', difficulty: 4, problem_type: "fill_in" },
+    { question: '$a = -3$ のとき、$2a^2 + 5a - 4$ の値を求めなさい。',
+      answer: "-1", hint: '$a^2 = 9$ を先に出してから、順に計算します。', difficulty: 5, problem_type: "fill_in" }
+  ],
+  "方程式" => [
+    { question: '$3(x - 2) = x + 4$ を解きなさい。',
+      answer: "5", hint: "まずかっこを外し、xを左、数を右に移項します。", difficulty: 4, problem_type: "fill_in" },
+    { question: '$\frac{x}{3} + 2 = 5$ を解きなさい。',
+      answer: "9", hint: "先に2を移項してから、両辺に3をかけます。", difficulty: 4, problem_type: "fill_in" },
+    { question: '1個150円のケーキと1個90円のプリンを合わせて8個買ったら、代金は900円でした。ケーキは何個買いましたか？',
+      answer: "3", hint: "ケーキを $x$ 個とすると、プリンは $8 - x$ 個です。", difficulty: 5, problem_type: "fill_in" }
+  ],
+  "比例と反比例" => [
+    { question: '$y$ が $x$ に反比例し、$x = 4$ のとき $y = 6$ です。比例定数を求めなさい。',
+      answer: "24", hint: '反比例では $x \times y$ が比例定数になります。', difficulty: 3, problem_type: "fill_in" },
+    { question: '$y = -3x$ で、$y = 12$ のときの $x$ の値を求めなさい。',
+      answer: "-4", hint: '$12 = -3x$ とみて、両辺を $-3$ で割ります。', difficulty: 3, problem_type: "fill_in" },
+    { question: '$y$ が $x$ に比例し、$x = 2$ のとき $y = -6$ です。$x = 5$ のときの $y$ の値を求めなさい。',
+      answer: "-15", hint: '先に比例定数 $a = y \div x$ を求めます。', difficulty: 4, problem_type: "fill_in" },
+    { question: '$y$ が $x$ に反比例し、$x = 3$ のとき $y = 8$ です。$x = 6$ のときの $y$ の値を求めなさい。',
+      answer: "4", hint: '先に比例定数 $x \times y$ を求めます。', difficulty: 4, problem_type: "fill_in" },
+    { question: '$y$ が $x$ に反比例し、$x = -2$ のとき $y = 9$ です。$y = -6$ のときの $x$ の値を求めなさい。',
+      answer: "3", hint: '比例定数は $(-2) \times 9$ です。そこから $x = a \div y$ で求めます。', difficulty: 5, problem_type: "fill_in" }
+  ]
+}
+
+advanced_problems.each do |title, probs|
+  unit = Unit.find_by(title: title)
+  next unless unit
+
+  probs.each do |pd|
+    Problem.find_or_create_by!(question: pd[:question], unit: unit) do |p|
+      p.answer = pd[:answer]
+      p.hint = pd[:hint]
+      p.difficulty = pd[:difficulty]
+      p.problem_type = pd[:problem_type]
+    end
+  end
+end
+
 # 単元ごとの教材（解説）Markdown。既存単元にも反映されるよう update で入れる。
 lessons = {
   # 数式は KaTeX（$...$ / $$...$$）。バックスラッシュを守るため

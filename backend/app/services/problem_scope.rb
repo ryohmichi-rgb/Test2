@@ -59,14 +59,18 @@ class ProblemScope
   #   2. 最新の回答が不正解（＝復習すべき問題）
   #   3. 正解済みだが RECOVERY_DAYS 以上たっている（満点に復帰している）
   #   4. 正解済みで RECOVERY_DAYS 以内（最後の手段。加点も20%になる）
-  # 各段の中はシャッフルし、上から順に count 問になるまで詰める。
+  # 各段の中は**習熟度に応じた重みづけ**で並べ替え、上から順に count 問になるまで詰める。
+  #
+  # 優先度が先、難易度はその中での並べ替え、という順序が肝。逆にして先に難易度で
+  # 絞ると「未挑戦かつ難易度3」が存在しない、という状況で候補がゼロになる。
   def sample_problems_for(student, count)
     count = count.to_i
     pool = problems.to_a
     return pool.shuffle if count <= 0 || count >= pool.size
 
     tiers = classify(student, pool)
-    tiers.flat_map(&:shuffle).first(count)
+    centers = center_difficulty_by_unit(student, pool)
+    tiers.flat_map { |tier| weighted_shuffle(tier, centers) }.first(count)
   end
 
   # 今「満点」で解ける問題（未挑戦・要復習・回復済み）。
@@ -95,7 +99,71 @@ class ProblemScope
     end
   end
 
+  # ===== 習熟度に応じた出題 =====
+  #
+  # 「その単元での直近の正答率」から中心難易度を決め、そこに近い問題を出やすくする。
+  # 単元ごとに見るのは、得意・苦手が単元によって違うため（全体の正答率だと、得意分野で
+  # 稼いだ数字で苦手分野にも難問が出てしまう）。はじめての単元はデータなし＝やさしめ。
+  MASTERY_WINDOW      = 10  # その単元での直近何問を見るか
+  MASTERY_MIN_SAMPLES = 3   # これ未満は「データなし」扱い
+  DEFAULT_CENTER      = 1   # データがないときの中心難易度
+
+  # 中心からの距離ごとの重み（距離0 / 1 / 2以上）。
+  # 中心を厚くしつつ、どの難易度も出る余地は残す（ずっと同じ難易度だと飽きるため）。
+  DIFFICULTY_WEIGHTS = [4, 2, 1].freeze
+
+  def self.center_difficulty(accuracy)
+    return DEFAULT_CENTER if accuracy.nil?
+
+    case accuracy
+    when 0...50  then 1
+    when 50...70 then 2
+    when 70...85 then 3
+    when 85...95 then 4
+    else              5
+    end
+  end
+
+  # 単元ID => その単元での直近 MASTERY_WINDOW 問の正答率(%)。
+  # 回答が MASTERY_MIN_SAMPLES 未満の単元は含めない（数問の偶然で難易度が飛ばないように）。
+  def self.mastery_by_unit(student, unit_ids)
+    return {} if student.nil? || unit_ids.empty?
+
+    rows = AnswerRecord
+      .joins(:problem)
+      .where(student_id: student.id, problems: { unit_id: unit_ids })
+      .order(created_at: :desc)
+      .pluck("problems.unit_id", :is_correct)
+
+    recent = Hash.new { |h, k| h[k] = [] }
+    rows.each do |unit_id, correct|
+      list = recent[unit_id]
+      list << correct if list.size < MASTERY_WINDOW
+    end
+
+    recent.each_with_object({}) do |(unit_id, list), acc|
+      next if list.size < MASTERY_MIN_SAMPLES
+      acc[unit_id] = list.count(true).to_f / list.size * 100
+    end
+  end
+
   private
+
+  def center_difficulty_by_unit(student, pool)
+    mastery = self.class.mastery_by_unit(student, pool.map(&:unit_id).uniq)
+    mastery.transform_values { |accuracy| self.class.center_difficulty(accuracy) }
+  end
+
+  # 重みつきのシャッフル。重い問題ほど前に来やすいが、順番は毎回変わる。
+  # key = rand ** (1/weight) を降順に並べる方式（重みつき非復元抽出の定石）。
+  def weighted_shuffle(list, centers)
+    list.sort_by do |problem|
+      center = centers[problem.unit_id] || DEFAULT_CENTER
+      distance = (problem.difficulty.to_i - center).abs
+      weight = DIFFICULTY_WEIGHTS[distance] || DIFFICULTY_WEIGHTS.last
+      -(rand**(1.0 / weight))
+    end
+  end
 
   # 問題を4つの層に振り分ける（上記 sample_problems_for のコメント参照）
   def classify(student, pool)
