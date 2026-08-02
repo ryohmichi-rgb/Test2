@@ -105,7 +105,7 @@ units_grade6 = [
         problem_type: "fill_in"
       },
       {
-        question: "120mLのジュースをAとBが3：2の割合で分けます。Aは何mLになりますか？",
+        question: "120mLのジュースをAとBが3：2の割合で分けます。Aは何mLになりますか？（単位はつけず数字だけで答えること）",
         answer: "72",
         hint: "全体を3+2=5に分けて、Aの分を求めましょう。",
         difficulty: 3,
@@ -120,21 +120,21 @@ units_grade6 = [
     display_order: 3,
     problems: [
       {
-        question: "60kmの道のりを2時間で走ったときの速さは？（km/h）",
+        question: "60kmの道のりを2時間で走ったときの速さは、時速何kmですか？（単位はつけず数字だけで答えること）",
         answer: "30",
         hint: "速さ＝距離÷時間",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "時速45kmで3時間走ったとき、何km進みますか？",
+        question: "時速45kmで3時間走ったとき、何km進みますか？（単位はつけず数字だけで答えること）",
         answer: "135",
         hint: "距離＝速さ×時間",
         difficulty: 1,
         problem_type: "fill_in"
       },
       {
-        question: "分速80mで歩くとき、2.4kmの距離を歩くのに何分かかりますか？",
+        question: "分速80mで歩くとき、2.4kmの距離を歩くのに何分かかりますか？（単位はつけず数字だけで答えること）",
         answer: "30",
         hint: "2.4km = 2400m。時間＝距離÷速さ",
         difficulty: 3,
@@ -398,14 +398,14 @@ extra_problems = {
     { question: "15 : 25 を最も簡単な整数の比にしなさい。（a:b の形で答えること）", answer: "3:5", hint: "5で割りましょう。", difficulty: 1, problem_type: "fill_in" },
     { question: "3 : 4 = 9 : □ の □ に当てはまる数を求めなさい。", answer: "12", hint: "3が9になったので3倍。4も3倍します。", difficulty: 2, problem_type: "fill_in" },
     { question: "10 : 15 = □ : 6 の □ に当てはまる数を求めなさい。", answer: "4", hint: "10:15 を簡単にすると 2:3。それを□:6に合わせます。", difficulty: 2, problem_type: "fill_in" },
-    { question: "200円をAとBで 3 : 5 に分けます。Bは何円ですか？", answer: "125", hint: "全体を3+5=8に分け、Bは5つ分。", difficulty: 3, problem_type: "fill_in" }
+    { question: "200円をAとBで 3 : 5 に分けます。Bは何円ですか？（単位はつけず数字だけで答えること）", answer: "125", hint: "全体を3+5=8に分け、Bは5つ分。", difficulty: 3, problem_type: "fill_in" }
   ],
   "速さ・時間・距離" => [
-    { question: "100kmの道のりを4時間で走ったときの速さは？（km/h）", answer: "25", hint: "速さ＝距離÷時間", difficulty: 1, problem_type: "fill_in" },
-    { question: "300mの道のりを分速60mで歩くと何分かかりますか？", answer: "5", hint: "時間＝距離÷速さ", difficulty: 1, problem_type: "fill_in" },
-    { question: "時速60kmで2.5時間走ると何km進みますか？", answer: "150", hint: "距離＝速さ×時間", difficulty: 2, problem_type: "fill_in" },
-    { question: "秒速5mは分速何mですか？", answer: "300", hint: "1分は60秒。5×60で求めます。", difficulty: 2, problem_type: "fill_in" },
-    { question: "時速4kmで3kmの道のりを歩くと何分かかりますか？", answer: "45", hint: "時間＝3÷4＝0.75時間。分に直します。", difficulty: 3, problem_type: "fill_in" }
+    { question: "100kmの道のりを4時間で走ったときの速さは、時速何kmですか？（単位はつけず数字だけで答えること）", answer: "25", hint: "速さ＝距離÷時間", difficulty: 1, problem_type: "fill_in" },
+    { question: "300mの道のりを分速60mで歩くと何分かかりますか？（単位はつけず数字だけで答えること）", answer: "5", hint: "時間＝距離÷速さ", difficulty: 1, problem_type: "fill_in" },
+    { question: "時速60kmで2.5時間走ると何km進みますか？（単位はつけず数字だけで答えること）", answer: "150", hint: "距離＝速さ×時間", difficulty: 2, problem_type: "fill_in" },
+    { question: "秒速5mは分速何mですか？（単位はつけず数字だけで答えること）", answer: "300", hint: "1分は60秒。5×60で求めます。", difficulty: 2, problem_type: "fill_in" },
+    { question: "時速4kmで3kmの道のりを歩くと何分かかりますか？（単位はつけず数字だけで答えること）", answer: "45", hint: "時間＝3÷4＝0.75時間。分に直します。", difficulty: 3, problem_type: "fill_in" }
   ],
   "文字と式（小6）" => [
     { question: '1個120円のりんごを $x$ 個買ったときの代金を式で表しなさい。', answer: "120x", hint: "（1個の値段）×（個数）。×は省略。", difficulty: 1, problem_type: "fill_in" },
@@ -462,25 +462,25 @@ advanced_problems = {
   "分数のかけ算・わり算" => [
     { question: '$\frac{9}{10} \times \frac{4}{3} \div 2$ を計算しなさい。（分数は a/b の形で答えること）',
       answer: "3/5", hint: '前から順に計算します。÷2 は $\times \frac{1}{2}$ と同じです。', difficulty: 4, problem_type: "fill_in" },
-    { question: '$\frac{3}{4}$ Lのジュースを、1人に $\frac{1}{8}$ Lずつ分けると何人に分けられますか？',
+    { question: '$\frac{3}{4}$ Lのジュースを、1人に $\frac{1}{8}$ Lずつ分けると何人に分けられますか？（単位はつけず数字だけで答えること）',
       answer: "6", hint: "「いくつ分か」を求めるのでわり算です。", difficulty: 4, problem_type: "fill_in" },
-    { question: '面積が $\frac{5}{6}$ m² の長方形の花だんがあります。たての長さが $\frac{2}{3}$ m のとき、横の長さは何mですか？（分数は a/b の形で答えること）',
+    { question: '面積が $\frac{5}{6}$ m² の長方形の花だんがあります。たての長さが $\frac{2}{3}$ m のとき、横の長さは何mですか？（単位はつけず、分数は a/b の形で答えること）',
       answer: "5/4", hint: "横 = 面積 ÷ たて です。", difficulty: 5, problem_type: "fill_in" }
   ],
   "比と比の値" => [
     { question: '$A : B = 2 : 3$、$B : C = 4 : 5$ のとき、$A : C$ を最も簡単な整数の比で答えなさい。（a:b の形で答えること）',
       answer: "8:15", hint: "Bの数をそろえます。2:3 は 8:12、4:5 は 12:15 にできます。", difficulty: 4, problem_type: "fill_in" },
-    { question: '兄と弟の所持金の比は $5 : 3$ です。兄が弟より400円多いとき、兄の所持金は何円ですか？',
+    { question: '兄と弟の所持金の比は $5 : 3$ です。兄が弟より400円多いとき、兄の所持金は何円ですか？（単位はつけず数字だけで答えること）',
       answer: "1000", hint: "比の差の2が400円にあたります。", difficulty: 4, problem_type: "fill_in" },
-    { question: '420円を $A : B : C = 2 : 3 : 5$ の割合で分けます。Bは何円ですか？',
+    { question: '420円を $A : B : C = 2 : 3 : 5$ の割合で分けます。Bは何円ですか？（単位はつけず数字だけで答えること）',
       answer: "126", hint: "全部で 2+3+5=10 にあたります。1にあたる金額から求めます。", difficulty: 5, problem_type: "fill_in" }
   ],
   "速さ・時間・距離" => [
-    { question: '時速72kmは秒速何mですか？',
+    { question: '時速72kmは秒速何mですか？（単位はつけず数字だけで答えること）',
       answer: "20", hint: "72km=72000m、1時間=3600秒です。", difficulty: 4, problem_type: "fill_in" },
-    { question: '4kmの道のりを、はじめの2kmは分速50m、残りの2kmは分速80mで歩きました。合わせて何分かかりましたか？',
+    { question: '4kmの道のりを、はじめの2kmは分速50m、残りの2kmは分速80mで歩きました。合わせて何分かかりましたか？（単位はつけず数字だけで答えること）',
       answer: "65", hint: "前半と後半の時間をそれぞれ出してから足します。", difficulty: 4, problem_type: "fill_in" },
-    { question: '家から学校までの1.2kmを、分速60mで歩くかわりに分速80mで走ると、何分早く着きますか？',
+    { question: '家から学校までの1.2kmを、分速60mで歩くかわりに分速80mで走ると、何分早く着きますか？（単位はつけず数字だけで答えること）',
       answer: "5", hint: "それぞれかかる時間を出して、その差を求めます。", difficulty: 5, problem_type: "fill_in" }
   ],
   "文字と式（小6）" => [
@@ -520,7 +520,7 @@ advanced_problems = {
       answer: "5", hint: "まずかっこを外し、xを左、数を右に移項します。", difficulty: 4, problem_type: "fill_in" },
     { question: '$\frac{x}{3} + 2 = 5$ を解きなさい。',
       answer: "9", hint: "先に2を移項してから、両辺に3をかけます。", difficulty: 4, problem_type: "fill_in" },
-    { question: '1個150円のケーキと1個90円のプリンを合わせて8個買ったら、代金は900円でした。ケーキは何個買いましたか？',
+    { question: '1個150円のケーキと1個90円のプリンを合わせて8個買ったら、代金は900円でした。ケーキは何個買いましたか？（単位はつけず数字だけで答えること）',
       answer: "3", hint: "ケーキを $x$ 個とすると、プリンは $8 - x$ 個です。", difficulty: 5, problem_type: "fill_in" }
   ],
   "比例と反比例" => [
