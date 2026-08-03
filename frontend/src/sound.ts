@@ -66,8 +66,13 @@ export function playFinish(): void {
 // 音源はライセンスを確認し、README にクレジットを書くこと。
 export type BgmTrack = { id: string; label: string; file: string };
 
+// ラベルは曲の雰囲気がわかる言い方にする（子どもが気分で選べるように）。
+// ファイル名は Pixabay からそのまま。末尾の数字が向こうの曲IDで、出典をたどれる。
 export const BGM_TRACKS: BgmTrack[] = [
-  { id: "study-jazz", label: "スタディジャズ", file: "/bgm/study-jazz.mp3" },
+  { id: "study-jazz",   label: "スタディジャズ", file: "/bgm/alex-morgan-study-jazz-study-music-564277.mp3" },
+  { id: "motivational", label: "やるきアップ",   file: "/bgm/alex-morgan-motivational-rise-inspiring-push-575881.mp3" },
+  { id: "calm",         label: "しずかな時間",   file: "/bgm/alex-morgan-waiting-room-calm-hold-loop-575878.mp3" },
+  { id: "horizon",      label: "ひろい世界",     file: "/bgm/alex-morgan-documentary-discovery-wide-horizon-573939.mp3" },
 ];
 
 export const BGM_RANDOM = "random";

@@ -3,11 +3,17 @@
 小学6年生〜中学1年生向けの算数・数学学習サービス。
 RPG風のステータス成長システムでモチベーションを維持しながら学習を続けられる。
 
-> BGM音源: [Study Jazz / study music](https://pixabay.com/ja/music/%E3%83%A2%E3%83%80%E3%83%B3%E3%82%B8%E3%83%A3%E3%82%BA-study-jazz-study-music-564277/) — [Pixabay](https://pixabay.com/)（Pixabay Content License）
+> BGM音源: いずれも **Alex Morgan** — [Pixabay](https://pixabay.com/)（Pixabay Content License）。
+> かっこ内は Pixabay の曲ID（ファイル名の末尾と同じ）。
+>
+> - [Study Jazz / study music](https://pixabay.com/ja/music/%E3%83%A2%E3%83%80%E3%83%B3%E3%82%B8%E3%83%A3%E3%82%BA-study-jazz-study-music-564277/)（564277）… 「スタディジャズ」
+> - Motivational Rise / inspiring push（575881）… 「やるきアップ」
+> - Waiting Room / calm hold loop（575878）… 「しずかな時間」
+> - Documentary Discovery / wide horizon（573939）… 「ひろい世界」
 >
 > BGMの曲を足すには、mp3 を `frontend/public/bgm/` に置いて
 > `frontend/src/sound.ts` の `BGM_TRACKS` に1行足す（配列に無いファイルは読み込まれない）。
-> 128kbps 程度で書き出せば1曲2〜3MBに収まる。追加したら上のクレジットにも追記すること。
+> 追加したら上のクレジットにも追記すること。
 
 ## 技術スタック
 
