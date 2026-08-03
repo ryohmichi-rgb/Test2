@@ -57,16 +57,66 @@ export function playFinish(): void {
 }
 
 // ===== BGM（音楽トラック） =====
+//
+// 曲は複数持てる。既定は「ランダム」で、1曲終わるたびに別の曲に移る（同じ曲は続けて引かない）。
+// せってい画面で曲を固定でき、そのときはその曲だけをループする。
+//
+// 曲を足すときは frontend/public/bgm/ に mp3 を置いて、この配列に1行足すだけ。
+// public/ はViteのバンドル対象外なので、**配列に無いファイルは誰も取りに行かない**。
+// 音源はライセンスを確認し、README にクレジットを書くこと。
+export type BgmTrack = { id: string; label: string; file: string };
+
+export const BGM_TRACKS: BgmTrack[] = [
+  { id: "study-jazz", label: "スタディジャズ", file: "/bgm/study-jazz.mp3" },
+];
+
+export const BGM_RANDOM = "random";
+
 const DEFAULT_BGM_VOLUME = 0.3;
 let bgm: HTMLAudioElement | null = null;
+let currentTrackId: string | null = null; // いま鳴っている曲
+
+// 次にかける曲を決める。「ランダム」のときだけ抽選し、直前と同じ曲は避ける
+// （曲が1つしかなければ避けようがないのでそのまま返す）。
+// 副作用を持たせないのは、抽選のルールだけを単体で確かめられるようにするため。
+export function nextTrackId(
+  selected: string,
+  playing: string | null,
+  tracks: BgmTrack[] = BGM_TRACKS
+): string | null {
+  if (tracks.length === 0) return null;
+  if (selected !== BGM_RANDOM && tracks.some((t) => t.id === selected)) return selected;
+  const others = tracks.filter((t) => t.id !== playing);
+  const pool = others.length > 0 ? others : tracks;
+  return pool[Math.floor(Math.random() * pool.length)].id;
+}
 
 function bgmEl(): HTMLAudioElement {
   if (!bgm) {
-    bgm = new Audio("/bgm.mp3");
-    bgm.loop = true;
+    bgm = new Audio();
+    bgm.preload = "none"; // src を入れるまで通信しない（全曲を先読みしない）
     bgm.volume = bgmVolume();
+    // 曲が終わったら次へ。曲を固定しているときは loop=true なのでここには来ない。
+    bgm.addEventListener("ended", () => { if (isBgmOn()) playTrack(); });
   }
   return bgm;
+}
+
+// 選択に従って1曲かける。鳴っている曲と違うときだけ src を差し替える。
+function playTrack(): void {
+  const id = nextTrackId(bgmTrack(), currentTrackId);
+  const track = BGM_TRACKS.find((t) => t.id === id);
+  if (!track) return;
+
+  const el = bgmEl();
+  // 曲を固定しているとき・そもそも1曲しかないときはブラウザ標準のループに任せる。
+  // ended を挟まないぶん確実で、曲が1つだけなら今までとまったく同じ動きになる。
+  el.loop = BGM_TRACKS.length <= 1 || bgmTrack() !== BGM_RANDOM;
+  if (currentTrackId !== track.id) {
+    currentTrackId = track.id;
+    el.src = track.file;
+  }
+  el.play().catch(() => { /* 自動再生制限などは無視 */ });
 }
 
 export function isBgmOn(): boolean {
@@ -80,9 +130,21 @@ export function setBgmVolume(v: number): void {
   localStorage.setItem("bgmVolume", String(v));
   if (bgm) bgm.volume = v;
 }
+export function bgmTrack(): string {
+  const id = localStorage.getItem("bgmTrack");
+  // 知らないIDならランダム扱い。曲を差し替えても設定が壊れない。
+  return id && BGM_TRACKS.some((t) => t.id === id) ? id : BGM_RANDOM;
+}
+export function setBgmTrack(id: string): void {
+  localStorage.setItem("bgmTrack", id);
+  if (!isBgmOn()) return;
+  // 「ランダム」に戻したときは、いまの曲を最後まで流してから次に移る（急に曲が切れない）
+  if (id === BGM_RANDOM && currentTrackId) { bgmEl().loop = false; return; }
+  playTrack();
+}
 export function startBgm(): void {
   localStorage.setItem("bgm", "on");
-  bgmEl().play().catch(() => { /* 自動再生制限などは無視 */ });
+  playTrack();
 }
 export function stopBgm(): void {
   localStorage.setItem("bgm", "off");
@@ -96,6 +158,6 @@ export function toggleBgm(): boolean {
 
 // リロード後、BGMがオンなら最初の操作で自動再開（ブラウザの自動再生制限対策）
 if (typeof window !== "undefined" && isBgmOn()) {
-  const resume = () => { bgmEl().play().catch(() => {}); window.removeEventListener("pointerdown", resume); };
+  const resume = () => { playTrack(); window.removeEventListener("pointerdown", resume); };
   window.addEventListener("pointerdown", resume, { once: true });
 }

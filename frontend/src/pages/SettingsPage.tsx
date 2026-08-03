@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { changePassword } from "../api";
+import { BGM_RANDOM, BGM_TRACKS, bgmTrack, isBgmOn, setBgmTrack, toggleBgm } from "../sound";
 
 // 生徒が自分でパスワードを変える画面。
 // パスワードを変えると今までのトークンは失効するので、返ってきた新しいトークンに差し替える
@@ -16,6 +17,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  const [bgmOn, setBgmOnState] = useState(isBgmOn());
+  const [track, setTrack] = useState(bgmTrack());
+
+  const chooseTrack = (id: string) => {
+    setTrack(id);
+    setBgmTrack(id); // オンなら鳴っている曲もすぐ切り替わる
+  };
 
   const submit = async () => {
     setError(null);
@@ -96,6 +105,33 @@ export default function SettingsPage() {
       <p style={{ color: "#a0aec0", fontSize: "0.78rem", margin: "1rem 0 1.5rem", lineHeight: 1.6 }}>
         パスワードを忘れてしまったときは、管理者に再発行してもらってください。
       </p>
+
+      <div className="setup-card">
+        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem" }}>BGM</h3>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}>
+          <span style={{ fontSize: "0.95rem" }}>音楽を流す</span>
+          <button className="btn-hint" onClick={() => setBgmOnState(toggleBgm())}>
+            {bgmOn ? "🎵 オン" : "🔇 オフ"}
+          </button>
+        </div>
+
+        {/* 曲が1つしかないうちは選ぶものがないので出さない */}
+        {BGM_TRACKS.length > 1 && (
+          <div className="start-form" style={{ marginTop: "1rem" }}>
+            <label>曲</label>
+            <select value={track} onChange={(e) => chooseTrack(e.target.value)}>
+              <option value={BGM_RANDOM}>ランダム（おまかせ）</option>
+              {BGM_TRACKS.map((t) => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+            <p style={{ color: "#a0aec0", fontSize: "0.78rem", margin: "0.5rem 0 0", lineHeight: 1.6 }}>
+              「ランダム」だと、1曲おわるたびにちがう曲になります。
+            </p>
+          </div>
+        )}
+      </div>
 
       <button className="btn-hint" style={{ width: "100%" }} onClick={logout}>ログアウト</button>
     </div>
