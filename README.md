@@ -14,6 +14,13 @@ RPG風のステータス成長システムでモチベーションを維持し�
 > BGMの曲を足すには、mp3 を `frontend/public/bgm/` に置いて
 > `frontend/src/sound.ts` の `BGM_TRACKS` に1行足す（配列に無いファイルは読み込まれない）。
 > 追加したら上のクレジットにも追記すること。
+>
+> 配信しているファイルは **128kbps** に落としてある（Pixabay の配布は256kbps）。
+> 新しい曲も同じように揃える:
+>
+> ```sh
+> lame --decode もとの.mp3 tmp.wav && lame -b 128 -m j -q 2 tmp.wav 置くファイル.mp3
+> ```
 
 ## 技術スタック
 
