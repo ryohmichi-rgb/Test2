@@ -326,7 +326,10 @@ export interface DailyQuota {
   earned_points: number;
   approx_problems: number;
   studied_today: boolean;
+  /** 学習した日の連続数 */
   streak: number;
+  /** ノルマを達成した日の連続数（学習日の連続とは別枠。解ける問題が尽きた日は飛ばす） */
+  quota_streak: number;
   has_goal: boolean;
   /** 満点で解ける問題が尽きた状態（全問を最近やりきった） */
   exhausted: boolean;

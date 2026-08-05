@@ -905,16 +905,31 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  /* 連続日数のバッジが2つ並ぶと狭い画面で入りきらない。
+     見出しを割るのではなくバッジを次の行に送る */
+  flex-wrap: wrap;
+  gap: 0.4rem;
   margin-bottom: 0.75rem;
 }
-.quota-title { font-weight: 700; font-size: 1.05rem; }
+.quota-title { font-weight: 700; font-size: 1.05rem; white-space: nowrap; }
+/* 連続日数のバッジは2つ並ぶことがある（学習日・ノルマ達成）。
+   狭い画面では折り返して、カードからはみ出させない */
+.quota-streaks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
 .quota-streak {
   background: rgba(255,255,255,0.2);
   border-radius: 999px;
   padding: 0.2rem 0.7rem;
   font-size: 0.82rem;
   font-weight: 700;
+  white-space: nowrap;
 }
+/* ノルマ達成の方は少し強く見せる（達成しにくい方なので） */
+.quota-streak-goal { background: rgba(255,255,255,0.34); }
 .quota-bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
 .quota-bar-track {
   flex: 1;

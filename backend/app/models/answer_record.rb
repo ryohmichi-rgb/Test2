@@ -8,6 +8,7 @@ class AnswerRecord < ApplicationRecord
   before_validation :evaluate_answer, on: :create
   before_validation :assign_points, on: :create
   after_create :update_student_stat, if: :is_correct?
+  after_create :record_daily_quota
 
   POINTS_BY_DIFFICULTY = { 1 => 10, 2 => 15, 3 => 20, 4 => 25, 5 => 30 }.freeze
   DEFAULT_POINTS = 10
@@ -72,6 +73,14 @@ class AnswerRecord < ApplicationRecord
     AnswerRecord
       .where(student_id: student_id, problem_id: problem_id, is_correct: true)
       .maximum(:created_at)
+  end
+
+  # その日のノルマを必ず残す。ホームを開かずに問題だけ解いた日でも、
+  # あとから「ノルマを達成した日」かどうかを判定できるようにするため
+  # （ノルマは goals の履歴が無いので、その日のうちに残さないと復元できない）。
+  # 2問目からは既存行が見つかるだけなので、索引1回ぶんの負担で済む。
+  def record_daily_quota
+    DailyQuota.for(student, created_at.to_date)
   end
 
   def update_student_stat

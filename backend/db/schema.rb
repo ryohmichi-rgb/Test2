@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_31_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_000000) do
     t.string "text"
     t.datetime "updated_at", null: false
     t.index ["problem_id"], name: "index_choices_on_problem_id"
+  end
+
+  create_table "daily_quotas", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "on_date", null: false
+    t.bigint "student_id", null: false
+    t.integer "target_points", null: false
+    t.datetime "updated_at", null: false
+    t.index ["student_id", "on_date"], name: "index_daily_quotas_on_student_id_and_on_date", unique: true
+    t.index ["student_id"], name: "index_daily_quotas_on_student_id"
   end
 
   create_table "goals", force: :cascade do |t|
@@ -193,6 +203,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_000000) do
   add_foreign_key "answer_records", "problems"
   add_foreign_key "answer_records", "students"
   add_foreign_key "choices", "problems"
+  add_foreign_key "daily_quotas", "students"
   add_foreign_key "goals", "stat_types"
   add_foreign_key "goals", "students"
   add_foreign_key "lesson_reads", "students"

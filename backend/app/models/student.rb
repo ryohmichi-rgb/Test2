@@ -10,6 +10,7 @@ class Student < ApplicationRecord
   has_many :lesson_reads, dependent: :destroy
   has_many :ai_usages, dependent: :destroy
   has_many :student_badges, dependent: :destroy
+  has_many :daily_quotas, dependent: :destroy
 
   validates :name, presence: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }
@@ -104,5 +105,49 @@ class Student < ApplicationRecord
       d -= 1
     end
     count
+  end
+
+  # ノルマを達成した日の連続数。学習日の連続（study_streak）とは別枠で数える。
+  #
+  # 1日ぶんの判定は3通り:
+  #   達成   … その日ポイントを稼ぎ、ノルマにも届いた（数える）
+  #   スキップ … ノルマが0＝満点で解ける問題が尽きていて、実際に何もしなかった日。
+  #             解きたくても解けない日なので、連続は切らないが達成にも数えない
+  #   未達   … それ以外（ここで打ち切り）
+  #
+  # ノルマの記録が無い日でも打ち切る。あとから復元できない以上、
+  # 「達成していたかもしれない」を達成とは見なさない（DailyQuota のコメント参照）。
+  def quota_streak(today = Date.current)
+    targets = daily_quotas.pluck(:on_date, :target_points).to_h
+    earned = answer_records.pluck(:created_at, :points_awarded)
+      .each_with_object(Hash.new(0)) { |(at, pts), acc| acc[at.to_date] += pts.to_i }
+
+    # 今日まだ達成していなければ昨日から数える（日中に「連続が切れた」と見せないため）
+    d = quota_met?(targets[today], earned[today]) ? today : today - 1
+    count = 0
+    loop do
+      target = targets[d]
+      break if target.nil?
+
+      if quota_met?(target, earned[d])
+        count += 1
+      elsif !quota_skipped?(target, earned[d])
+        break
+      end
+      d -= 1
+    end
+    count
+  end
+
+  private
+
+  def quota_met?(target, points)
+    return false if target.nil?
+    points.to_i > 0 && points.to_i >= target
+  end
+
+  # 解ける問題が尽きていて（ノルマ0）、実際に何もしなかった日
+  def quota_skipped?(target, points)
+    target.to_i.zero? && points.to_i.zero?
   end
 end

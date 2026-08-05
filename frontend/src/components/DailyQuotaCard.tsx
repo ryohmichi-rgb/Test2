@@ -8,9 +8,17 @@ export default function DailyQuotaCard({ quota, onStart }: { quota: DailyQuota; 
     <div className="quota-card">
       <div className="quota-head">
         <span className="quota-title">今日のノルマ</span>
-        {quota.streak > 0 && (
-          <span className="quota-streak">🔥 {quota.streak}日れんぞく</span>
-        )}
+        <span className="quota-streaks">
+          {quota.streak > 0 && (
+            <span className="quota-streak">🔥 {quota.streak}日れんぞく</span>
+          )}
+          {/* ノルマ達成の連続は学習日の連続より厳しいので、伸びていれば別に見せる */}
+          {quota.quota_streak > 0 && (
+            <span className="quota-streak quota-streak-goal" title="ノルマを達成した日の連続">
+              🎯 ノルマ{quota.quota_streak}日
+            </span>
+          )}
+        </span>
       </div>
 
       {quota.exhausted ? (

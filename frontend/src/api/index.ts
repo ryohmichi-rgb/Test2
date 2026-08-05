@@ -75,8 +75,12 @@ export const fetchGrowth = (studentId: number): Promise<Growth> =>
 export const fetchReviewList = (studentId: number): Promise<ReviewList> =>
   api.get<ReviewList>(`/students/${studentId}/review`).then((r) => r.data);
 
+// quota_streak は後から足したフィールド。旧バックエンドから返ってこない窓があるので既定値を埋める
 export const fetchDailyQuota = (studentId: number): Promise<DailyQuota> =>
-  api.get<DailyQuota>(`/students/${studentId}/quota`).then((r) => r.data);
+  api.get<DailyQuota>(`/students/${studentId}/quota`).then((r) => ({
+    ...r.data,
+    quota_streak: r.data.quota_streak ?? 0,
+  }));
 
 export const fetchLessonReads = (studentId: number): Promise<number[]> =>
   api.get<{ unit_ids: number[] }>(`/students/${studentId}/lesson_reads`).then((r) => r.data.unit_ids);
