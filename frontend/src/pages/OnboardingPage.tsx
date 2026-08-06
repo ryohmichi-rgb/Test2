@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchReferenceStats, updateGoal, completeOnboarding, fetchLearningPlan, fetchGrades } from "../api";
 import type { ReferenceStat } from "../types";
 import Mascot from "../components/Mascot";

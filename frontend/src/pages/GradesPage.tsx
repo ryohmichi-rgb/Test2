@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchGrades, fetchLessonReads } from "../api";
 import type { Grade } from "../types";
 

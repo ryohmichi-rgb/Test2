@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchAdminStudents, deleteAdminStudent, resetStudentPassword } from "../../api";
 import type { AdminStudentSummary } from "../../types";
 import { useAdminGuard } from "./guard";

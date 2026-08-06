@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { fetchStudentProgress } from "../api";
 import type { StudentProgress, UnitProgress } from "../types";
 

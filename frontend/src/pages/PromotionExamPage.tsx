@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchPromotionExam, submitPromotionExam } from "../api";
 import type { Problem, PromotionExamSet, PromotionExamResult } from "../types";
 import ProblemView from "../components/ProblemView";

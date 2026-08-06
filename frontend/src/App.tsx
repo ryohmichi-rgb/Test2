@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import AuthPage from "./pages/AuthPage";
 import GradesPage from "./pages/GradesPage";
 import ProgressPage from "./pages/ProgressPage";

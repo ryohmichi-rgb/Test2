@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchGrades, fetchProblemSet, submitAnswer } from "../api";
 import type { Grade, Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchStudentStats, fetchReferenceStats, updateGoal, fetchCondition, fetchRankStatus, fetchAchievements, updateTitle } from "../api";
 import type { StudentStat, ReferenceStat, Condition, RankStatus, TitleOption } from "../types";
 import ReferenceIcon from "../components/ReferenceIcon";

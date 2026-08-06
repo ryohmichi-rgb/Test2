@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchTestResults } from "../api";
 import type { TestResult, ScopeType } from "../types";
 

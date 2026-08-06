@@ -688,6 +688,11 @@ flowchart TD
 
 ## 6. フロント構成（主なコンポーネント）
 
+> ルーティングは **`react-router` v8**。v8 で `react-router-dom` は無くなったので、
+> `BrowserRouter` なども **`react-router` から import する**（`react-router-dom` は使わない）。
+> 使っているのは `BrowserRouter` / `Routes` / `Route` / `Navigate` / `useNavigate` / `useParams` の6つだけで、
+> データ読み込みは各ページが `api/` を直接呼ぶ（loader/action は使っていない）。
+
 | 種別 | ファイル | 役割 |
 |------|----------|------|
 | ページ | `pages/*.tsx` | 各画面（Auth / Onboarding / Home / Grades / Lesson / Practice / ProblemSet / Test / TestHistory / Review / Stats / Plan / Settings） |

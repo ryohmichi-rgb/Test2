@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { fetchAdminProblems, createAdminProblem, updateAdminProblem, deleteAdminProblem } from "../../api";
 import type { AdminProblem, AdminChoice } from "../../types";
 import { useAdminGuard } from "./guard";

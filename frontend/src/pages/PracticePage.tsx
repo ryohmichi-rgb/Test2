@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { fetchUnit, submitAnswer } from "../api";
 import type { Unit, Problem, AnswerResult } from "../types";
 import AskTeacher from "../components/AskTeacher";

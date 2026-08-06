@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import type { RankStatus } from "../types";
 
 // 総合ランク（全ステータスの合計ポイント）の表示。

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition, fetchRankStatus } from "../api";
 import type { Growth, DailyQuota, StudentStat, Badge, Condition, RankStatus } from "../types";
 import GrowthChart from "../components/GrowthChart";

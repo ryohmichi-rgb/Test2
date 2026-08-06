@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { fetchAdminReferenceStats, fetchAdminMeta, createAdminReferenceStat, updateAdminReferenceStat, deleteAdminReferenceStat } from "../../api";
 import type { AdminReferenceStat, AdminMeta } from "../../types";
 import { useAdminGuard } from "./guard";
