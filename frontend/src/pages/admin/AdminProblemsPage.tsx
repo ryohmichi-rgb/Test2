@@ -21,7 +21,7 @@ export default function AdminProblemsPage() {
   const reload = () => fetchAdminProblems(uid).then(setProblems);
   useEffect(() => { reload().finally(() => setLoading(false)); /* eslint-disable-next-line */ }, [uid]);
 
-  const startNew = () => setDraft({ unit_id: uid, question: "", answer: "", hint: "", difficulty: 1, problem_type: "fill_in", active: true, choices: [] });
+  const startNew = () => setDraft({ unit_id: uid, question: "", answer: "", hint: "", solution: "", difficulty: 1, problem_type: "fill_in", active: true, choices: [] });
   const startEdit = (p: AdminProblem) => setDraft({ ...p, choices: p.choices.map((c) => ({ ...c })) });
 
   const setChoice = (i: number, patch: Partial<AdminChoice>) => {
@@ -33,7 +33,7 @@ export default function AdminProblemsPage() {
   const save = async () => {
     if (!draft?.question?.trim() || !draft.answer?.trim()) { setError("問題文と答えは必須です"); return; }
     setSaving(true); setError("");
-    const body = { unit_id: uid, question: draft.question, answer: draft.answer, hint: draft.hint, difficulty: draft.difficulty, problem_type: draft.problem_type, active: draft.active };
+    const body = { unit_id: uid, question: draft.question, answer: draft.answer, hint: draft.hint, solution: draft.solution, difficulty: draft.difficulty, problem_type: draft.problem_type, active: draft.active };
     const choices = draft.problem_type === "multiple_choice" ? (draft.choices ?? []) : [];
     try {
       if (draft.id) await updateAdminProblem(draft.id, body, choices);
@@ -75,6 +75,9 @@ export default function AdminProblemsPage() {
           <input className="admin-input" value={draft.answer ?? ""} onChange={(e) => setDraft({ ...draft, answer: e.target.value })} />
           <label className="admin-label">ヒント</label>
           <input className="admin-input" value={draft.hint ?? ""} onChange={(e) => setDraft({ ...draft, hint: e.target.value })} />
+          {/* 解説は間違えたときだけ出る。ヒント（解く前）とは別物 */}
+          <label className="admin-label">解説（間違えたときに出す解き方）</label>
+          <textarea className="admin-input" rows={3} value={draft.solution ?? ""} onChange={(e) => setDraft({ ...draft, solution: e.target.value })} />
           <div className="admin-row">
             <div><label className="admin-label">難易度</label>
               <select className="admin-input" value={draft.difficulty} onChange={(e) => setDraft({ ...draft, difficulty: Number(e.target.value) })}>

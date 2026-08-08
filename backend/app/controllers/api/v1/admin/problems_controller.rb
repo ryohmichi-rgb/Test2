@@ -51,12 +51,12 @@ module Api
         end
 
         def problem_params
-          params.require(:problem).permit(:unit_id, :question, :answer, :hint, :difficulty, :problem_type, :active)
+          params.require(:problem).permit(:unit_id, :question, :answer, :hint, :solution, :difficulty, :problem_type, :active)
         end
 
         def problem_json(p)
           {
-            id: p.id, unit_id: p.unit_id, question: p.question, answer: p.answer, hint: p.hint,
+            id: p.id, unit_id: p.unit_id, question: p.question, answer: p.answer, hint: p.hint, solution: p.solution,
             difficulty: p.difficulty, problem_type: p.problem_type, active: p.active,
             used: p.answer_records.exists?,
             choices: p.choices.as_json(only: [:id, :text, :is_correct])

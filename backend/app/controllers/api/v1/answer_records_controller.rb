@@ -10,7 +10,10 @@ module Api
             points: record.points_awarded,
             # 解き直しで減額されたか。黙って減ると不具合に見えるのでフロントで知らせる。
             is_repeat: record.repeat?,
-            explanation: record.is_correct ? "正解です！" : "惜しい！正解は「#{record.problem.answer}」です。"
+            explanation: record.is_correct ? "正解です！" : "惜しい！正解は「#{record.problem.answer}」です。",
+            # 解き方の解説。間違えたときだけ返す（正解した子に読ませてテンポを落とさない）。
+            # 中身は problems.solution（seedで全問に用意。管理画面から直せる）。
+            solution: record.is_correct ? nil : record.problem.solution.presence
           }, status: :created
         else
           render json: { errors: record.errors.full_messages }, status: :unprocessable_entity

@@ -214,4 +214,5 @@ export const submitAnswer = (
         submitted_answer: submittedAnswer,
       },
     })
-    .then((r) => r.data);
+    // solution は後から足したフィールド。旧バックエンドから返ってこない窓があるので既定値を埋める
+    .then((r) => ({ ...r.data, solution: r.data.solution ?? null }));

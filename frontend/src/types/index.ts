@@ -174,6 +174,8 @@ export interface AdminProblem {
   question: string;
   answer: string;
   hint: string;
+  /** 間違えたときに出す解き方。空なら何も出ない */
+  solution: string;
   difficulty: number;
   problem_type: "fill_in" | "multiple_choice";
   active: boolean;
@@ -209,6 +211,8 @@ export interface AnswerResult {
   is_correct: boolean;
   correct_answer: string;
   explanation: string;
+  /** 解き方の解説。間違えたときだけ入る（正解時と、解説が未登録の問題では null） */
+  solution: string | null;
   points: number;
   /** 同じ問題の解き直しでポイントが減額されたか（黙って減らさず知らせる） */
   is_repeat: boolean;

@@ -6,6 +6,7 @@ import AskTeacher from "../components/AskTeacher";
 import MathText from "../components/MathText";
 import AnswerInput from "../components/AnswerInput";
 import PointsEarned from "../components/PointsEarned";
+import SolutionNote from "../components/SolutionNote";
 import { playCorrect, playIncorrect } from "../sound";
 
 type ProblemState = {
@@ -134,6 +135,7 @@ export default function PracticePage() {
           <div className={`answer-feedback ${currentState.result?.is_correct ? "correct" : "incorrect"}`}>
             <p className="feedback-emoji">{currentState.result?.is_correct ? "◎" : "✕"}</p>
             <p className="feedback-text">{currentState.result?.explanation}</p>
+            <SolutionNote solution={currentState.result?.solution ?? null} />
             {currentState.result && <PointsEarned result={currentState.result} />}
             <button className="btn-primary" onClick={handleNext}>
               {currentIndex + 1 < problems.length ? "次の問題へ →" : "結果を見る"}

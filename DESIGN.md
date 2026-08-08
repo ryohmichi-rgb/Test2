@@ -92,7 +92,8 @@ erDiagram
     problems {
         text question
         string answer
-        text hint
+        text hint "解く前のヒント"
+        text solution "間違えたときに出す解き方"
         int difficulty "1-5"
         string problem_type "fill_in/multiple_choice"
         bool active "無効化で出題除外"
@@ -184,6 +185,9 @@ erDiagram
   `bonus_points` は高得点ボーナス（自己ベスト更新時のみ）。成長曲線でこの値も合算する。
 - **answer_records.points_awarded** … その回答で実際に入ったポイント。解き直しの逓減を含めて
   **回答時に確定**させる（3.13）。今日のノルマ・成長曲線はこの列をSUMするだけでよい。
+- **problems.hint / problems.solution** … `hint` は**解く前**に見るヒント（自分で押して開く）、
+  `solution` は**間違えたあと**に出る解き方。役割が違うので別の列にしている。
+  `solution` は全94問に用意ずみ。空でも画面は落ちない（何も出ないだけ）。
 - **problem.problem_type** … `fill_in`（記述）または `multiple_choice`（選択）。選択の場合のみ `choices` を持つ。
 - **difficulty** … 1〜5。ポイント計算に使う（満点は 10/15/20/25/30pt）。
 - **students.username / password_digest** … 認証用。`username` は一意（ログインID）、`password_digest` は bcrypt（`has_secure_password`）。
@@ -423,6 +427,22 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 > ⚠️ **seeds.rb の問題文で LaTeX を書くときは Ruby のシングルクォートを使う。**
 > `"$\frac{2}{3}$"` はダブルクォートなので `\f` が改ページ文字に化ける。
 > `'$\frac{2}{3}$'` と書くこと。
+
+#### 間違えたときの解き方
+
+不正解のとき、正解の表示に続けて **`problems.solution`（解き方）** を出す。
+以前は「惜しい！正解は「3/8」です。」だけで、**なぜ間違えたかが分からなかった**。
+
+- **正解のときは出さない。** 読む必要がないうえ、テンポが落ちる。
+  APIも正解時は `solution` を返さない（画面側でも二重に守る）。
+- 描画は `SolutionNote`。中の数式は `MathText` を通すので `$...$` がそのまま組版される。
+- **解説が空でも画面は落ちない**（何も出ないだけ）。管理画面から足した問題を想定している。
+- 解説は管理画面から直せる。**seed は空のときだけ入れる**（`fill_solution`）ので、直した内容は
+  デプロイのたびに上書きされない。
+
+> ⚠️ **`find_or_create_by!` のブロックは新規作成のときしか走らない。**
+> あとから列を足して seed のデータに書くだけでは、**すでにある問題には入らない**。
+> `solution` は `fill_solution` で作成後にも入れている。同じ形で列を足すときは注意。
 
 #### 答えの入力（キーパッド）
 
@@ -717,6 +737,7 @@ flowchart TD
 | 共通 | `api/client.ts` | axios。トークン自動付与＋401ハンドリング |
 | 共通 | `components/ProblemView.tsx` | 1問の表示（記述/選択）。演習・問題集・テスト・復習で共用 |
 | 共通 | `components/AnswerInput.tsx` | 記述式の答えの入力欄＋キーパッド。答えを打つ画面すべてで共用 |
+| 共通 | `components/SolutionNote.tsx` | 間違えたときに出す「解き方」。演習・問題集・復習・今日の一問で共用 |
 | 共通 | `components/GrowthChart.tsx` | 成長曲線（実線＋点線、合計/ステータス別タブ） |
 | 共通 | `components/DailyQuotaCard.tsx` | 今日のノルマカード |
 | 共通 | `components/MascotMessage.tsx` | 応援メッセージを話す手描き風マスコット |

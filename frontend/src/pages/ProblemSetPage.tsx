@@ -5,6 +5,7 @@ import type { Grade, Problem, AnswerResult } from "../types";
 import ProblemView from "../components/ProblemView";
 import AskTeacher from "../components/AskTeacher";
 import PointsEarned from "../components/PointsEarned";
+import SolutionNote from "../components/SolutionNote";
 import { playCorrect, playIncorrect } from "../sound";
 
 const COUNTS = [5, 10, 20];
@@ -198,6 +199,7 @@ export default function ProblemSetPage() {
             <div className={`answer-feedback ${feedback.is_correct ? "correct" : "incorrect"}`} style={{ marginTop: "1rem" }}>
               <p className="feedback-emoji">{feedback.is_correct ? "◎" : "✕"}</p>
               <p className="feedback-text">{feedback.explanation}</p>
+              <SolutionNote solution={feedback.solution} />
               <PointsEarned result={feedback} />
               <button className="btn-primary" onClick={next}>
                 {idx + 1 < problems.length ? "次の問題へ →" : "結果を見る"}
