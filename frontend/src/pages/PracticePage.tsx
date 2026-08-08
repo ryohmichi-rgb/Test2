@@ -4,6 +4,7 @@ import { fetchUnit, submitAnswer } from "../api";
 import type { Unit, Problem, AnswerResult } from "../types";
 import AskTeacher from "../components/AskTeacher";
 import MathText from "../components/MathText";
+import AnswerInput from "../components/AnswerInput";
 import PointsEarned from "../components/PointsEarned";
 import { playCorrect, playIncorrect } from "../sound";
 
@@ -153,15 +154,7 @@ export default function PracticePage() {
                 ))}
               </div>
             ) : (
-              <input
-                type="text"
-                className="answer-input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                placeholder="答えを入力..."
-                autoFocus
-              />
+              <AnswerInput value={input} onChange={setInput} onEnter={handleSubmit} autoFocus />
             )}
 
             <div className="action-row">

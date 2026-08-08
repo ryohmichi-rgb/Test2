@@ -1,5 +1,6 @@
 import type { Problem } from "../types";
 import MathText from "./MathText";
+import AnswerInput from "./AnswerInput";
 
 type Props = {
   problem: Problem;
@@ -34,16 +35,7 @@ export default function ProblemView({ problem, value, onChange, disabled, onEnte
           ))}
         </div>
       ) : (
-        <input
-          type="text"
-          className="answer-input"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
-          placeholder="答えを入力..."
-          disabled={disabled}
-          autoFocus
-        />
+        <AnswerInput value={value} onChange={onChange} disabled={disabled} onEnter={onEnter} autoFocus />
       )}
     </>
   );

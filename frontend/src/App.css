@@ -289,6 +289,49 @@ body {
   border-color: #4c51bf;
 }
 
+/* 答えを打つためのキーパッド。
+   答えに出てくる文字は +-/0123456789:abx の17種類だけなので、これで全部打てる。
+   入力欄には inputMode="none" を付けてスマホのソフトキーボードを出さないようにしてあるが、
+   PCの物理キーボードはそのまま使える（inputMode は仮想キーボードにしか効かない）。 */
+.keypad {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: 320px;      /* PCで間延びしないよう頭を押さえる */
+  margin: 0 auto 1rem;
+}
+.keypad-row {
+  display: flex;
+  gap: 0.4rem;
+}
+.keypad-key {
+  flex: 1;
+  min-width: 0;          /* 狭い画面でもはみ出さない */
+  /* 指で押せる大きさを確保する（小さいと押し間違える） */
+  min-height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #2d3748;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  /* 連打したときに文字が選択されてしまうのを防ぐ */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.keypad-key:active { background: #e9eaf6; border-color: #4c51bf; }
+.keypad-key:disabled { opacity: 0.4; cursor: default; }
+.keypad-key-del { background: #f7fafc; color: #718096; }
+/* 最後の行（a・b）は2つしかないので、幅が広がりすぎないよう左に寄せる */
+.keypad-row:last-child .keypad-key { flex: 0 0 calc((100% - 1.2rem) / 4); }
+
+@media (hover: hover) {
+  .keypad-key:hover { background: #f0f1fa; border-color: #a3bffa; }
+}
+
 .choices-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

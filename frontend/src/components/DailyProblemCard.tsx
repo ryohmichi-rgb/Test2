@@ -4,6 +4,7 @@ import type { Problem, AnswerResult } from "../types";
 import ProblemView from "./ProblemView";
 import MathText from "./MathText";
 import AskTeacher from "./AskTeacher";
+import AnswerInput from "./AnswerInput";
 import PointsEarned from "./PointsEarned";
 import { playCorrect, playIncorrect } from "../sound";
 
@@ -55,15 +56,7 @@ export default function DailyProblemCard({ studentId }: { studentId: number }) {
           {problem.problem_type === "multiple_choice" ? (
             <ProblemView problem={problem} value={answer} onChange={setAnswer} />
           ) : (
-            <input
-              type="text"
-              className="answer-input"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && check()}
-              placeholder="答えを入力..."
-              style={{ marginBottom: "0.6rem" }}
-            />
+            <AnswerInput value={answer} onChange={setAnswer} onEnter={check} />
           )}
           <button className="btn-primary" style={{ width: "100%", padding: "0.55rem" }} onClick={check} disabled={submitting || !answer.trim()}>
             {submitting ? "..." : "答える"}
