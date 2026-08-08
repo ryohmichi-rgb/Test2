@@ -5,6 +5,7 @@ import type { Problem, PromotionExamSet, PromotionExamResult } from "../types";
 import ProblemView from "../components/ProblemView";
 import MathText from "../components/MathText";
 import AnswerInput from "../components/AnswerInput";
+import ScratchPad from "../components/ScratchPad";
 import { playFinish } from "../sound";
 
 // 昇格試験。通常のテストと違い、範囲・問題数・合格ラインは固定で選べない。
@@ -159,6 +160,8 @@ export default function PromotionExamPage() {
       <p className="daily-question" style={{ marginTop: "1rem" }}>
         <MathText>{current.question}</MathText>
       </p>
+
+      <ScratchPad key={current.id} />
 
       {current.problem_type === "multiple_choice" ? (
         <ProblemView problem={current} value={answers[current.id] ?? ""} onChange={setAnswer} />

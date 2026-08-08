@@ -332,6 +332,56 @@ body {
   .keypad-key:hover { background: #f0f1fa; border-color: #a3bffa; }
 }
 
+/* 手書きメモ（筆算・途中式）。既定は閉じていて、押すと開く。
+   画面はすでに縦に長い（問題文＋入力欄＋キーパッド）ので、常時表示にはしない。 */
+.scratch-toggle { width: 100%; margin-bottom: 0.75rem; }
+
+.scratch {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.6rem;
+  margin-bottom: 0.9rem;
+  background: #fcfcfd;
+}
+.scratch-bar {
+  display: flex;
+  flex-wrap: wrap;      /* 狭い画面ではボタンを折り返す */
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+.scratch-tool {
+  flex: 1 1 auto;
+  min-height: 40px;     /* 指で押せる大きさ */
+  padding: 0.4rem 0.5rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.scratch-tool.on {
+  background: #ebf4ff;
+  border-color: #4c51bf;
+  color: #4c51bf;
+  font-weight: 700;
+}
+
+.scratch-canvas {
+  display: block;
+  width: 100%;
+  border: 1px dashed #cbd5e0;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 27px, #edf2f7 27px, #edf2f7 28px),
+    #fff;              /* うすい罫線。桁をそろえる目安にする */
+  /* 指で書くときにページが動かないようにする。これが無いと描くかわりにスクロールする */
+  touch-action: none;
+  cursor: crosshair;
+}
+.scratch-note {
+  font-size: 0.72rem;
+  color: #a0aec0;
+  margin-top: 0.4rem;
+  line-height: 1.6;
+}
+
 /* 間違えたときに出す「解き方」。正解のときは出さない（テンポを落とさない）。
    フィードバックの吹き出しの中に置くので、背景から浮かせて読みやすくする */
 .solution-note {

@@ -6,6 +6,7 @@ import ProblemView from "../components/ProblemView";
 import AskTeacher from "../components/AskTeacher";
 import PointsEarned from "../components/PointsEarned";
 import SolutionNote from "../components/SolutionNote";
+import ScratchPad from "../components/ScratchPad";
 import { playCorrect, playIncorrect } from "../sound";
 
 const COUNTS = [5, 10, 20];
@@ -208,6 +209,7 @@ export default function ProblemSetPage() {
           </>
         ) : (
           <>
+            <ScratchPad key={problem.id} />
             <ProblemView problem={problem} value={answer} onChange={setAnswer} onEnter={check} />
             <div className="action-row">
               <button className="btn-primary" onClick={check} disabled={submitting || !answer.trim()}>

@@ -7,6 +7,7 @@ import MathText from "../components/MathText";
 import AnswerInput from "../components/AnswerInput";
 import PointsEarned from "../components/PointsEarned";
 import SolutionNote from "../components/SolutionNote";
+import ScratchPad from "../components/ScratchPad";
 import { playCorrect, playIncorrect } from "../sound";
 
 type ProblemState = {
@@ -143,6 +144,8 @@ export default function PracticePage() {
           </div>
         ) : (
           <div className="answer-area">
+            {/* 問題が変わったら新しい紙にする（key で作り直す） */}
+            <ScratchPad key={current.id} />
             {isMultipleChoice ? (
               <div className="choices-grid">
                 {current.choices?.map((choice) => (

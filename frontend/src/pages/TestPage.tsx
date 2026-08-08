@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { fetchGrades, fetchStudentStats, fetchProblemSet, submitTest } from "../api";
 import type { Grade, StudentStat, Problem, ScopeType, TestSubmitResult } from "../types";
 import ProblemView from "../components/ProblemView";
+import ScratchPad from "../components/ScratchPad";
 import { playFinish } from "../sound";
 
 const COUNTS = [5, 10, 20];
@@ -238,6 +239,7 @@ export default function TestPage() {
       </div>
 
       <div className="problem-card">
+        <ScratchPad key={problem.id} />
         <ProblemView problem={problem} value={answers[idx]} onChange={setAnswer} onEnter={() => !isLast && setIdx((i) => i + 1)} />
         <div className="action-row">
           {idx > 0 && (
