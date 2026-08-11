@@ -118,6 +118,8 @@ export interface Problem {
 }
 
 export type AskKind = "hint" | "approach" | "why" | "free";
+/** 「この人に聞く」の質問の種類 */
+export type PersonaKind = "why_study" | "how_used" | "childhood" | "free";
 
 export interface AiUsage {
   used: number;

@@ -27,6 +27,9 @@ Rails.application.routes.draw do
         get :condition, on: :member, to: "condition#show"
         get :ai_usage, on: :member, to: "ai_teacher#usage"
         post :ask_teacher, on: :member, to: "ai_teacher#ask"
+        # 「この人に聞く」（職業ペルソナへの相談）。先生とは回数の枠を分けている
+        get :persona_usage, on: :member, to: "personas#usage"
+        post :ask_persona, on: :member, to: "personas#ask"
         put :password, on: :member, to: "passwords#update"
         get :rank, on: :member, to: "promotion_exams#status"
         get :promotion_exam, on: :member, to: "promotion_exams#show"

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router";
 import { fetchStudentStats, fetchReferenceStats, updateGoal, fetchCondition, fetchRankStatus, fetchAchievements, updateTitle } from "../api";
 import type { StudentStat, ReferenceStat, Condition, RankStatus, TitleOption } from "../types";
 import ReferenceIcon from "../components/ReferenceIcon";
 import RankCard from "../components/RankCard";
+
 
 const STAT_COLORS: Record<string, string> = {
   "計算力":    "#4c51bf",
@@ -19,6 +20,21 @@ const defaultGoalDate = () => {
   const d = new Date();
   d.setMonth(d.getMonth() + 3);
   return d.toISOString().slice(0, 10);
+};
+
+// AskPersona は MathText 経由で KaTeX を連れてくる。ステータス画面は遅延読み込みでは
+// ないので、直に import すると初回JSに KaTeX が入って倍近くなる。
+// 開いたときだけ読み込む。
+const AskPersona = lazy(() => import("../components/AskPersona"));
+
+// 相談できるのは「人物」のラベルだけ。参考ステータスには目標（高校受験など）も
+// 混ざっていて、そちらは人ではないので「この人に聞く」を出さない。
+// バックエンドの PersonaCatalog と同じ4人。増やすときは両方に足す。
+const PERSONAS: Record<string, string> = {
+  "数学の先生": "🧑‍🏫",
+  "エンジニア": "💻",
+  "研究者": "🔬",
+  "ゲームクリエイター": "🎮",
 };
 
 export default function StatsPage() {
@@ -329,6 +345,18 @@ export default function StatsPage() {
                     );
                   })}
                 </div>
+
+                {/* 人物のラベルなら「この人に聞く」を出す（目標のラベルには出さない） */}
+                {PERSONAS[ref.label] && studentId && (
+                  <Suspense fallback={null}>
+                  <AskPersona
+                    studentId={studentId}
+                    characterKey={ref.label}
+                    label={ref.label}
+                    emoji={PERSONAS[ref.label]}
+                  />
+                  </Suspense>
+                )}
 
                 {/* 目標にする日付選択 */}
                 {isSettingGoal && (

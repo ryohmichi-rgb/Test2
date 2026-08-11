@@ -28,6 +28,7 @@ RPG風のステータス成長でモチベーションを維持しながら継�
 | 成長曲線 | 実績＋目標ペースの折れ線 | HomePage（GrowthChart） |
 | 今日のノルマ | 必要ポイント・進捗・連続学習日数 | HomePage（DailyQuotaCard） |
 | 先生に聞く（生成AI） | その問題の文脈でClaudeがヒント・解き方・理由を返す（答えは丸投げしない・1日上限つき） | Practice/ProblemSet/Review/DailyProblem（AskTeacher） |
+| この人に聞く（生成AI） | 職業の人（ペルソナ）に「なんで勉強するの？」を相談する。先生とは役目も回数の枠も別 | StatsPage（AskPersona） |
 
 ### ステータス（学力）の5種
 
@@ -176,7 +177,8 @@ erDiagram
         fk unit_id
     }
     ai_usages {
-        string kind "hint/approach/why/free"
+        string kind "質問の種類"
+        string character_key "この人に聞く。先生はnull"
         fk student_id
         fk problem_id "null許容"
     }
@@ -203,7 +205,11 @@ erDiagram
 - **units.active / problems.active** … 無効化フラグ。`false` は新しい出題（演習・問題集・テスト・今日の一問・復習・単元一覧）から除外。回答履歴は保持。
 - **units.lesson_body** … 単元の教材（Markdown）。フロントで `react-markdown` により描画。
 - **lesson_reads** … 教材の読了記録。`(student_id, unit_id)` で一意。初回読了の判定＋既読表示に使う。
-- **ai_usages** … 「先生に聞く」（生成AI）の利用ログ。1レコード＝1回の質問。`(student_id, created_at)` に索引を張り、その日の利用回数を数えてレート制限に使う。`problem_id` は文脈にした問題（削除されても残せるよう `null` 許容）。`kind` は `hint / approach / why / free`。
+- **ai_usages** … 生成AIの利用ログ。1レコード＝1回の質問。その日の利用回数を数えてレート制限に使う。
+  **`character_key` で「先生」と「この人」を分ける**（先生は `nil`）。回数の枠が別なので、
+  同じテーブルのまま `scope :teacher / :persona` で数え分けている。
+  `problem_id` は文脈にした問題（削除されても残せるよう `null` 許容）。
+  **質問文と返答は保存しない**（子どもの書いたものを残さない方針）。
 
 - **ranks** … 総合ランクの定義（10級〜初段の11段階）。しきい値と昇格試験のパラメータを持つ。
   seed で `display_order` をキーに更新するので、調整は seed の書き換えだけで効く。
@@ -662,6 +668,52 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
   （`students.title_key`）。未獲得の称号は名乗れない。ランク到達バッジに称号を付けていないのは、
   ランク自体が別枠で表示されるため。
 
+### 3.20 AIキャラクター（この人に聞く）
+
+参考ステータスのカードから、その職業の人に**勉強する意味**を相談できる。
+「先生に聞く」（3.13）とは**役目も回数の枠も分けている**。同じことをさせると片方が要らなくなる。
+
+| | 先生に聞く | この人に聞く |
+|---|---|---|
+| 役目 | 目の前の問題のヒント | なんで勉強するのか（動機づけ） |
+| 入口 | 問題を解く4画面 | ステータス画面の参考ステータスカード |
+| 相手 | 1人（先生） | 4人（数学の先生／エンジニア／研究者／ゲームクリエイター） |
+| 回数 | 1日20回 | **1日5回（別枠）** |
+
+- **相手は「人物」のラベルだけ。** `reference_stats` の7ラベルのうち、残る3つ
+  （高校受験・難関高校受験・中学卒業レベル）は目標であって人ではないので出さない。
+- 会話は**1往復**。履歴は持たない（複数ターンは後から追加テーブル1つで足せる）。
+- **質問文と返答は保存しない。** 残すのは回数を数えるための `character_key` だけ。
+
+#### プロンプトの積み方
+
+**守るべき線（`AiSafety::COMMON_RULES`）は全キャラ共通で、キャラごとに変えてよいのは人物像だけ。**
+ここを各キャラに散らすと、キャラを足すたびに守りが薄くなる。
+
+```
+キャラの人物像（PersonaCatalog）
+  ↓
+その役目の決まりごと（ClaudePersona::ROLE_RULES / ClaudeTeacher::ROLE）
+  ↓
+全キャラ共通の安全ルール（AiSafety::COMMON_RULES）
+```
+
+共通ルールが見ているのは、年齢に合う言葉・オフトピック拒否・個人情報・**人格否定をしない**・
+**指示の上書きに従わない**・数式の記法・Markdown 禁止。
+ペルソナ固有では、**年収や偏差値や合格の難しさを断定しない／向き不向きを決めつけない**を足す。
+子どもの進路観に直接ひびくため、ここは特に強く縛る。
+
+- 定義はコード側に置く（`PersonaCatalog`。`BadgeCatalog` と同じ考え方）。
+- API を叩く部分は `ClaudeClient` に集約。キャラごとに違うのはプロンプトだけ。
+- 質問は **200字まで**（`AiSafety::MAX_QUESTION_LENGTH`）。長文でプロンプトを押し流す手口への備え。
+
+> ⚠️ **キャラを足したら安全性チェックを流す。**
+> `ANTHROPIC_API_KEY=... bundle exec bin/rails runner script/ai_safety_check.rb`
+> 通常の質問と意地悪な質問10種（答えを教えろと粘る／指示の上書き／なりすまし／
+> 算数と無関係な相談／個人情報／自己否定を引き出す／進路の断定を求める／年収を聞く／
+> 長文で押し流す／こわい話）を全キャラに投げる。
+> **機械で見られるのは形式と禁止語だけなので、返答の全文は必ず人が読むこと。**
+
 ### 3.19 保護者アカウント（見る専用）
 
 保護者は紐づいた子どもの学習状況を**読むだけ**。問題を解く・目標を決める・パスワードを変えるは
@@ -765,6 +817,8 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | POST | `/students/:id/promotion_exam` | 昇格試験の提出（採点＋昇格判定） |
 | GET | `/students/:id/condition` | さびつき状態（未学習日数から算出） |
 | GET | `/students/:id/ai_usage` | 「先生に聞く」の今日の利用状況（used/limit/remaining） |
+| GET | `/students/:id/persona_usage` | 「この人に聞く」の残り回数（先生とは別枠） |
+| POST | `/students/:id/ask_persona` | 職業の人に相談する（character_key/kind/question） |
 | POST | `/students/:id/ask_teacher` | その問題の文脈で先生に質問（problem_id/kind/question） |
 | GET | `/grades` | 学年一覧（単元込み） |
 | GET | `/units/:id` | 単元詳細（教材・問題込み） |
@@ -829,6 +883,7 @@ flowchart TD
 | 共通 | `components/AchievementsRow.tsx` | 実績バッジ一覧 |
 | 共通 | `components/RankCard.tsx` | 総合ランク・称号・昇格試験への導線（ホームとステータスで共用） |
 | ページ | `pages/PromotionExamPage.tsx` | 昇格試験（説明→出題→合否）。範囲も問題数も選べない |
+| 共通 | `components/AskPersona.tsx` | 「この人に聞く」。ステータス画面の参考ステータスカードから開く |
 | 共通 | `components/AskTeacher.tsx` | 「先生に聞く」（生成AI）。問題を解く4画面で共用（テストは除く） |
 | 共通 | `components/MarkdownView.tsx` | Markdown＋数式（KaTeX）の描画。教材ページで使用 |
 | 共通 | `components/MathText.tsx` | 問題文・選択肢・ヒント内の `$...$` だけを数式化（Markdownは解釈しない軽量版） |

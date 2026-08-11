@@ -90,12 +90,27 @@ class Student < ApplicationRecord
 
   # 今日のAI利用回数（通算：問題ごとではない）
   def ai_used_today
-    ai_usages.today.count
+    ai_usages.today.teacher.count
   end
 
   # 今日あと何回聞けるか
   def ai_remaining_today
     [self.class.ai_daily_limit - ai_used_today, 0].max
+  end
+
+  # 「この人に聞く」（ペルソナ相談）の1日あたり上限。
+  # 先生の枠とは別にしている。相乗りさせると、雑談で使い切った日に
+  # 本当に困った問題でヒントが引けなくなる。
+  def self.persona_daily_limit
+    ENV.fetch("AI_PERSONA_DAILY_LIMIT", "5").to_i
+  end
+
+  def persona_used_today
+    ai_usages.today.persona.count
+  end
+
+  def persona_remaining_today
+    [self.class.persona_daily_limit - persona_used_today, 0].max
   end
 
   # ===== ランクと称号 =====

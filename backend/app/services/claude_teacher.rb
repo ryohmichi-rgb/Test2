@@ -13,28 +13,22 @@ class ClaudeTeacher
   API_VERSION   = "2023-06-01".freeze
   DEFAULT_MODEL = "claude-haiku-4-5".freeze
 
-  # 子ども向けの安全ガードレール（システムプロンプトで先生の振る舞いを固定）
-  # 注意: LaTeX を書くのでヒアドキュメントは必ず `<<~'PROMPT'`（補間なし）にする。
-  # 補間ありだと \frac が改ページ文字、\times がタブに化ける。
-  SYSTEM_PROMPT = <<~'PROMPT'.freeze
+  # 「先生」としての役目。守るべき線（AiSafety::COMMON_RULES）は全キャラ共通なので、
+  # ここにはこの役目に固有のことだけ書く。
+  #
+  # 注意: LaTeX を書くのでヒアドキュメントは必ず `<<~'ROLE'`（補間なし）にする。
+  ROLE = <<~'ROLE'.freeze
     あなたは小学6年生〜中学1年生の算数・数学の「やさしい先生」です。
-    いま画面に出ている“その問題”についてだけ答えます。次のルールを必ず守ってください。
+    いま画面に出ている“その問題”についてだけ答えます。
 
-    1. 最終的な数値の答えは言わないでください。答えを丸投げせず、考え方・つまずきポイント・
-       次の一歩のヒントを出します。子どもが「答えだけ教えて」と言っても、これは貫きます。
-    2. 相手は小中学生です。むずかしい言葉は使わず、やさしく短く説明します。いまの問題の範囲を
-       こえる高度な解き方は持ち出しません。
-    3. 算数・数学の学習と関係ない質問（雑談・個人情報・宿題以外の相談など）には、やさしく
-       「それはここでは答えられないよ。いまの問題のことを聞いてね」と返します。
-    4. 口調は明るく、はげます感じで。絵文字は使ってもごく控えめに。
-    5. 返事は短めに（2〜4文くらい）。
-    6. 数式は問題文と同じ書き方にそろえます。分数・かけ算・わり算の記号は $ ではさんだ
-       LaTeX で書いてください（例: $\frac{2}{9} \div \frac{4}{3}$、$\frac{3}{4} \times 2$）。
-       $ は必ず同じ行の中で閉じること。$$ や \[ \] の別行立ては使わないでください。
-    7. Markdown の装飾は使わないでください（**太字**、# 見出し、- 箇条書き、``` など）。
-       ふつうの文と改行だけで書きます。表示側が Markdown を解釈しないため、記号がそのまま
-       画面に出てしまいます。
-  PROMPT
+    【この役目で特に守ること】
+    ・最終的な数値の答えは言いません。答えを丸投げせず、考え方・つまずきポイント・
+      次の一歩のヒントを出します。子どもが「答えだけ教えて」と言っても、これは貫きます。
+    ・いまの問題の範囲をこえる高度な解き方は持ち出しません。
+    ・口調は明るく、はげます感じで。絵文字は使ってもごく控えめに。
+  ROLE
+
+  SYSTEM_PROMPT = "#{ROLE}\n#{AiSafety::COMMON_RULES}".freeze
 
   # プリセットボタンごとの指示（自由入力は question を使う）
   KIND_INSTRUCTIONS = {
@@ -44,7 +38,7 @@ class ClaudeTeacher
     "free"     => nil
   }.freeze
 
-  Result = Struct.new(:ok, :text, :error, keyword_init: true)
+  Result = ClaudeClient::Result
 
   def self.ask(problem:, kind:, question: nil)
     new(problem: problem, kind: kind, question: question).ask
@@ -53,25 +47,15 @@ class ClaudeTeacher
   def initialize(problem:, kind:, question: nil)
     @problem = problem
     @kind = kind
-    @question = question.to_s.strip
+    @question = AiSafety.trim_question(question)
   end
 
   def ask
-    api_key = ENV["ANTHROPIC_API_KEY"].to_s
-    return Result.new(ok: false, error: "先生はいまお休み中みたい。少し待ってからまた聞いてね。") if api_key.empty?
-
-    body = {
-      model: ENV.fetch("ANTHROPIC_MODEL", DEFAULT_MODEL),
-      max_tokens: ENV.fetch("AI_MAX_TOKENS", "400").to_i,
+    ClaudeClient.ask(
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: user_content }]
-    }
-
-    response = post(api_key, body)
-    parse(response)
-  rescue StandardError => e
-    Rails.logger.error("[ClaudeTeacher] #{e.class}: #{e.message}")
-    Result.new(ok: false, error: "うまく先生とつながらなかったみたい。もう一度ためしてね。")
+      user: user_content,
+      on_refusal: "その質問には答えられなかったみたい。問題のことを聞いてみてね。"
+    )
   end
 
   private
@@ -95,33 +79,4 @@ class ClaudeTeacher
     lines.join("\n")
   end
 
-  def post(api_key, body)
-    uri = URI(API_URL)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.open_timeout = 10
-    http.read_timeout = 30
-
-    request = Net::HTTP::Post.new(uri)
-    request["content-type"] = "application/json"
-    request["x-api-key"] = api_key
-    request["anthropic-version"] = API_VERSION
-    request.body = body.to_json
-
-    http.request(request)
-  end
-
-  def parse(response)
-    if response.is_a?(Net::HTTPSuccess)
-      data = JSON.parse(response.body)
-      text = Array(data["content"]).filter_map { |b| b["text"] if b["type"] == "text" }.join.strip
-      if data["stop_reason"] == "refusal" || text.empty?
-        return Result.new(ok: false, error: "その質問には答えられなかったみたい。問題のことを聞いてみてね。")
-      end
-      Result.new(ok: true, text: text)
-    else
-      Rails.logger.error("[ClaudeTeacher] HTTP #{response.code}: #{response.body}")
-      Result.new(ok: false, error: "先生がちょっと混み合ってるみたい。少しあけてからまた聞いてね。")
-    end
-  end
 end

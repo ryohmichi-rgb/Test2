@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, PersonaKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -158,6 +158,25 @@ export const updateAdminProblem = (id: number, problem: Partial<AdminProblem>, c
   api.put<AdminProblem>(`/admin/problems/${id}`, { problem, choices }).then((r) => r.data);
 export const deleteAdminProblem = (id: number): Promise<void> =>
   api.delete(`/admin/problems/${id}`).then(() => undefined);
+
+// ===== この人に聞く（職業ペルソナへの相談） =====
+// 「先生に聞く」とは回数の枠が別なので、専用のエンドポイントを叩く
+export const fetchPersonaUsage = (studentId: number): Promise<AiUsage> =>
+  api.get<AiUsage>(`/students/${studentId}/persona_usage`).then((r) => r.data);
+
+export const askPersona = (
+  studentId: number,
+  characterKey: string,
+  kind: PersonaKind,
+  question?: string
+): Promise<AskTeacherResult> =>
+  api
+    .post<AskTeacherResult>(`/students/${studentId}/ask_persona`, {
+      character_key: characterKey,
+      kind,
+      question,
+    })
+    .then((r) => r.data);
 
 // ===== 保護者 =====
 // role は後から足したフィールド。旧バックエンドから返ってこない窓があるので既定値を埋める
