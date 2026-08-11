@@ -2,6 +2,7 @@ module Api
   module V1
     class StatsController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :index
 
       def index
         student = Student.find(params[:id])

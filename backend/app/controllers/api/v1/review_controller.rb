@@ -2,6 +2,7 @@ module Api
   module V1
     class ReviewController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :index
 
       # 復習リスト：各問題の「最新の回答」が不正解だった問題を返す。
       # 次に正解すればリストから外れる（未解決の間違い一覧）。

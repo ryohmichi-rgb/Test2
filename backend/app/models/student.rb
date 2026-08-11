@@ -12,6 +12,29 @@ class Student < ApplicationRecord
   has_many :student_badges, dependent: :destroy
   has_many :daily_quotas, dependent: :destroy
 
+  # 保護者として見ている子どもたち
+  has_many :guardianships, foreign_key: :guardian_id, dependent: :destroy
+  has_many :children, through: :guardianships, source: :student
+  # 自分を見ている保護者たち
+  has_many :guarded_by, class_name: "Guardianship", dependent: :destroy
+  has_many :guardians, through: :guarded_by, source: :guardian
+
+  # アカウントの種類。生徒か保護者か。
+  # 保護者は問題を解かず、紐づいた子どもの学習状況を読むだけ。
+  ROLES = %w[student parent].freeze
+  validates :role, inclusion: { in: ROLES }
+
+  scope :students_only, -> { where(role: "student") }
+  scope :parents_only,  -> { where(role: "parent") }
+
+  def parent? = role == "parent"
+  def student? = !parent?
+
+  # この保護者がその子を見てよいか
+  def guardian_of?(other)
+    parent? && guardianships.exists?(student_id: other.is_a?(Student) ? other.id : other.to_i)
+  end
+
   validates :name, presence: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }
   validates :password, length: { minimum: 4 }, allow_nil: true

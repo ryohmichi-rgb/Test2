@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { changePassword } from "../api";
+import { changePassword, fetchStudent } from "../api";
 import { BGM_RANDOM, BGM_TRACKS, bgmTrack, isBgmOn, setBgmTrack, toggleBgm } from "../sound";
 
 // 生徒が自分でパスワードを変える画面。
@@ -20,6 +20,13 @@ export default function SettingsPage() {
 
   const [bgmOn, setBgmOnState] = useState(isBgmOn());
   const [track, setTrack] = useState(bgmTrack());
+  // 自分を見ている保護者。黙って見られている状態にしないため、いる場合だけそっと知らせる
+  const [guardians, setGuardians] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!studentId) return;
+    fetchStudent(studentId).then((s) => setGuardians(s.guardians ?? [])).catch(() => {});
+  }, [studentId]);
 
   const chooseTrack = (id: string) => {
     setTrack(id);
@@ -132,6 +139,14 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      {/* 見られていることを、監視されている感じを出さずに伝える。
+          あとから知って裏切られた気分になるのが一番よくない。 */}
+      {guardians.length > 0 && (
+        <p className="watched-note">
+          🏠 {guardians.map((g) => g.name).join("・")} が、あなたのがんばりを見られます。
+        </p>
+      )}
 
       <button className="btn-hint" style={{ width: "100%" }} onClick={logout}>ログアウト</button>
     </div>

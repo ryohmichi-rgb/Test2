@@ -100,6 +100,13 @@
   読むと、その間だけ画面が真っ白になる（実際に `/stats` で起きた）。
   `badges: r.data.badges ?? []` のように入口1箇所で埋めておけば、応答の形が変わっても落ちない。
   逆にフィールドを**消す**ときは、フロントが参照しなくなってから消す（順番が逆だと同じ窓で壊れる）。
+- **保護者は「見る専用」。`StudentScoped` で開くのはアクション単位**（`allow_guardian_read! :index`）。
+  既定は本人のみなので、新しいエンドポイントを足しても明示しない限り保護者には開かない。
+  **`POST /answer_records` は `StudentScoped` を通らない**（`current_student` で記録する）ので、
+  保護者を弾く処理を別に置いている。同じ形の経路を足すときは注意。
+- **「読むだけ」のつもりのAPIが子どもの記録を書き換えることがある。** `/achievements` は開くと
+  バッジ獲得が確定して「新しいバッジ！」を消費し、`/quota` は開くとその日のノルマが決まる。
+  保護者の閲覧では `guardian_viewing?` で分けて、どちらも起こさない。
 - **`render json: xs.map do |x| ... end` と書かない。** `do...end` は `map` ではなく `render` に
   結合するので、整形前の生レコード（`password_digest` を含む）がそのまま返る。
   `payload = xs.map do ... end` と変数に受けてから `render json: payload` する

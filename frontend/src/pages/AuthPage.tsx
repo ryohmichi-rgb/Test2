@@ -19,8 +19,14 @@ export default function AuthPage() {
     localStorage.setItem("studentId", String(res.student.id));
     localStorage.setItem("studentName", res.student.name);
     localStorage.setItem("admin", res.student.admin ? "1" : "");
+    // role は後から足したので、返ってこない旧バックエンドでは生徒として扱う
+    const role = res.student.role ?? "student";
+    localStorage.setItem("role", role);
+
+    // 保護者は問題を解かないので、オンボーディングにも入れず専用のホームへ送る
+    if (role === "parent") navigate("/parent");
     // 新規登録、または未オンボーディングならウィザードへ
-    if (mode === "signup" || !res.student.onboarded) navigate("/onboarding");
+    else if (mode === "signup" || !res.student.onboarded) navigate("/onboarding");
     else navigate("/home");
   };
 

@@ -2,6 +2,7 @@ module Api
   module V1
     class AchievementsController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :index
 
       # 実績バッジ。獲得済みかどうかと、獲得した日時を返す。
       # 判定は毎回やり直すが、**獲得した事実は StudentBadge に残す**。
@@ -12,7 +13,9 @@ module Api
         earned_now = BadgeCatalog.earned_keys_for(student)
         already = student.student_badges.pluck(:badge_key, :earned_at).to_h
 
-        newly = (earned_now - already.keys).to_a
+        # 保護者が見たときは獲得を確定させない。ここで保存してしまうと、
+        # 子どもが自分で開いたときに「新しいバッジ！」が出なくなる（お祝いを横取りしてしまう）。
+        newly = guardian_viewing? ? [] : (earned_now - already.keys).to_a
         newly.each do |key|
           record = student.student_badges.create!(badge_key: key, earned_at: Time.current)
           already[key] = record.earned_at

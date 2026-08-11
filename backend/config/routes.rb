@@ -33,6 +33,8 @@ Rails.application.routes.draw do
         post :promotion_exam, on: :member, to: "promotion_exams#create"
         put :title, on: :member, to: "titles#update"
       end
+      # 保護者が見られる子どもの一覧（学習状況そのものは /students/:id/* を使う）
+      resources :children, only: [:index]
       resources :answer_records, only: [:create]
       resources :reference_stats, only: [:index]
       resource :problem_set, only: [:show], controller: "problem_sets"
@@ -42,8 +44,11 @@ Rails.application.routes.draw do
         resources :units, only: [:index, :create, :update, :destroy]
         resources :problems, only: [:index, :create, :update, :destroy]
         resources :reference_stats, only: [:index, :create, :update, :destroy]
-        resources :students, only: [:index, :show, :destroy] do
+        resources :students, only: [:index, :show, :create, :destroy] do
           post :reset_password, on: :member
+          # 保護者（:id）と子どもの紐づけ
+          post   "guardianships",             on: :member, to: "students#create_guardianship"
+          delete "guardianships/:student_id", on: :member, to: "students#destroy_guardianship"
         end
       end
     end

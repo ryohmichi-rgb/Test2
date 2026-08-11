@@ -2,6 +2,7 @@ module Api
   module V1
     class GrowthController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :show
 
       # 成長曲線。
       # - 実績: AnswerRecord から累積ポイントの時系列を再構築（過去→現在）

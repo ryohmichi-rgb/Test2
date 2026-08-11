@@ -2,6 +2,7 @@ module Api
   module V1
     class ConditionController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :show
 
       # ステータスの「さびつき」状態。earned値は変えず、表示のナッジに使う。
       # GET /api/v1/students/:id/condition

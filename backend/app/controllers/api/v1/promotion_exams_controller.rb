@@ -3,6 +3,7 @@ module Api
     # 昇格試験。到達（合計ポイント）＋合格で総合ランクが上がる。
     class PromotionExamsController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :status
 
       # GET /api/v1/students/:id/rank — 今のランクと次のランクまでの状況
       def status

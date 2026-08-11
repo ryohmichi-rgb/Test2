@@ -2,6 +2,7 @@ module Api
   module V1
     class QuotaController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :show
 
       # 今日のノルマと連続日数。
       # GET /api/v1/students/:id/quota
@@ -11,7 +12,11 @@ module Api
 
         # ノルマの計算そのものは DailyQuota に持たせている。
         # その日はじめて計算したときに決まり、以後その日は変わらない（達成判定の基準になるため）。
-        quota = DailyQuota.for(student, today)
+        # 保護者が見ただけでその日のノルマを決めてしまわないようにする。
+        # まだ決まっていなければ「まだ今日は始まっていない」として 0 で見せる。
+        quota = guardian_viewing? ? DailyQuota.find_by(student_id: student.id, on_date: today)
+                                  : DailyQuota.for(student, today)
+        quota ||= DailyQuota.new(target_points: 0)
         earned_points = points_earned_on(student, today)
 
         # 「いま満点で解ける問題」は解くたびに減るので、こちらは毎回その場で見る。

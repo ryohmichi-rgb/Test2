@@ -2,6 +2,7 @@ module Api
   module V1
     class TestResultsController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :index
 
       BONUS_HIGH = 100  # 90%以上
       BONUS_MID  = 50   # 80〜89%

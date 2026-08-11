@@ -1651,3 +1651,105 @@ body {
   cursor: not-allowed;
   font-weight: 400;
 }
+
+/* ===== 保護者（見る専用） ===== */
+.parent-child-card {
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+}
+.parent-child-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+.parent-child-name { font-size: 1.1rem; font-weight: 700; color: #2d3748; }
+.parent-child-rank {
+  background: #ebf4ff;
+  color: #4c51bf;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.parent-child-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+.parent-child-last { font-size: 0.78rem; color: #a0aec0; margin-top: 0.35rem; }
+
+.parent-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4a5568;
+  margin-bottom: 0.6rem;
+}
+.parent-line { font-size: 0.92rem; line-height: 1.9; }
+.parent-sub { color: #a0aec0; font-size: 0.8rem; margin-left: 0.3rem; }
+.parent-badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.parent-badge {
+  background: #f7f8ff;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+/* 見られていることの、さりげない知らせ。目立たせすぎない */
+.watched-note {
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  color: #718096;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+/* 管理画面のロール表示と紐づけ */
+.role-tag {
+  font-size: 0.68rem;
+  color: #4c51bf;
+  font-weight: 700;
+  background: #ebf4ff;
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  margin-left: 0.35rem;
+}
+.role-parent { color: #276749; background: #f0fff4; }
+.link-list { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f7f8ff;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.74rem;
+  color: #4a5568;
+}
+.link-add { cursor: pointer; color: #4c51bf; }
+.link-x {
+  border: none;
+  background: none;
+  color: #a0aec0;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+}
+.link-select {
+  font-size: 0.74rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  background: #fff;
+}

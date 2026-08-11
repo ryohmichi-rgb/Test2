@@ -135,8 +135,23 @@ export interface Student {
   id: number;
   name: string;
   username?: string;
+  /** アカウントの種類。"parent" なら保護者（見る専用） */
+  role?: "student" | "parent";
+  /** 自分を見ている保護者（黙って見られている状態にしないため本人にも見せる） */
+  guardians?: { id: number; name: string }[];
   onboarded?: boolean;
   admin?: boolean;
+}
+
+/** 保護者が見られる子ども（一覧用のサマリー） */
+export interface Child {
+  id: number;
+  name: string;
+  username: string;
+  total_points: number;
+  rank: string | null;
+  streak: number;
+  last_studied_on: string | null;
 }
 
 export interface AdminMeta {
@@ -195,6 +210,10 @@ export interface AdminStudentSummary {
   id: number;
   name: string;
   username: string;
+  role: "student" | "parent";
+  /** 保護者なら見ている子ども / 生徒なら見ている保護者 */
+  children: { id: number; name: string }[];
+  guardians: { id: number; name: string }[];
   admin: boolean;
   onboarded: boolean;
   created_at: string;

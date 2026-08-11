@@ -2,6 +2,7 @@ module Api
   module V1
     class PlanController < ApplicationController
       include StudentScoped
+      allow_guardian_read! :show
 
       ESTIMATED_POINTS_PER_UNIT = 40
       MAX_UNITS_PER_STAT = 3

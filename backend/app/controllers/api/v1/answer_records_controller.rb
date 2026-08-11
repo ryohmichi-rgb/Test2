@@ -1,6 +1,10 @@
 module Api
   module V1
     class AnswerRecordsController < ApplicationController
+      # 保護者は見る専用。ここは StudentScoped を通らず current_student で記録するので、
+      # 塞がないと保護者自身の回答として保存され、保護者にポイントが入ってしまう。
+      before_action :require_student!
+
       def create
         record = AnswerRecord.new(answer_record_params.merge(student: current_student))
         if record.save
@@ -21,6 +25,10 @@ module Api
       end
 
       private
+
+      def require_student!
+        head :forbidden if current_student&.parent?
+      end
 
       def answer_record_params
         params.require(:answer_record).permit(:problem_id, :submitted_answer)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_01_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_000000) do
     t.integer "display_order"
     t.string "name"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "guardianships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "guardian_id", null: false
+    t.bigint "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["guardian_id", "student_id"], name: "index_guardianships_on_guardian_id_and_student_id", unique: true
+    t.index ["guardian_id"], name: "index_guardianships_on_guardian_id"
+    t.index ["student_id"], name: "index_guardianships_on_student_id"
   end
 
   create_table "lesson_reads", force: :cascade do |t|
@@ -155,10 +165,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_000000) do
     t.boolean "onboarded", default: false, null: false
     t.string "password_digest"
     t.bigint "rank_id"
+    t.string "role", default: "student", null: false
     t.string "title_key"
     t.datetime "updated_at", null: false
     t.string "username"
     t.index ["rank_id"], name: "index_students_on_rank_id"
+    t.index ["role"], name: "index_students_on_role"
     t.index ["username"], name: "index_students_on_username", unique: true
   end
 
@@ -207,6 +219,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_000000) do
   add_foreign_key "daily_quotas", "students"
   add_foreign_key "goals", "stat_types"
   add_foreign_key "goals", "students"
+  add_foreign_key "guardianships", "students"
+  add_foreign_key "guardianships", "students", column: "guardian_id"
   add_foreign_key "lesson_reads", "students"
   add_foreign_key "lesson_reads", "units"
   add_foreign_key "problems", "units"

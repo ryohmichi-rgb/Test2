@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, AskTeacherResult, Achievements, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
 
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) => r.data);
@@ -13,8 +13,13 @@ export const signup = (name: string, username: string, password: string): Promis
 export const login = (username: string, password: string): Promise<AuthResult> =>
   api.post<AuthResult>("/login", { username, password }).then((r) => r.data);
 
+// guardians / role は後から足したフィールド。旧バックエンドの窓でも落ちないよう既定値を埋める
 export const fetchStudent = (id: number): Promise<Student> =>
-  api.get<Student>(`/students/${id}`).then((r) => r.data);
+  api.get<Student>(`/students/${id}`).then((r) => ({
+    ...r.data,
+    role: r.data.role ?? "student",
+    guardians: r.data.guardians ?? [],
+  }));
 
 export const fetchStudentProgress = (id: number): Promise<StudentProgress> =>
   api.get<StudentProgress>(`/students/${id}/progress`).then((r) => r.data);
@@ -154,6 +159,24 @@ export const updateAdminProblem = (id: number, problem: Partial<AdminProblem>, c
 export const deleteAdminProblem = (id: number): Promise<void> =>
   api.delete(`/admin/problems/${id}`).then(() => undefined);
 
+// ===== 保護者 =====
+// role は後から足したフィールド。旧バックエンドから返ってこない窓があるので既定値を埋める
+export const fetchChildren = (): Promise<Child[]> =>
+  api.get<Child[]>("/children").then((r) => r.data ?? []);
+
+export const createAdminAccount = (name: string, username: string, role: "parent" | "student") =>
+  api.post<{ id: number; name: string; username: string; role: string; password: string }>(
+    "/admin/students", { name, username, role }
+  ).then((r) => r.data);
+
+export const linkGuardianship = (guardianId: number, studentId: number) =>
+  api.post<{ id: number; name: string }>(`/admin/students/${guardianId}/guardianships`, {
+    student_id: studentId,
+  }).then((r) => r.data);
+
+export const unlinkGuardianship = (guardianId: number, studentId: number): Promise<void> =>
+  api.delete(`/admin/students/${guardianId}/guardianships/${studentId}`).then(() => undefined);
+
 export const fetchAdminReferenceStats = (): Promise<AdminReferenceStat[]> =>
   api.get<AdminReferenceStat[]>("/admin/reference_stats").then((r) => r.data);
 export const createAdminReferenceStat = (reference_stat: Partial<AdminReferenceStat>): Promise<AdminReferenceStat> =>
@@ -164,7 +187,14 @@ export const deleteAdminReferenceStat = (id: number): Promise<void> =>
   api.delete(`/admin/reference_stats/${id}`).then(() => undefined);
 
 export const fetchAdminStudents = (): Promise<AdminStudentSummary[]> =>
-  api.get<AdminStudentSummary[]>("/admin/students").then((r) => r.data);
+  api.get<AdminStudentSummary[]>("/admin/students").then((r) =>
+    (r.data ?? []).map((s) => ({
+      ...s,
+      role: s.role ?? "student",
+      children: s.children ?? [],
+      guardians: s.guardians ?? [],
+    }))
+  );
 export const deleteAdminStudent = (id: number): Promise<void> =>
   api.delete(`/admin/students/${id}`).then(() => undefined);
 // パスワードを忘れた生徒の救済。新しいパスワードはこの応答でしか受け取れない

@@ -9,6 +9,8 @@ import HomePage from "./pages/HomePage";
 import OnboardingPage from "./pages/OnboardingPage";
 import TestHistoryPage from "./pages/TestHistoryPage";
 import SettingsPage from "./pages/SettingsPage";
+import ParentHomePage from "./pages/ParentHomePage";
+import ParentChildPage from "./pages/ParentChildPage";
 import PasswordGate from "./components/PasswordGate";
 import "./App.css";
 
@@ -30,6 +32,14 @@ const AdminProblemsPage = lazy(() => import("./pages/admin/AdminProblemsPage"));
 const AdminReferenceStatsPage = lazy(() => import("./pages/admin/AdminReferenceStatsPage"));
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
 
+// 保護者は「見る専用」なので、問題を解く画面や設定画面には入れない。
+// バックエンドでも塞いでいるが、入れてしまうと「押せるのに何も起きない」画面になるため
+// 手前で保護者のホームへ戻す。
+function StudentOnly({ children }: { children: React.ReactNode }) {
+  if (localStorage.getItem("role") === "parent") return <Navigate to="/parent" replace />;
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <PasswordGate>
@@ -37,20 +47,23 @@ function App() {
       <Suspense fallback={<div className="loading">読み込み中...</div>}>
       <Routes>
         <Route path="/" element={<AuthPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/grades" element={<GradesPage />} />
-        <Route path="/units/:unitId" element={<LessonPage />} />
-        <Route path="/units/:unitId/practice" element={<PracticePage />} />
-        <Route path="/progress/:studentId" element={<ProgressPage />} />
-        <Route path="/stats" element={<StatsPage />} />
-        <Route path="/plan" element={<PlanPage />} />
-        <Route path="/problem-set" element={<ProblemSetPage />} />
-        <Route path="/test" element={<TestPage />} />
-        <Route path="/test-history" element={<TestHistoryPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/review" element={<ReviewPage />} />
-        <Route path="/promotion-exam" element={<PromotionExamPage />} />
+        <Route path="/home" element={<StudentOnly><HomePage /></StudentOnly>} />
+        <Route path="/onboarding" element={<StudentOnly><OnboardingPage /></StudentOnly>} />
+        <Route path="/grades" element={<StudentOnly><GradesPage /></StudentOnly>} />
+        <Route path="/units/:unitId" element={<StudentOnly><LessonPage /></StudentOnly>} />
+        <Route path="/units/:unitId/practice" element={<StudentOnly><PracticePage /></StudentOnly>} />
+        <Route path="/progress/:studentId" element={<StudentOnly><ProgressPage /></StudentOnly>} />
+        <Route path="/stats" element={<StudentOnly><StatsPage /></StudentOnly>} />
+        <Route path="/plan" element={<StudentOnly><PlanPage /></StudentOnly>} />
+        <Route path="/problem-set" element={<StudentOnly><ProblemSetPage /></StudentOnly>} />
+        <Route path="/test" element={<StudentOnly><TestPage /></StudentOnly>} />
+        <Route path="/test-history" element={<StudentOnly><TestHistoryPage /></StudentOnly>} />
+        <Route path="/settings" element={<StudentOnly><SettingsPage /></StudentOnly>} />
+        {/* 保護者（見る専用）。子どもの学習状況を読むだけの画面 */}
+        <Route path="/parent" element={<ParentHomePage />} />
+        <Route path="/parent/children/:childId" element={<ParentChildPage />} />
+        <Route path="/review" element={<StudentOnly><ReviewPage /></StudentOnly>} />
+        <Route path="/promotion-exam" element={<StudentOnly><PromotionExamPage /></StudentOnly>} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/units" element={<AdminUnitsPage />} />
         <Route path="/admin/units/:unitId/problems" element={<AdminProblemsPage />} />

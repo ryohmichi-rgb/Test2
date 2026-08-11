@@ -13,6 +13,7 @@ RPG風のステータス成長でモチベーションを維持しながら継�
 | 機能 | 概要 | 主な画面 |
 |------|------|----------|
 | 認証 | ユーザーID＋パスワードでログイン/新規登録 | AuthPage |
+| 保護者（見る専用） | 紐づいた子どもの学習状況を読むだけ。問題は解けない | ParentHomePage / ParentChildPage |
 | オンボーディング | 初回のみ「ようこそ→目標を選ぶ→最初の学習」を案内 | OnboardingPage |
 | 管理ページ（管理者のみ） | 単元/教材・問題・参考ステータスの編集、生徒の管理 | Admin* |
 | ホーム | 各機能への入口。マスコットの応援・今日のノルマ・目標までの距離・目標達成のお祝い・今日の一問・成長曲線・実績バッジ | HomePage |
@@ -61,6 +62,7 @@ erDiagram
     students ||--o{ ai_usages : ""
     students ||--o{ student_badges : ""
     students ||--o{ daily_quotas : ""
+    students ||--o{ guardianships : ""
     ranks ||--o{ students : ""
     problems ||--o{ ai_usages : ""
     stat_types ||--o{ student_stats : ""
@@ -107,6 +109,7 @@ erDiagram
     students {
         string name
         string username "一意・ログインID"
+        string role "student/parent"
         string password_digest "bcrypt"
         bool onboarded "初回案内ずみ"
         bool admin "管理者"
@@ -130,6 +133,10 @@ erDiagram
         date on_date
         int target_points "その日決めたノルマ"
         fk student_id
+    }
+    guardianships {
+        fk guardian_id "保護者(students)"
+        fk student_id "子ども(students)"
     }
     answer_records {
         string submitted_answer
@@ -213,6 +220,13 @@ erDiagram
   ため、過去のある日のノルマはあとから復元できない。「ノルマを達成した日」の連続を数えるには
   その日のうちに残すしかない。**稼いだポイントの方は持たない**（`points_awarded` が確定値なので
   いつでも集計し直せる）。
+- **students.role** … `student` か `parent`。**保護者も同じテーブルに置く**（認証の入口が
+  `Student.find_by_token_for` の1本なので、別テーブルにすると `current_student` の意味が
+  変わって広範囲に波及する）。既存の `admin` フラグとは直交で、「どんな種類の人か」と
+  「コンテンツを管理できるか」は別。生徒を全件ひくのは管理画面の一覧だけなので影響は小さい。
+- **guardianships** … 保護者↔子ども。`(guardian_id, student_id)` で一意。
+  父と母の2人が同じ子を見る／きょうだいを1人が見る、どちらも起きるので **N:N**。
+  作れるのは管理画面からだけ（招待コードの仕組みは持たない）。
 - **students.title_key** … 選択中の称号。称号を持つバッジの `key` を指す。
   バッジ未獲得なら名乗れない（`Student#title` が `null` を返す）。
 
@@ -648,6 +662,45 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
   （`students.title_key`）。未獲得の称号は名乗れない。ランク到達バッジに称号を付けていないのは、
   ランク自体が別枠で表示されるため。
 
+### 3.19 保護者アカウント（見る専用）
+
+保護者は紐づいた子どもの学習状況を**読むだけ**。問題を解く・目標を決める・パスワードを変えるは
+一切できない。
+
+#### 権限の関所は1か所
+
+`/students/:id/*` の全22本は `StudentScoped` を通る。ここを「本人 or その保護者」に広げているが、
+開くのは **アクション単位**（`allow_guardian_read! :index`）。
+
+- **既定は本人のみ。** 新しいエンドポイントを足しても、明示しない限り保護者には開かない。
+- コントローラ単位にしないのは開けすぎるため（例: 昇格試験は「ランク状況」と
+  「試験問題の取得」が同じコントローラにある。前者だけ開きたい）。
+- 開いているのは `stats / growth / quota / condition / plan / review / test_results#index /
+  achievements / students#show / promotion_exams#status` の10本。
+- **`POST /answer_records` は `StudentScoped` を通らない**（`current_student` で記録する）。
+  塞がないと保護者自身の回答として保存され、保護者にポイントが入るので、別途弾いている。
+
+#### 読むだけでも副作用があるところ
+
+「見る」つもりの操作が子どもの記録を書き換えてしまう箇所が2つあり、`guardian_viewing?` で分けている。
+
+| | 何が起きるか | 対処 |
+|---|---|---|
+| `/achievements` | 開くとバッジ獲得が確定し、`newly_earned` を消費する | 保護者が見たときは確定させない（**子どものお祝いを横取りしない**） |
+| `/quota` | 開くとその日のノルマが決まってしまう | 保護者が見たときは作らない。まだ決まっていなければ 0 で見せる |
+
+#### 子どもへの知らせ
+
+**黙って見ている状態にはしない。** せってい画面に「🏠 ○○ が、あなたのがんばりを見られます。」と
+小さく出す（`students#show` が `guardians` を返す）。ホームなど勉強しているところには出さない
+（気が散るため）。あとから知って裏切られた気分になるのが一番よくない、という判断。
+
+#### 紐づけ
+
+管理画面からだけ作る。保護者アカウントも管理画面から作り、パスワードは再発行と同じく
+**その場で一度だけ**表示する（生徒は自分で新規登録できるが、保護者はできない）。
+不正な組み合わせは `Guardianship` のバリデーションで弾く（自分自身・生徒を保護者に・二重登録）。
+
 ### 3.18 音（効果音・BGM）
 
 すべてフロント側（`sound.ts`）だけで完結する。サーバーは関係しない。
@@ -693,6 +746,10 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | PUT | `/students/:id/goals` | 目標の設定・更新 |
 | GET | `/students/:id/progress` | 単元別の学習進捗 |
 | GET | `/students/:id/plan` | 今日のプラン |
+| GET | `/children` | 保護者が見られる子ども一覧（保護者のみ） |
+| POST | `/admin/students` | アカウント作成（主に保護者。パスワードを一度だけ返す） |
+| POST | `/admin/students/:id/guardianships` | 保護者に子どもを紐づける |
+| DELETE | `/admin/students/:id/guardianships/:student_id` | 紐づけを外す |
 | GET | `/students/:id/quota` | 今日のノルマ・ストリーク2種（`streak`＝学習日 / `quota_streak`＝ノルマ達成日） |
 | GET | `/students/:id/growth` | 成長曲線（実績＋目標） |
 | GET | `/students/:id/review` | 復習リスト |
@@ -777,7 +834,9 @@ flowchart TD
 | 共通 | `components/MathText.tsx` | 問題文・選択肢・ヒント内の `$...$` だけを数式化（Markdownは解釈しない軽量版） |
 | サービス | `services/claude_teacher.rb` | Claude API を `Net::HTTP` で呼ぶ（バックエンド。キーは環境変数） |
 | 共通 | `sound.ts` | 効果音（Web Audio APIで合成、音源不要／正解・不正解・完了）＋ BGM（`public/bgm/` の曲を再生）。効果音はホーム、BGMはホームとせっていでオン/オフ |
-| ページ | `pages/SettingsPage.tsx` | せってい（パスワード変更・BGMのオン/オフと曲えらび・ログアウト） |
+| ページ | `pages/SettingsPage.tsx` | せってい（パスワード変更・BGMのオン/オフと曲えらび・見ている保護者の表示・ログアウト） |
+| ページ | `pages/ParentHomePage.tsx` | 保護者のホーム。見られる子どもを並べる |
+| ページ | `pages/ParentChildPage.tsx` | 子ども1人の学習の様子（読み取りのみ） |
 | 共通 | `components/ReferenceIcon.tsx` | 参考ステータスの手描き風SVGアイコン |
 | 共通 | `components/PasswordGate.tsx` | 開発中アクセス制限 |
 | API | `api/index.ts` | 全APIラッパー |
