@@ -375,6 +375,24 @@ body {
   touch-action: none;
   cursor: crosshair;
 }
+/* 文字のメモ。手書きと同じ広さ・同じ罫線にして、切り替えても見た目が飛ばないようにする */
+.scratch-text {
+  display: block;
+  width: 100%;
+  border: 1px dashed #cbd5e0;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.95rem;
+  line-height: 28px;
+  font-family: inherit;
+  color: #2d3748;
+  resize: none;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 27px, #edf2f7 27px, #edf2f7 28px),
+    #fff;
+}
+.scratch-text:focus { outline: none; border-color: #4c51bf; }
+
 .scratch-note {
   font-size: 0.72rem;
   color: #a0aec0;

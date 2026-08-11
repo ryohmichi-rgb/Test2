@@ -1,30 +1,49 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// 問題を解いている最中の手書きメモ（筆算・途中式）。
+// 問題を解いている最中のメモ（筆算・途中式）。
 // 演習・問題集・テスト・復習・昇格試験で共用する。
 //
-// 保存はしない。紙と同じ使い捨てで、問題を移れば新しい紙になる（親が key を変えて作り直す）。
-// 画像を localStorage に貯めると容量（数MB）をすぐ使い切るし、メモは残す前提のものではない。
-//
-// 線は画像ではなく**座標の配列**で持つ。こうすると「元に戻す」が配列を1つ減らして
-// 描き直すだけで済み、画面の幅が変わっても線が伸び縮みしない。
+// メモの中身は保存しない。紙と同じ使い捨てで、問題を移れば新しい紙になる
+// （親が key={problem.id} を渡して作り直す）。
+// ただし**使い方の設定（開いているか・手書きか文字か・広さ）は localStorage に残す**。
+// 問題ごとに作り直される作りなので、残さないと毎問「開く」「ひろげる」を押し直すことになる。
 type Point = { x: number; y: number };
 type Stroke = { points: Point[]; erase: boolean };
 
 const PEN_WIDTH = 2.5;
 const ERASER_WIDTH = 18;
-const HEIGHT = 220;          // 筆算が2〜3個書けるくらい
-const MAX_STROKES = 300;     // 際限なく増えないように上限を置く（実用上まず当たらない）
+const MAX_STROKES = 300;   // 際限なく増えないように上限を置く（実用上まず当たらない）
+
+// 高さは2段階。既定でも筆算が3つほど書ける広さにし、足りなければ「ひろげる」で倍近くまで。
+const SIZES = { normal: 280, wide: 520 } as const;
+type Size = keyof typeof SIZES;
+
+const KEY_OPEN = "scratchOpen";
+const KEY_MODE = "scratchMode";
+const KEY_SIZE = "scratchSize";
+
+const read = (key: string, fallback: string) => {
+  if (typeof localStorage === "undefined") return fallback;
+  return localStorage.getItem(key) ?? fallback;
+};
 
 export default function ScratchPad() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Stroke[]>([]);
   const drawingRef = useRef(false);
-  const [open, setOpen] = useState(false);
+
+  const [open, setOpen] = useState(() => read(KEY_OPEN, "off") === "on");
+  const [mode, setMode] = useState<"draw" | "text">(() => (read(KEY_MODE, "draw") === "text" ? "text" : "draw"));
+  const [size, setSize] = useState<Size>(() => (read(KEY_SIZE, "normal") === "wide" ? "wide" : "normal"));
   const [erasing, setErasing] = useState(false);
   const [hasInk, setHasInk] = useState(false);
+  const [text, setText] = useState("");   // 文字メモ。問題が変わればこの state ごと作り直される
 
-  // 線を全部引き直す。画面幅が変わったときと「元に戻す」で使う。
+  const height = SIZES[size];
+
+  const remember = (key: string, value: string) => localStorage.setItem(key, value);
+
+  // 線を全部引き直す。広さを変えたとき・画面幅が変わったとき・「もどす」で使う。
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -34,12 +53,13 @@ export default function ScratchPad() {
     // 高解像度の画面でぼやけないよう、実ピクセルで持って表示サイズに合わせて縮める
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth;
-    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(HEIGHT * dpr)) {
+    const h = canvas.clientHeight;
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
       canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(HEIGHT * dpr);
+      canvas.height = Math.round(h * dpr);
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, HEIGHT);
+    ctx.clearRect(0, 0, w, h);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
@@ -59,11 +79,11 @@ export default function ScratchPad() {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || mode !== "draw") return;
     redraw();
     window.addEventListener("resize", redraw);
     return () => window.removeEventListener("resize", redraw);
-  }, [open, redraw]);
+  }, [open, mode, size, redraw]);
 
   const pointOf = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -99,9 +119,17 @@ export default function ScratchPad() {
     redraw();
   };
 
+  const switchMode = (next: "draw" | "text") => { setMode(next); remember(KEY_MODE, next); };
+  const switchSize = () => {
+    const next: Size = size === "normal" ? "wide" : "normal";
+    setSize(next);
+    remember(KEY_SIZE, next);
+  };
+  const toggleOpen = (next: boolean) => { setOpen(next); remember(KEY_OPEN, next ? "on" : "off"); };
+
   if (!open) {
     return (
-      <button className="btn-hint scratch-toggle" onClick={() => setOpen(true)}>
+      <button className="btn-hint scratch-toggle" onClick={() => toggleOpen(true)}>
         ✏️ メモを開く
       </button>
     );
@@ -111,33 +139,67 @@ export default function ScratchPad() {
     <div className="scratch">
       <div className="scratch-bar">
         <button
-          className={`btn-hint scratch-tool${erasing ? "" : " on"}`}
-          onClick={() => setErasing(false)}
-          aria-pressed={!erasing}
+          className={`btn-hint scratch-tool${mode === "draw" ? " on" : ""}`}
+          onClick={() => switchMode("draw")}
+          aria-pressed={mode === "draw"}
         >
-          ✏️ ペン
+          ✏️ 手書き
         </button>
         <button
-          className={`btn-hint scratch-tool${erasing ? " on" : ""}`}
-          onClick={() => setErasing(true)}
-          aria-pressed={erasing}
+          className={`btn-hint scratch-tool${mode === "text" ? " on" : ""}`}
+          onClick={() => switchMode("text")}
+          aria-pressed={mode === "text"}
         >
-          ⬜ 消しゴム
+          ⌨️ 文字
         </button>
-        <button className="btn-hint scratch-tool" onClick={undo} disabled={!hasInk}>もどす</button>
-        <button className="btn-hint scratch-tool" onClick={clear} disabled={!hasInk}>ぜんぶ消す</button>
-        <button className="btn-hint scratch-tool" onClick={() => setOpen(false)}>とじる</button>
+        <button className="btn-hint scratch-tool" onClick={switchSize}>
+          {size === "normal" ? "⤢ ひろげる" : "⤡ ちいさく"}
+        </button>
+        <button className="btn-hint scratch-tool" onClick={() => toggleOpen(false)}>とじる</button>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        className="scratch-canvas"
-        style={{ height: HEIGHT }}
-        onPointerDown={start}
-        onPointerMove={move}
-        onPointerUp={end}
-        onPointerCancel={end}
-      />
+      {mode === "draw" ? (
+        <>
+          <div className="scratch-bar">
+            <button
+              className={`btn-hint scratch-tool${erasing ? "" : " on"}`}
+              onClick={() => setErasing(false)}
+              aria-pressed={!erasing}
+            >
+              ✏️ ペン
+            </button>
+            <button
+              className={`btn-hint scratch-tool${erasing ? " on" : ""}`}
+              onClick={() => setErasing(true)}
+              aria-pressed={erasing}
+            >
+              ⬜ 消しゴム
+            </button>
+            <button className="btn-hint scratch-tool" onClick={undo} disabled={!hasInk}>もどす</button>
+            <button className="btn-hint scratch-tool" onClick={clear} disabled={!hasInk}>ぜんぶ消す</button>
+          </div>
+
+          <canvas
+            ref={canvasRef}
+            className="scratch-canvas"
+            style={{ height }}
+            onPointerDown={start}
+            onPointerMove={move}
+            onPointerUp={end}
+            onPointerCancel={end}
+          />
+        </>
+      ) : (
+        // 文字のメモ。答えの入力欄と違って自由に打つので、ソフトキーボードはふつうに出す
+        <textarea
+          className="scratch-text"
+          style={{ height }}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="式や考えたことをメモできます"
+        />
+      )}
+
       <p className="scratch-note">メモは答え合わせには使われません。次の問題に進むと消えます。</p>
     </div>
   );
