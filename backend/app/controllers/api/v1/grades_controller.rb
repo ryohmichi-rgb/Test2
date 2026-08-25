@@ -20,7 +20,8 @@ module Api
           id: grade.id,
           name: grade.name,
           display_order: grade.display_order,
-          units: units.map { |u| { id: u.id, title: u.title, description: u.description, display_order: u.display_order, subject: u.subject.as_json(only: [:id, :name]) } }
+          # stat_type_id は「ステータス別テストで教科をしぼる」ときに使う（画面側の絞り込み用）
+          units: units.map { |u| { id: u.id, title: u.title, description: u.description, display_order: u.display_order, stat_type_id: u.stat_type_id, subject: u.subject.as_json(only: [:id, :name]) } }
         }
       end
     end

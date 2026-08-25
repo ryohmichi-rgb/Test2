@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { fetchGrades, fetchProblemSet, submitAnswer } from "../api";
-import type { Grade, Problem, AnswerResult } from "../types";
+import type { Grade, Subject, Problem, AnswerResult } from "../types";
+import { subjectsOf, subjectPickerNeeded, gradesOf } from "../scope";
 import ProblemView from "../components/ProblemView";
 import AskTeacher from "../components/AskTeacher";
 import PointsEarned from "../components/PointsEarned";
@@ -20,6 +21,9 @@ export default function ProblemSetPage() {
   const STORAGE_KEY = `problemset_${studentId}`;
 
   const [grades, setGrades] = useState<Grade[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  // 教科が1つしか無いうちは選ばせない（null＝しぼり込みなし）
+  const [subjectId, setSubjectId] = useState<number | null>(null);
   const [gradeId, setGradeId] = useState<number | null>(null);
   const [count, setCount] = useState(10);
   const [phase, setPhase] = useState<Phase>("setup");
@@ -41,7 +45,11 @@ export default function ProblemSetPage() {
     } catch { /* ignore */ }
     fetchGrades().then((g) => {
       setGrades(g);
-      setGradeId(g[0]?.id ?? null);
+      const subs = subjectPickerNeeded(g) ? subjectsOf(g) : [];
+      setSubjects(subs);
+      const first = subs[0]?.id ?? null;
+      setSubjectId(first);
+      setGradeId(gradesOf(g, first)[0]?.id ?? null);
     }).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, navigate]);
@@ -65,7 +73,7 @@ export default function ProblemSetPage() {
     setLoading(true);
     try {
       // 練習なので、まだ解けていない問題を優先して出してもらう
-      const set = await fetchProblemSet("grade", gradeId, count, "practice");
+      const set = await fetchProblemSet("grade", gradeId, count, "practice", subjectId);
       setProblems(set.problems);
       setIdx(0); setAnswer(""); setFeedback(null); setCorrectTotal(0);
       persist(set.problems, 0, 0);
@@ -127,9 +135,26 @@ export default function ProblemSetPage() {
         )}
 
         <div className="setup-card">
+          {subjects.length > 0 && (
+            <>
+              <label className="setup-label">教科</label>
+              <div className="chip-row" style={{ marginBottom: "1.25rem" }}>
+                {subjects.map((s) => (
+                  <button
+                    key={s.id}
+                    className={`chip ${subjectId === s.id ? "chip-on" : ""}`}
+                    onClick={() => { setSubjectId(s.id); setGradeId(gradesOf(grades, s.id)[0]?.id ?? null); }}
+                  >
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
           <label className="setup-label">学年</label>
           <div className="chip-row">
-            {grades.map((g) => (
+            {gradesOf(grades, subjectId).map((g) => (
               <button key={g.id} className={`chip ${gradeId === g.id ? "chip-on" : ""}`} onClick={() => setGradeId(g.id)}>
                 {g.name}
               </button>

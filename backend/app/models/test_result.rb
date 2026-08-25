@@ -1,5 +1,7 @@
 class TestResult < ApplicationRecord
   belongs_to :student
+  # 教科は範囲（scope_type/scope_id）とは別軸のしぼり込み。教科が1つしか無いうちは nil。
+  belongs_to :subject, optional: true
 
   # ユーザーがテストの範囲として選べるもの
   SCOPE_TYPES = %w[grade stat_type unit].freeze
@@ -16,9 +18,10 @@ class TestResult < ApplicationRecord
   scope :recent_first, -> { order(created_at: :desc) }
 
   # 同じ範囲での直前の結果（前回比較用）。self より前のものを返す。
+  # 教科もそろえないと「小6の算数」と「小6の国語」が同じ範囲として比べられてしまう。
   def previous
     TestResult
-      .where(student_id: student_id, scope_type: scope_type, scope_id: scope_id)
+      .where(student_id: student_id, scope_type: scope_type, scope_id: scope_id, subject_id: subject_id)
       .where("created_at < ?", created_at)
       .order(created_at: :desc)
       .first

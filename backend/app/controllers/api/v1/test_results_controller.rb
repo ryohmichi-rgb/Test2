@@ -15,7 +15,7 @@ module Api
       end
 
       # POST /api/v1/students/:id/test_results — テスト提出（一括採点）
-      # body: { scope_type, scope_id, answers: [{ problem_id, submitted_answer }] }
+      # body: { scope_type, scope_id, subject_id, answers: [{ problem_id, submitted_answer }] }
       def create
         student = Student.find(params[:id])
         answers = params.require(:answers)
@@ -25,11 +25,13 @@ module Api
         correct = graded.count { |g| g[:is_correct] }
         score = total > 0 ? (correct.to_f / total * 100).round : 0
 
-        scope = ProblemScope.new(scope_type: params[:scope_type], scope_id: params[:scope_id])
+        subject_id = params[:subject_id].presence
+        scope = ProblemScope.new(scope_type: params[:scope_type], scope_id: params[:scope_id], subject_id: subject_id)
 
-        # 自己ベスト判定（この結果を保存する前の最高点と比較）
+        # 自己ベスト判定（この結果を保存する前の最高点と比較）。
+        # 教科もそろえる（そろえないと「小6の国語」が「小6の算数」の自己ベストと比べられる）。
         best_before = student.test_results
-          .where(scope_type: params[:scope_type], scope_id: params[:scope_id].presence)
+          .where(scope_type: params[:scope_type], scope_id: params[:scope_id].presence, subject_id: subject_id)
           .maximum(:score_percent)
         is_best = best_before.nil? || score > best_before
 
@@ -39,6 +41,7 @@ module Api
         result = student.test_results.create!(
           scope_type: params[:scope_type],
           scope_id: params[:scope_id].presence,
+          subject_id: subject_id,
           scope_label: scope.label,
           total_questions: total,
           correct_count: correct,
@@ -99,6 +102,7 @@ module Api
           id: r.id,
           scope_type: r.scope_type,
           scope_id: r.scope_id,
+          subject_id: r.subject_id,
           scope_label: r.scope_label,
           total_questions: r.total_questions,
           correct_count: r.correct_count,

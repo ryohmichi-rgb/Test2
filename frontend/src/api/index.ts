@@ -1,8 +1,12 @@
 import api from "./client";
 import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, PersonaKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
 
+// stat_type_id は後から足したフィールド。旧バックエンドの窓では返ってこないので
+// 既定値（null＝不明）を埋める。不明のときは教科でしぼらず全部見せる側に倒す
 export const fetchGrades = (): Promise<Grade[]> =>
-  api.get<Grade[]>("/grades").then((r) => r.data);
+  api.get<Grade[]>("/grades").then((r) =>
+    r.data.map((g) => ({ ...g, units: (g.units ?? []).map((u) => ({ ...u, stat_type_id: u.stat_type_id ?? null })) }))
+  );
 
 export const fetchUnit = (id: number): Promise<Unit> =>
   api.get<Unit>(`/units/${id}`).then((r) => r.data);
@@ -45,34 +49,40 @@ export const fetchLearningPlan = (studentId: number): Promise<LearningPlan> =>
 
 // mode="practice" … 練習。同じ問題ばかり出ないよう優先度をつけて選ばれる（問題集）
 // mode 未指定     … 範囲全体からランダム（テスト。実力測定なので解ける問題も含める）
+// subjectId は範囲とは別軸のしぼり込み。教科が1つしか無いうちは null（送らない）
 export const fetchProblemSet = (
   scopeType: ScopeType,
   scopeId: number | null,
   count: number,
-  mode?: "practice"
+  mode?: "practice",
+  subjectId?: number | null
 ): Promise<ProblemSet> =>
   api
     .get<ProblemSet>("/problem_set", {
-      params: { scope_type: scopeType, scope_id: scopeId, count, mode },
+      params: { scope_type: scopeType, scope_id: scopeId, subject_id: subjectId ?? undefined, count, mode },
     })
-    .then((r) => r.data);
+    .then((r) => ({ ...r.data, subject_id: r.data.subject_id ?? null }));
 
 export const submitTest = (
   studentId: number,
   scopeType: ScopeType,
   scopeId: number | null,
-  answers: { problem_id: number; submitted_answer: string }[]
+  answers: { problem_id: number; submitted_answer: string }[],
+  subjectId?: number | null
 ): Promise<TestSubmitResult> =>
   api
     .post<TestSubmitResult>(`/students/${studentId}/test_results`, {
       scope_type: scopeType,
       scope_id: scopeId,
+      subject_id: subjectId ?? null,
       answers,
     })
-    .then((r) => r.data);
+    .then((r) => ({ ...r.data, subject_id: r.data.subject_id ?? null }));
 
 export const fetchTestResults = (studentId: number): Promise<TestResult[]> =>
-  api.get<TestResult[]>(`/students/${studentId}/test_results`).then((r) => r.data);
+  api.get<TestResult[]>(`/students/${studentId}/test_results`).then((r) =>
+    r.data.map((t) => ({ ...t, subject_id: t.subject_id ?? null }))
+  );
 
 export const fetchGrowth = (studentId: number): Promise<Growth> =>
   api.get<Growth>(`/students/${studentId}/growth`).then((r) => r.data);

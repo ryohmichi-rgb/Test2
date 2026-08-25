@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -191,10 +191,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_000000) do
     t.string "scope_type"
     t.integer "score_percent"
     t.bigint "student_id", null: false
+    t.bigint "subject_id"
     t.integer "total_questions"
     t.datetime "updated_at", null: false
     t.index ["student_id", "scope_type", "created_at"], name: "index_test_results_on_student_id_and_scope_type_and_created_at"
     t.index ["student_id"], name: "index_test_results_on_student_id"
+    t.index ["subject_id"], name: "index_test_results_on_subject_id"
   end
 
   create_table "units", force: :cascade do |t|
@@ -232,6 +234,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_000000) do
   add_foreign_key "student_stats", "students"
   add_foreign_key "students", "ranks"
   add_foreign_key "test_results", "students"
+  add_foreign_key "test_results", "subjects"
   add_foreign_key "units", "grades"
   add_foreign_key "units", "stat_types"
   add_foreign_key "units", "subjects"

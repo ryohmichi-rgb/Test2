@@ -1,9 +1,14 @@
 # 範囲（学年 / ステータス / 単元）から問題セットを解決する共通ロジック。
 # 問題集モードとテストモードの両方で使う。
+#
+# 教科は scope_type ではなく**別軸のしぼり込み**（subject_id）にしている。
+# 「小6」を選んだときに算数と国語が混ざって出るのを防ぐのが目的で、これは
+# 学年・ステータス・単元のどの範囲とも組み合わさるため。scope_type に足すと
+# 「小6の算数」が表せない。
 class ProblemScope
-  attr_reader :scope_type, :scope_id
+  attr_reader :scope_type, :scope_id, :subject_id
 
-  def initialize(scope_type:, scope_id:)
+  def initialize(scope_type:, scope_id:, subject_id: nil)
     @scope_type = scope_type.to_s
     # scope_id は単一IDのほか、複数の単元IDの配列も受ける（昇格試験の「学んだ単元」用）。
     @scope_id = if scope_id.is_a?(Array)
@@ -11,6 +16,7 @@ class ProblemScope
     else
       scope_id.presence && scope_id.to_i
     end
+    @subject_id = subject_id.presence && subject_id.to_i
   end
 
   def valid?
@@ -36,12 +42,15 @@ class ProblemScope
   end
 
   def units
-    @units ||= case scope_type
-    when "grade"     then Unit.active_only.where(grade_id: scope_id)
-    when "stat_type" then Unit.active_only.where(stat_type_id: scope_id)
-    when "unit"      then Unit.active_only.where(id: scope_id)
-    when "all"       then Unit.active_only
-    else Unit.none
+    @units ||= begin
+      base = case scope_type
+      when "grade"     then Unit.active_only.where(grade_id: scope_id)
+      when "stat_type" then Unit.active_only.where(stat_type_id: scope_id)
+      when "unit"      then Unit.active_only.where(id: scope_id)
+      when "all"       then Unit.active_only
+      else Unit.none
+      end
+      subject_id ? base.where(subject_id: subject_id) : base
     end
   end
 
@@ -91,12 +100,18 @@ class ProblemScope
   def label
     return "学んだ単元" if scope_id.is_a?(Array)
 
-    case scope_type
+    base = case scope_type
     when "grade"     then Grade.find_by(id: scope_id)&.name.to_s
     when "stat_type" then "#{StatType.find_by(id: scope_id)&.name}テスト"
     when "unit"      then Unit.find_by(id: scope_id)&.title.to_s
     else ""
     end
+
+    # 単元は名前から教科が分かるので付けない。教科を選んでいないとき（＝教科が1つしか
+    # 無くて画面に出ていないとき）も、これまでどおり「小6」のままにする。
+    return base if subject_id.nil? || scope_type == "unit"
+    name = Subject.find_by(id: subject_id)&.name
+    name.present? ? "#{name}｜#{base}" : base
   end
 
   # ===== 習熟度に応じた出題 =====

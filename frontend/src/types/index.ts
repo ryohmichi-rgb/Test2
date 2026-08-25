@@ -16,6 +16,8 @@ export interface Unit {
   description: string;
   display_order: number;
   lesson_body?: string;
+  /** ステータス別の範囲を教科でしぼるのに使う。未設定の単元は null */
+  stat_type_id?: number | null;
   grade?: Grade;
   subject?: Subject;
   problems?: Problem[];
@@ -309,6 +311,8 @@ export type ScopeType = "grade" | "stat_type" | "unit";
 export interface ProblemSet {
   scope_type: ScopeType;
   scope_id: number | null;
+  /** 範囲とは別軸の教科しぼり込み。教科が1つしか無いうちは null */
+  subject_id: number | null;
   scope_label: string;
   available_count: number;
   problems: Problem[];
@@ -318,6 +322,7 @@ export interface TestResult {
   id: number;
   scope_type: ScopeType;
   scope_id: number | null;
+  subject_id: number | null;
   scope_label: string;
   total_questions: number;
   correct_count: number;

@@ -165,6 +165,7 @@ erDiagram
     test_results {
         string scope_type "grade/stat_type/unit/promotion"
         int scope_id
+        fk subject_id "教科のしぼり込み。null許容"
         string scope_label
         int total_questions
         int correct_count
@@ -192,6 +193,10 @@ erDiagram
 - **reference_stats** … 目標の目安（参考値）。`label` でグルーピング。中学卒業レベル/高校受験（公立）/難関高校受験/数学の先生/エンジニア/研究者/ゲームクリエイター など。
 - **test_results** … テスト結果の履歴。`scope_type` は `grade | stat_type | unit`（選べる範囲）に加え、昇格試験の記録用に `promotion`（`scope_id` はランクID）。`SCOPE_TYPES` は選べる範囲、`RECORDED_SCOPE_TYPES` は保存されうる範囲。
   `bonus_points` は高得点ボーナス（自己ベスト更新時のみ）。成長曲線でこの値も合算する。
+- **test_results.subject_id** … 教科のしぼり込み（3.7）。範囲とは**別軸**なので `scope_type` ではなく列で持つ。
+  自己ベストと前回比較が `scope_type` + `scope_id` + `subject_id` の一致で行われる。
+  ここを分けないと「小6の国語」の点が「小6の算数」の自己ベストと比べられてしまう。
+  教科を選ばなかったとき（教科が1つしか無い＝画面に選択が出ないとき）は `null`。
 - **answer_records.points_awarded** … その回答で実際に入ったポイント。解き直しの逓減を含めて
   **回答時に確定**させる（3.13）。今日のノルマ・成長曲線はこの列をSUMするだけでよい。
 - **problems.hint / problems.solution** … `hint` は**解く前**に見るヒント（自分で押して開く）、
@@ -293,7 +298,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 
 1. 各回答について `AnswerRecord` を作成（→ 通常ポイントが自動加算）
 2. 正解数から `score_percent`（0〜100）を算出
-3. **自己ベスト判定**: 同じ範囲（`scope_type` + `scope_id`）の過去最高点と比較
+3. **自己ベスト判定**: 同じ範囲（`scope_type` + `scope_id` + `subject_id`）の過去最高点と比較
 4. **高得点ボーナス**（自己ベスト更新時のみ付与 = farming防止）
    - 90%以上 → +100pt / 80〜89% → +50pt
    - ボーナスはテストに出たステータスへ均等配分
@@ -370,6 +375,21 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 - **練習（`mode=practice`）とテストで選び方が違う**：
   - 練習 … `sample_problems_for` … 4段階優先度 →（その中で）習熟度に応じた重みづけ（3.17）
   - テスト … `sample_problems` … 範囲全体から純ランダム（実力測定なので解ける問題も含める）
+
+#### 教科のしぼり込み
+
+教科（`subject_id`）は範囲とは**別軸**のしぼり込みで、`scope_type` には足していない。
+学年・ステータス・単元のどれとも組み合わさるためで、`scope_type` に足すと「小6の算数」が表せない。
+
+- `ProblemScope.new(scope_type:, scope_id:, subject_id:)`。`subject_id` が `nil` なら教科でしぼらない。
+- ラベルは `算数｜小学6年生` のように教科を前に付ける。ただし**単元の範囲には付けない**
+  （単元名から教科が分かるため）。
+- 組み合わせに問題が1問も無ければ `valid?` が `false` になり、`GET /problem_set` は 422 を返す。
+- **画面に教科の選択を出すのは、同じ学年に2教科以上あるときだけ**（`subjectPickerNeeded`）。
+  いまの教科は算数（小6）と数学（中1）で**学年と1対1**なので、「教科が2つ以上ある」で判定すると
+  「小6 → 算数」と押させるだけの無駄な一手が増える。出すべきなのは
+  **学年を選ぶと教科が混ざるとき**だけ。選択を出さないときは `subject_id` を送らない
+  （＝いまの挙動のまま）。
 
 ### 3.17 習熟度に応じた出題
 
@@ -806,7 +826,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | GET | `/students/:id/growth` | 成長曲線（実績＋目標） |
 | GET | `/students/:id/review` | 復習リスト |
 | GET | `/students/:id/test_results` | テスト履歴 |
-| POST | `/students/:id/test_results` | テスト提出（採点） |
+| POST | `/students/:id/test_results` | テスト提出（採点。body に `scope_type` / `scope_id` / `subject_id` / `answers`） |
 | GET | `/students/:id/lesson_reads` | 既読の単元ID一覧 |
 | POST | `/students/:id/lesson_reads` | 教材読了（初回+5pt） |
 | GET | `/students/:id/daily_problem` | 今日の一問（ランダム1問） |
@@ -824,7 +844,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | GET | `/units/:id` | 単元詳細（教材・問題込み） |
 | POST | `/answer_records` | 回答送信（即採点＋ポイント加算） |
 | GET | `/reference_stats` | 参考ステータス |
-| GET | `/problem_set?scope_type=&scope_id=&count=&mode=` | 動的問題セット（`mode=practice` で重複回避つき／未指定はランダム＝テスト用） |
+| GET | `/problem_set?scope_type=&scope_id=&subject_id=&count=&mode=` | 動的問題セット（`mode=practice` で重複回避つき／未指定はランダム＝テスト用。`subject_id` は省略可＝教科でしぼらない） |
 | POST | `/admin/students/:id/reset_password` | パスワード再発行（管理者。平文はこの応答でだけ返す） |
 | — | `/admin/*`（管理者のみ） | meta / units / problems / reference_stats / students のCRUD |
 
@@ -855,6 +875,7 @@ flowchart TD
 
 - ログイン状態は `localStorage`（`token` / `studentId` / `studentName`）で保持。トークンは全APIに自動付与し、401で `/`（ログイン）へ戻す。
 - 問題集の途中状態は `localStorage`（`problemset_<studentId>`）に保存し「続きから」再開。
+- テストと問題集の範囲えらびは `scope.ts` に集約。教科の選択は、同じ学年に2教科以上あるときだけ出る（3.7）。
 - 開発中アクセス制限として、認証の外側に `PasswordGate`（あいことば）を通す。
 
 ---
@@ -888,6 +909,7 @@ flowchart TD
 | 共通 | `components/MarkdownView.tsx` | Markdown＋数式（KaTeX）の描画。教材ページで使用 |
 | 共通 | `components/MathText.tsx` | 問題文・選択肢・ヒント内の `$...$` だけを数式化（Markdownは解釈しない軽量版） |
 | サービス | `services/claude_teacher.rb` | Claude API を `Net::HTTP` で呼ぶ（バックエンド。キーは環境変数） |
+| 共通 | `scope.ts` | 出題範囲の選択肢づくり（教科・学年・ステータス・単元）。テストと問題集で共用 |
 | 共通 | `sound.ts` | 効果音（Web Audio APIで合成、音源不要／正解・不正解・完了）＋ BGM（`public/bgm/` の曲を再生）。効果音はホーム、BGMはホームとせっていでオン/オフ |
 | ページ | `pages/SettingsPage.tsx` | せってい（パスワード変更・BGMのオン/オフと曲えらび・見ている保護者の表示・ログアウト） |
 | ページ | `pages/ParentHomePage.tsx` | 保護者のホーム。見られる子どもを並べる |

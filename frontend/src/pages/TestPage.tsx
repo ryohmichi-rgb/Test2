@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { fetchGrades, fetchStudentStats, fetchProblemSet, submitTest } from "../api";
-import type { Grade, StudentStat, Problem, ScopeType, TestSubmitResult } from "../types";
+import type { Grade, Subject, StudentStat, Problem, ScopeType, TestSubmitResult } from "../types";
+import { subjectsOf, subjectPickerNeeded, gradesOf, unitsOf, statTypeIdsOf } from "../scope";
 import ProblemView from "../components/ProblemView";
 import ScratchPad from "../components/ScratchPad";
 import { playFinish } from "../sound";
@@ -26,6 +27,9 @@ export default function TestPage() {
   const [stats, setStats] = useState<StudentStat[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  // 教科が1つしか無いうちは選ばせない（null＝しぼり込みなし）
+  const [subjectId, setSubjectId] = useState<number | null>(null);
   const [scopeType, setScopeType] = useState<ScopeType>("grade");
   const [targetId, setTargetId] = useState<number | null>(null);
   const [count, setCount] = useState(10);
@@ -45,33 +49,43 @@ export default function TestPage() {
       .then(([g, s]) => {
         setGrades(g);
         setStats(s);
-        setTargetId(g[0]?.id ?? null);
+        const subs = subjectPickerNeeded(g) ? subjectsOf(g) : [];
+        setSubjects(subs);
+        const first = subs[0]?.id ?? null;
+        setSubjectId(first);
+        setTargetId(gradesOf(g, first)[0]?.id ?? null);
       })
       .finally(() => setLoading(false));
   }, [studentId, navigate]);
 
-  // テストタイプごとの選択肢
-  const targets: TargetOption[] =
-    scopeType === "grade"
-      ? grades.map((g) => ({ id: g.id, label: g.name }))
-      : scopeType === "stat_type"
-      ? stats.map((s) => ({ id: s.stat_type_id, label: s.name }))
-      : grades.flatMap((g) => (g.units || []).map((u) => ({ id: u.id, label: `${g.name}｜${u.title}` })));
+  // テストタイプごとの選択肢（教科を選んでいればその教科の分だけ）
+  const targetsFor = (t: ScopeType, subject: number | null): TargetOption[] => {
+    if (t === "grade") return gradesOf(grades, subject).map((g) => ({ id: g.id, label: g.name }));
+    if (t === "stat_type") {
+      const allowed = statTypeIdsOf(grades, subject);
+      const list = allowed === null ? stats : stats.filter((s) => allowed.includes(s.stat_type_id));
+      return list.map((s) => ({ id: s.stat_type_id, label: s.name }));
+    }
+    return unitsOf(grades, subject).map((u) => ({ id: u.id, label: `${u.gradeName}｜${u.title}` }));
+  };
+  const targets = targetsFor(scopeType, subjectId);
 
   const pickType = (t: ScopeType) => {
     setScopeType(t);
-    const first =
-      t === "grade" ? grades[0]?.id
-      : t === "stat_type" ? stats[0]?.stat_type_id
-      : grades.flatMap((g) => g.units || [])[0]?.id;
-    setTargetId(first ?? null);
+    setTargetId(targetsFor(t, subjectId)[0]?.id ?? null);
+  };
+
+  // 教科を変えると範囲の選択肢が入れ替わるので、選び直しておく
+  const pickSubject = (id: number) => {
+    setSubjectId(id);
+    setTargetId(targetsFor(scopeType, id)[0]?.id ?? null);
   };
 
   const start = async () => {
     if (!targetId) return;
     setLoading(true);
     try {
-      const set = await fetchProblemSet(scopeType, targetId, count);
+      const set = await fetchProblemSet(scopeType, targetId, count, undefined, subjectId);
       setProblems(set.problems);
       setAnswers(new Array(set.problems.length).fill(""));
       setIdx(0);
@@ -91,7 +105,7 @@ export default function TestPage() {
     setSubmitting(true);
     try {
       const payload = problems.map((p, i) => ({ problem_id: p.id, submitted_answer: answers[i] || "" }));
-      const res = await submitTest(studentId, scopeType, targetId, payload);
+      const res = await submitTest(studentId, scopeType, targetId, payload, subjectId);
       playFinish();
       setResult(res);
       setPhase("result");
@@ -131,6 +145,19 @@ export default function TestPage() {
         </p>
 
         <div className="setup-card">
+          {subjects.length > 0 && (
+            <>
+              <label className="setup-label">教科</label>
+              <div className="chip-row" style={{ marginBottom: "1.25rem" }}>
+                {subjects.map((s) => (
+                  <button key={s.id} className={`chip ${subjectId === s.id ? "chip-on" : ""}`} onClick={() => pickSubject(s.id)}>
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
           <label className="setup-label">テストの種類</label>
           <div className="chip-row">
             {typeLabels.map((t) => (

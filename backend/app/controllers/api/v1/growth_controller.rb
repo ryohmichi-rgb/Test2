@@ -84,7 +84,7 @@ module Api
       # （加点時の apply_bonus と同じ「範囲内のステータスへ均等配分」の考え方）。
       def bonus_stat_type_ids(test_result)
         ProblemScope
-          .new(scope_type: test_result.scope_type, scope_id: test_result.scope_id)
+          .new(scope_type: test_result.scope_type, scope_id: test_result.scope_id, subject_id: test_result.subject_id)
           .units.pluck(:stat_type_id).compact.uniq
       end
 
