@@ -1,12 +1,13 @@
 module Api
   module V1
     module Admin
-      # フォームのプルダウン用（学年・教科・ステータス種別）
+      # フォームのプルダウン用（学年・教科・ステータス種別・教科のまとまり）
       class MetaController < BaseController
         def show
           render json: {
             grades: Grade.ordered.as_json(only: [:id, :name]),
             subjects: Subject.order(:id).as_json(only: [:id, :name]),
+            subject_groups: SubjectGroup.ordered.as_json(only: [:id, :name]),
             stat_types: StatType.all.as_json(only: [:id, :name])
           }
         end

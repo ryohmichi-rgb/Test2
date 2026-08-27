@@ -26,13 +26,13 @@ class ProblemScope
   # 生徒が実際に学んだ（1問以上答えた）単元だけを対象にするスコープ。昇格試験で使う。
   # 生徒に学年を持たせていないので、「まだ習っていない学年の問題が出る」のを
   # 学年ではなく学習履歴で防いでいる（先取りした分はちゃんと範囲に入る）。
-  def self.learned_by(student)
-    unit_ids = Unit.active_only
+  # subject_ids を渡すと、その教科の単元だけにしぼる（教科のまとまりごとの昇格試験で使う）。
+  def self.learned_by(student, subject_ids = nil)
+    rel = Unit.active_only
       .joins(problems: :answer_records)
       .where(answer_records: { student_id: student.id })
-      .distinct
-      .pluck(:id)
-    new(scope_type: "unit", scope_id: unit_ids)
+    rel = rel.where(subject_id: subject_ids) if subject_ids
+    new(scope_type: "unit", scope_id: rel.distinct.pluck(:id))
   end
 
   # 全問を対象にするスコープ（今日の一問・ノルマの上限計算で使う）。

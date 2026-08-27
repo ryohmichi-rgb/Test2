@@ -1,6 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router";
-import { fetchStudentStats, fetchReferenceStats, updateGoal, fetchCondition, fetchRankStatus, fetchAchievements, updateTitle } from "../api";
+import { fetchStudentStats, fetchReferenceStats, updateGoal, fetchCondition, fetchRankStatuses, fetchAchievements, updateTitle } from "../api";
 import type { StudentStat, ReferenceStat, Condition, RankStatus, TitleOption } from "../types";
 import ReferenceIcon from "../components/ReferenceIcon";
 import RankCard from "../components/RankCard";
@@ -56,7 +56,7 @@ export default function StatsPage() {
   const [refSaving, setRefSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
-  const [rank, setRank] = useState<RankStatus | null>(null);
+  const [ranks, setRanks] = useState<RankStatus[]>([]);
   const [titles, setTitles] = useState<TitleOption[]>([]);
   const [titleKey, setTitleKey] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export default function StatsPage() {
       .then(([s, r]) => { setStats(s); setRefs(r); })
       .finally(() => setLoading(false));
     fetchCondition(studentId).then(setCondition).catch(() => {});
-    fetchRankStatus(studentId).then(setRank).catch(() => {});
+    fetchRankStatuses(studentId).then(setRanks).catch(() => {});
     fetchAchievements(studentId)
       .then((a) => { setTitles(a.titles); setTitleKey(a.title_key); setTitle(a.title); })
       .catch(() => {});
@@ -146,7 +146,9 @@ export default function StatsPage() {
       </p>
 
       {/* 総合ランク（全ステータスの合計ポイント）と称号 */}
-      {rank?.current_rank && <RankCard status={rank} title={title} />}
+      {ranks.map((r) => (
+        <RankCard key={r.subject_group?.id ?? "one"} status={r} title={title} showGroupName={ranks.length > 1} />
+      ))}
 
       {titles.length > 0 && (
         <div className="title-picker">

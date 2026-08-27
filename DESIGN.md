@@ -66,6 +66,10 @@ erDiagram
     students ||--o{ daily_quotas : ""
     students ||--o{ guardianships : ""
     ranks ||--o{ students : ""
+    subject_groups ||--o{ subjects : ""
+    subject_groups ||--o{ student_ranks : ""
+    students ||--o{ student_ranks : ""
+    ranks ||--o{ student_ranks : ""
     problems ||--o{ ai_usages : ""
     stat_types ||--o{ student_stats : ""
     stat_types ||--o{ goals : ""
@@ -77,6 +81,17 @@ erDiagram
     }
     subjects {
         string name
+        fk subject_group_id "ランクを数える単位"
+    }
+    subject_groups {
+        string name "例: 算数・数学"
+        int display_order
+    }
+    student_ranks {
+        fk student_id
+        fk subject_group_id
+        fk rank_id "null=最下位"
+        int last_exam_points "再挑戦しきい値"
     }
     stat_types {
         string name
@@ -214,6 +229,12 @@ erDiagram
 - **difficulty** … 1〜5。ポイント計算に使う（満点は 10/15/20/25/30pt）。
 - **students.username / password_digest** … 認証用。`username` は一意（ログインID）、`password_digest` は bcrypt（`has_secure_password`）。
 - **students.onboarded** … 初回オンボーディング済みか。`false` の間だけウィザードを表示。
+- **subject_groups / student_ranks** … ランクを数える単位と、生徒のまとまりごとのランク（3.15）。
+  `subjects.subject_group_id` を指定せずに教科を作ると、**その教科だけの新しいまとまり**ができる
+  （新しい教科は別系統のことが多い。同じ積み上げに混ぜたいときは管理画面でえらぶ）。
+- **students.rank_id / students.last_exam_points** … まとまりごとのランクにする前の列。
+  **もう読んでいない**（`student_ranks` に移行ずみ）。デプロイ中に旧コードが新スキーマに
+  対して動く窓があるため、この移行では消さずに残している。
 - **students.admin** … 管理者か。`ADMIN_USERNAME` 環境変数のユーザーを seed が管理者にする。
 - **units.active / problems.active** … 無効化フラグ。`false` は新しい出題（演習・問題集・テスト・今日の一問・復習・単元一覧）から除外。回答履歴は保持。
 - **units.lesson_body** … 単元の教材（Markdown）。フロントで `react-markdown` により描画。
@@ -675,8 +696,13 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 
 目標（ステータスごと・150〜500pt）は遠い。**あいだにランクを置いて、達成感を刻む。**
 
-- **単位は総合ランク1本**。全ステータスの合計ポイントで判定する（`Student#total_points`）。
-  ステータス別の目標はそのまま残す。
+- **単位は「教科のまとまり」（`SubjectGroup`）ごとのランク**。そのまとまりで積んだポイントで
+  判定する（`RankPoints.for(student, group)`）。ステータス別の目標はそのまま残す。
+  教科そのものを単位にしないのは、算数（小6）と数学（中1）が**学年と1対1**で実質ひとつながりの
+  積み上げだから。教科で割ると中1に進んだ時点で算数のランクが止まり、数学は10級からやり直しになる。
+  国語のような別系統を足したら、そちらは別のまとまりにする。
+- **まとまりが1つのうちは画面の見た目が変わらない**。ランクカードにまとまりの名前を出すのは
+  2つ以上あるときだけ（`showGroupName`）。`GET /students/:id/rank` は**配列**を返す。
 - **11段階**: 10級 → 1級 → 初段。しきい値は 0 / 30 / 80 / 150 / 250 / 400 / 600 / 850 / 1150 / 1500 / 2000pt。
   最初の昇格が2〜3問で来るので、始めてすぐ成功体験がある。参考目標の合計が500〜1750ptなので、
   その道中に昇格イベントが並ぶ。
@@ -687,7 +713,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 
 | 項目 | 内容 |
 |------|------|
-| 出題範囲 | **その子が学んだ単元**（回答履歴のある単元。`ProblemScope.learned_by`） |
+| 出題範囲 | **その子がそのまとまりで学んだ単元**（回答履歴のある単元。`ProblemScope.learned_by(student, subject_ids)`） |
 | 問題数 | `ranks.exam_question_count`（既定10。範囲の問題が少なければその数） |
 | 合格 | `ranks.pass_percent`（既定80%）以上 |
 | 制限時間 | なし |
@@ -697,8 +723,9 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 出題範囲を学年ではなく**学習履歴**で絞っているのは、生徒に学年を持たせていないため。
 学年で縛るより正確でもある（先取りした分は範囲に入り、まだ触っていない領域は出ない）。
 
-**落ちたときの再挑戦**: 不合格時点の合計ポイントを `students.last_exam_points` に記録し、
-そこから `RETRY_POINTS`（20pt）伸ばすと再挑戦できる。待ち時間も連打もなく、
+**落ちたときの再挑戦**: 不合格時点のポイントを `student_ranks.last_exam_points` に記録し、
+そこから `RETRY_POINTS`（20pt）伸ばすと再挑戦できる。まとまりごとに別々に持つので、
+片方で落ちてももう片方の試験は受けられる。待ち時間も連打もなく、
 「落ちた → 少し学習 → もう一度」のループになる。
 
 > ⚠️ **スナップショットは採点が終わって加点が反映されたあとに取ること。**
@@ -708,6 +735,22 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 > 補足: 同じ理由で、試験の得点が次のランクの到達条件を押し上げるため、合格後にそのまま
 > 次の試験へ進めることがある。ただし解き直しは満点の20%しか入らないので連鎖は必ず止まる
 > （実測: 1単元9問だけの学習で 7級／184pt で頭打ち）。
+
+#### まとまりのポイントの数え方（`RankPoints`）
+
+`student_stats` はステータス別の現在値しか持たず、教科の軸を持たない。そこで成長曲線と同じ
+3系統（回答・テストのボーナス・教材の読了）を、まとまりで束ねて数える。
+
+- テストのボーナスは、教科を選んで受けたテストならその教科。選んでいなければ範囲の単元からたどる。
+  複数のまとまりにまたがるときは均等に分ける（端数も配りきる）。
+- **有効・無効や、いま付いているステータスでは絞らない。** 単元を無効化したりステータスの
+  紐づけを外したりしたときに、過去に積んだポイントが消えてランクが下がって見えるのを防ぐため
+  （「降格はしない」という約束を読み出し側でも守る）。
+- まとまりが1つのうちは `RankPoints.for` の値は `Student#total_points` と一致する
+  （＝いまの子のランクは移行後も変わらない）。
+
+**バッジの「1級とうたつ」「初段とうたつ」は、どれか1つのまとまりで届けば獲得**とする。
+まとまりが増えるほど取りにくくなる形にはしない（`Student#best_rank`）。
 
 ### 3.16 実績バッジと称号
 
@@ -878,9 +921,9 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | GET | `/students/:id/daily_problem` | 今日の一問（ランダム1問） |
 | GET | `/students/:id/achievements` | 実績バッジ（獲得判定・獲得日時・新規獲得・称号の選択肢） |
 | PUT | `/students/:id/title` | 称号を選ぶ／外す（未獲得は422） |
-| GET | `/students/:id/rank` | 総合ランクの状況（次まで何pt・昇格試験に挑戦できるか） |
-| GET | `/students/:id/promotion_exam` | 昇格試験の問題を取り出す（挑戦できないときは422） |
-| POST | `/students/:id/promotion_exam` | 昇格試験の提出（採点＋昇格判定） |
+| GET | `/students/:id/rank` | ランクの状況（**教科のまとまりごとの配列**。次まで何pt・昇格試験に挑戦できるか） |
+| GET | `/students/:id/promotion_exam?subject_group_id=` | 昇格試験の問題を取り出す（挑戦できないときは422。省略時は先頭のまとまり） |
+| POST | `/students/:id/promotion_exam` | 昇格試験の提出（採点＋昇格判定。body に `subject_group_id`） |
 | GET | `/students/:id/condition` | さびつき状態（未学習日数から算出） |
 | GET | `/students/:id/ai_usage` | 「先生に聞く」の今日の利用状況（used/limit/remaining） |
 | GET | `/students/:id/persona_usage` | 「この人に聞く」の残り回数（先生とは別枠） |

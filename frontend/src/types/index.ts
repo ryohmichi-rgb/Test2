@@ -66,8 +66,15 @@ export interface Rank {
   display_order: number;
 }
 
-/** 総合ランクの状況（昇格試験に挑戦できるかどうかを含む） */
+export interface SubjectGroup {
+  id: number;
+  name: string;
+}
+
+/** ランクの状況（昇格試験に挑戦できるかどうかを含む）。教科のまとまりごとに1つ */
 export interface RankStatus {
+  /** ランクを数える単位（教科のまとまり）。まとまりが1つのときは画面に出さない */
+  subject_group: SubjectGroup;
   current_rank: Rank;
   next_rank: Rank | null;
   total_points: number;
@@ -84,6 +91,7 @@ export interface RankStatus {
 }
 
 export interface PromotionExamSet {
+  subject_group: SubjectGroup;
   rank: Rank;
   pass_percent: number;
   scope_label: string;
@@ -161,12 +169,16 @@ export interface Child {
 export interface AdminMeta {
   grades: { id: number; name: string }[];
   subjects: { id: number; name: string }[];
+  subject_groups: { id: number; name: string }[];
   stat_types: { id: number; name: string }[];
 }
 
 export interface AdminSubject {
   id: number;
   name: string;
+  /** ランクを数える単位。空なら保存時に「この教科だけの新しいまとまり」ができる */
+  subject_group_id: number | null;
+  subject_group: string | null;
   unit_count: number;
   /** 単元がぶら下がっているか。true なら削除できない */
   used: boolean;

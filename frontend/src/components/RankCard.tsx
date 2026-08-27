@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import type { RankStatus } from "../types";
 
-// 総合ランク（全ステータスの合計ポイント）の表示。
+// ランク（そのまとまりで積んだポイント）の表示。ランクは教科のまとまりごとにある。
 // 「到達したら自動で昇格」ではなく、昇格試験に合格して初めて上がるので、下段の見せ方を
 // 3つに分ける：
 //   1. まだ届いていない  → 次のランクまであと何pt
@@ -13,11 +13,14 @@ export default function RankCard({
   status,
   title = null,
   compact = false,
+  showGroupName = false,
 }: {
   status: RankStatus;
   /** 選択中の称号（あれば級位のとなりに出す） */
   title?: string | null;
   compact?: boolean;
+  /** まとまりが2つ以上あるときだけ名前を出す（1つのうちは今までどおりの見た目） */
+  showGroupName?: boolean;
 }) {
   const navigate = useNavigate();
   const { current_rank, next_rank, total_points, points_to_next, available, retry_points_needed } = status;
@@ -30,13 +33,17 @@ export default function RankCard({
   return (
     <div className={`rank-card ${compact ? "rank-card-compact" : ""}`}>
       <div className="rank-card-head">
+        {showGroupName && <span className="rank-group">{status.subject_group?.name}</span>}
         <span className="rank-badge">{current_rank.name}</span>
         {title && <span className="rank-title">{title}</span>}
         <span className="rank-points">{total_points}pt</span>
       </div>
 
       {available ? (
-        <div className="rank-ready" onClick={() => navigate("/promotion-exam")}>
+        <div
+          className="rank-ready"
+          onClick={() => navigate(`/promotion-exam?group=${status.subject_group?.id ?? ""}`)}
+        >
           <p className="rank-ready-title">⚔️ 昇格試験に ちょうせんできる！</p>
           <p className="rank-ready-text">
             {next_rank?.name} をめざそう（{status.question_count}問・{status.pass_percent}%で合格）

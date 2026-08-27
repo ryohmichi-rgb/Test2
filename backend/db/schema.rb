@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_06_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -149,6 +149,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_000000) do
     t.index ["student_id"], name: "index_student_badges_on_student_id"
   end
 
+  create_table "student_ranks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "last_exam_points"
+    t.bigint "rank_id"
+    t.bigint "student_id", null: false
+    t.bigint "subject_group_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rank_id"], name: "index_student_ranks_on_rank_id"
+    t.index ["student_id", "subject_group_id"], name: "index_student_ranks_on_student_id_and_subject_group_id", unique: true
+    t.index ["student_id"], name: "index_student_ranks_on_student_id"
+    t.index ["subject_group_id"], name: "index_student_ranks_on_subject_group_id"
+  end
+
   create_table "student_stats", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "stat_type_id", null: false
@@ -176,10 +189,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_000000) do
     t.index ["username"], name: "index_students_on_username", unique: true
   end
 
+  create_table "subject_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "display_order", default: 0, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "subjects", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name"
+    t.bigint "subject_group_id"
     t.datetime "updated_at", null: false
+    t.index ["subject_group_id"], name: "index_subjects_on_subject_group_id"
   end
 
   create_table "test_results", force: :cascade do |t|
@@ -240,9 +262,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_000000) do
   add_foreign_key "problems", "units"
   add_foreign_key "reference_stats", "stat_types"
   add_foreign_key "student_badges", "students"
+  add_foreign_key "student_ranks", "ranks"
+  add_foreign_key "student_ranks", "students"
+  add_foreign_key "student_ranks", "subject_groups"
   add_foreign_key "student_stats", "stat_types"
   add_foreign_key "student_stats", "students"
   add_foreign_key "students", "ranks"
+  add_foreign_key "subjects", "subject_groups"
   add_foreign_key "test_results", "students"
   add_foreign_key "test_results", "subjects"
   add_foreign_key "unit_stat_types", "stat_types"

@@ -127,9 +127,11 @@ class BadgeCatalog
     !AnswerRecord.where(id: latest_ids, is_correct: false).exists?
   end
 
+  # ランクは「教科のまとまり」ごとにある。**どれか1つでも**届いていれば獲得とする
+  # （まとまりが増えるほど取りにくくなる、という形にはしない）。
   def rank_reached?(rank_name)
     target = Rank.find_by(name: rank_name)
     return false if target.nil?
-    student.current_rank.display_order >= target.display_order
+    student.best_rank&.display_order.to_i >= target.display_order
   end
 end

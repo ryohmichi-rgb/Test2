@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router";
-import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition, fetchRankStatus } from "../api";
+import { fetchGrowth, fetchReviewList, fetchDailyQuota, fetchStudentStats, fetchAchievements, fetchCondition, fetchRankStatuses } from "../api";
 import type { Growth, DailyQuota, StudentStat, Badge, Condition, RankStatus } from "../types";
 import GrowthChart from "../components/GrowthChart";
 import { isSoundOn, setSoundOn, playCorrect, isBgmOn, toggleBgm } from "../sound";
@@ -35,7 +35,7 @@ export default function HomePage() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [newBadges, setNewBadges] = useState<Badge[]>([]);
   const [title, setTitle] = useState<string | null>(null);
-  const [rank, setRank] = useState<RankStatus | null>(null);
+  const [ranks, setRanks] = useState<RankStatus[]>([]);
   const [condition, setCondition] = useState<Condition | null>(null);
   const [soundOn, setSoundOnState] = useState(isSoundOn());
   const [bgmOn, setBgmOnState] = useState(isBgmOn());
@@ -65,7 +65,7 @@ export default function HomePage() {
       })
       .catch(() => {});
     fetchCondition(id).then(setCondition).catch(() => {});
-    fetchRankStatus(id).then(setRank).catch(() => {});
+    fetchRankStatuses(id).then(setRanks).catch(() => {});
   }, [studentId, navigate]);
 
   // 達成した目標のお祝い（一度閉じた達成は localStorage で覚えて再表示しない）
@@ -113,7 +113,9 @@ export default function HomePage() {
 
       <MascotMessage name={studentName} quota={quota} />
 
-      {rank?.current_rank && <RankCard status={rank} title={title} />}
+      {ranks.map((r) => (
+        <RankCard key={r.subject_group?.id ?? "one"} status={r} title={title} showGroupName={ranks.length > 1} />
+      ))}
 
       {newBadges.length > 0 && (
         <div className="celebrate-banner">

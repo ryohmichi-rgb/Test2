@@ -56,8 +56,14 @@ stat_logic   = StatType.find_or_create_by!(name: "論理力")    { |s| s.descrip
 end
 
 # 教科
-math_e = Subject.find_or_create_by!(name: "算数")
-math_m = Subject.find_or_create_by!(name: "数学")
+# ランクを数える「教科のまとまり」。算数（小6）と数学（中1）は学年と1対1で
+# ひとつながりの積み上げなので、ランクは分けずに1つにまとめる。
+math_group = SubjectGroup.find_or_create_by!(name: "算数・数学") { |g| g.display_order = 0 }
+math_e = Subject.find_or_create_by!(name: "算数") { |s| s.subject_group = math_group }
+math_m = Subject.find_or_create_by!(name: "数学") { |s| s.subject_group = math_group }
+# find_or_create_by! のブロックは新規作成のときしか走らないので、既存行にも入れておく
+# （まとまり未設定のときだけ。管理画面で移した設定は上書きしない）
+[math_e, math_m].each { |s| s.update!(subject_group: math_group) if s.subject_group_id.nil? }
 
 # 学年
 grade6 = Grade.find_or_create_by!(name: "小学6年生") { |g| g.display_order = 1 }

@@ -10,6 +10,8 @@ class Student < ApplicationRecord
   has_many :lesson_reads, dependent: :destroy
   has_many :ai_usages, dependent: :destroy
   has_many :student_badges, dependent: :destroy
+  # 教科のまとまりごとのランク
+  has_many :student_ranks, dependent: :destroy
   has_many :daily_quotas, dependent: :destroy
 
   # 保護者として見ている子どもたち
@@ -120,9 +122,12 @@ class Student < ApplicationRecord
     student_stats.sum(:value)
   end
 
-  # rank_id が NULL の生徒は最下位ランク扱い（既存生徒のバックフィルを不要にするため）
-  def current_rank
-    rank || Rank.lowest
+  # 一番上のランク（教科のまとまりごとに持つので、代表として最上位を返す）。
+  # 保護者向けのサマリーとバッジ判定に使う。1つも無ければ最下位ランク。
+  def best_rank
+    ids = student_ranks.pluck(:rank_id).compact
+    return Rank.lowest if ids.empty?
+    Rank.where(id: ids).order(display_order: :desc).first || Rank.lowest
   end
 
   # 選択中の称号名。バッジを持っていなければ名乗れない（獲得後に外れることはない）。

@@ -3,7 +3,7 @@ module Api
     module Admin
       class SubjectsController < BaseController
         def index
-          render json: Subject.order(:id).map { |s| subject_json(s) }
+          render json: Subject.includes(:subject_group).order(:id).map { |s| subject_json(s) }
         end
 
         def create
@@ -40,12 +40,18 @@ module Api
 
         private
 
+        # subject_group_id を空で送ると「その教科だけの新しいまとまり」を作る（Subject 側の既定）
         def subject_params
-          params.require(:subject).permit(:name)
+          params.require(:subject).permit(:name, :subject_group_id)
         end
 
         def subject_json(s)
-          { id: s.id, name: s.name, unit_count: s.units.count, used: s.units.exists? }
+          {
+            id: s.id, name: s.name,
+            subject_group_id: s.subject_group_id,
+            subject_group: s.subject_group&.name,
+            unit_count: s.units.count, used: s.units.exists?
+          }
         end
       end
     end

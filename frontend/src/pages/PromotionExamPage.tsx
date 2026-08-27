@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { fetchPromotionExam, submitPromotionExam } from "../api";
 import type { Problem, PromotionExamSet, PromotionExamResult } from "../types";
 import ProblemView from "../components/ProblemView";
@@ -15,6 +15,9 @@ type Phase = "intro" | "running" | "result";
 
 export default function PromotionExamPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // どの教科のまとまりの試験か。省略ならバックエンドが最初のまとまりを使う
+  const groupId = Number(searchParams.get("group")) || null;
   const studentId = Number(localStorage.getItem("studentId"));
 
   const [phase, setPhase] = useState<Phase>("intro");
@@ -29,11 +32,11 @@ export default function PromotionExamPage() {
 
   useEffect(() => {
     if (!studentId) { navigate("/"); return; }
-    fetchPromotionExam(studentId)
+    fetchPromotionExam(studentId, groupId)
       .then(setExam)
       .catch((e) => setError(e?.response?.data?.error || "いまは昇格試験を受けられません。"))
       .finally(() => setLoading(false));
-  }, [studentId, navigate]);
+  }, [studentId, groupId, navigate]);
 
   const problems: Problem[] = exam?.problems ?? [];
   const current = problems[idx];
@@ -52,7 +55,7 @@ export default function PromotionExamPage() {
         problem_id: p.id,
         submitted_answer: (answers[p.id] ?? "").trim(),
       }));
-      const res = await submitPromotionExam(studentId, payload);
+      const res = await submitPromotionExam(studentId, payload, groupId);
       playFinish();
       setResult(res);
       setPhase("result");

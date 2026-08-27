@@ -12,7 +12,7 @@ module Api
             name: child.name,
             username: child.username,
             total_points: child.total_points,
-            rank: child.current_rank&.name,
+            rank: child.best_rank&.name,
             streak: child.study_streak,
             last_studied_on: child.last_studied_on
           }

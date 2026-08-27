@@ -127,18 +127,27 @@ export const updateTitle = (studentId: number, titleKey: string | null) =>
 
 // ===== 総合ランクと昇格試験 =====
 
-export const fetchRankStatus = (studentId: number): Promise<RankStatus> =>
-  api.get<RankStatus>(`/students/${studentId}/rank`).then((r) => r.data);
+// ランクは教科のまとまりごとにあるので配列。旧バックエンドは単体を返すので、
+// 配列でなければ包んでから返す（デプロイ中の窓で画面を落とさない）。
+export const fetchRankStatuses = (studentId: number): Promise<RankStatus[]> =>
+  api.get<RankStatus[] | RankStatus>(`/students/${studentId}/rank`).then((r) =>
+    (Array.isArray(r.data) ? r.data : [r.data]).filter((s) => s?.current_rank)
+  );
 
-export const fetchPromotionExam = (studentId: number): Promise<PromotionExamSet> =>
-  api.get<PromotionExamSet>(`/students/${studentId}/promotion_exam`).then((r) => r.data);
+export const fetchPromotionExam = (studentId: number, subjectGroupId?: number | null): Promise<PromotionExamSet> =>
+  api
+    .get<PromotionExamSet>(`/students/${studentId}/promotion_exam`, {
+      params: { subject_group_id: subjectGroupId ?? undefined },
+    })
+    .then((r) => r.data);
 
 export const submitPromotionExam = (
   studentId: number,
-  answers: { problem_id: number; submitted_answer: string }[]
+  answers: { problem_id: number; submitted_answer: string }[],
+  subjectGroupId?: number | null
 ): Promise<PromotionExamResult> =>
   api
-    .post<PromotionExamResult>(`/students/${studentId}/promotion_exam`, { answers })
+    .post<PromotionExamResult>(`/students/${studentId}/promotion_exam`, { answers, subject_group_id: subjectGroupId ?? null })
     .then((r) => r.data);
 
 export const completeOnboarding = (studentId: number): Promise<void> =>
@@ -149,13 +158,18 @@ export const fetchCondition = (studentId: number): Promise<Condition> =>
 
 // ===== 管理（admin） =====
 export const fetchAdminMeta = (): Promise<AdminMeta> =>
-  api.get<AdminMeta>("/admin/meta").then((r) => r.data);
+  api.get<AdminMeta>("/admin/meta").then((r) => ({ ...r.data, subject_groups: r.data.subject_groups ?? [] }));
 
+type SubjectInput = { name: string; subject_group_id?: number | null };
+
+// subject_group / subject_group_id は後から足したフィールド。旧バックエンドの窓でも落ちないよう既定値を埋める
 export const fetchAdminSubjects = (): Promise<AdminSubject[]> =>
-  api.get<AdminSubject[]>("/admin/subjects").then((r) => r.data);
-export const createAdminSubject = (subject: { name: string }): Promise<AdminSubject> =>
+  api.get<AdminSubject[]>("/admin/subjects").then((r) =>
+    r.data.map((s) => ({ ...s, subject_group_id: s.subject_group_id ?? null, subject_group: s.subject_group ?? null }))
+  );
+export const createAdminSubject = (subject: SubjectInput): Promise<AdminSubject> =>
   api.post<AdminSubject>("/admin/subjects", { subject }).then((r) => r.data);
-export const updateAdminSubject = (id: number, subject: { name: string }): Promise<AdminSubject> =>
+export const updateAdminSubject = (id: number, subject: SubjectInput): Promise<AdminSubject> =>
   api.put<AdminSubject>(`/admin/subjects/${id}`, { subject }).then((r) => r.data);
 export const deleteAdminSubject = (id: number): Promise<void> =>
   api.delete(`/admin/subjects/${id}`).then(() => undefined);
