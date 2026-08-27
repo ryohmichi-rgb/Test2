@@ -8,6 +8,26 @@ def fill_solution(problem, solution)
   problem.update!(solution: solution)
 end
 
+# 単元名 => 問題の配列、をまとめて作る。問題文をキーに探すので、
+# 既存の問題文を変えると別レコードとして増えてしまう点に注意（変えるなら移行を添える）。
+def create_problems(map)
+  map.each do |title, probs|
+    unit = Unit.find_by(title: title)
+    next unless unit
+
+    probs.each do |pd|
+      problem_row = Problem.find_or_create_by!(question: pd[:question], unit: unit) do |p|
+        p.answer = pd[:answer]
+        p.hint = pd[:hint]
+        p.difficulty = pd[:difficulty]
+        p.problem_type = pd[:problem_type]
+        p.solution = pd[:solution]
+      end
+      fill_solution(problem_row, pd[:solution])
+    end
+  end
+end
+
 
 if (admin_name = ENV["ADMIN_USERNAME"].presence)
   Student.where("lower(username) = ?", admin_name.downcase).update_all(admin: true)
@@ -464,23 +484,7 @@ extra_problems = {
   ]
 }
 
-extra_problems.each do |title, probs|
-  unit = Unit.find_by(title: title)
-  next unless unit
-
-  probs.each do |pd|
-    problem_row = Problem.find_or_create_by!(question: pd[:question], unit: unit) do |p|
-      p.answer = pd[:answer]
-      p.hint = pd[:hint]
-      p.difficulty = pd[:difficulty]
-      p.problem_type = pd[:problem_type]
-      p.solution = pd[:solution]
-    end
-    # find_or_create_by! のブロックは新規作成のときしか走らない。
-    # 解説をあとから足したので、すでにある問題にも入れる（空のときだけ＝管理画面の編集は残す）。
-    fill_solution(problem_row, pd[:solution])
-  end
-end
+create_problems(extra_problems)
 
 # 難易度の上のほう（3〜5）の問題。習熟度に応じた出題を効かせるには、
 # 単元ごとに難易度の幅が要る（幅がないと「中心難易度」を決めても選びようがない）。
@@ -565,23 +569,139 @@ advanced_problems = {
   ]
 }
 
-advanced_problems.each do |title, probs|
-  unit = Unit.find_by(title: title)
-  next unless unit
+create_problems(advanced_problems)
 
-  probs.each do |pd|
-    problem_row = Problem.find_or_create_by!(question: pd[:question], unit: unit) do |p|
-      p.answer = pd[:answer]
-      p.hint = pd[:hint]
-      p.difficulty = pd[:difficulty]
-      p.problem_type = pd[:problem_type]
-      p.solution = pd[:solution]
-    end
-    # find_or_create_by! のブロックは新規作成のときしか走らない。
-    # 解説をあとから足したので、すでにある問題にも入れる（空のときだけ＝管理画面の編集は残す）。
-    fill_solution(problem_row, pd[:solution])
-  end
-end
+# 難易度の上のほうを厚くする第2弾。各単元を「難易度3・4・5をそれぞれ3問以上」にそろえる。
+# 上の幅が薄いと、習熟度の高い子は難しい問題をすぐ解き切ってしまい、
+# 以後は解き直し（満点の20%）ばかりになる。ロジックと問題はセットで用意する。
+#
+# 答えはキーパッド（AnswerInput の KEYPAD_ROWS）で打てる文字だけにする。
+# 小数点が無いので、割り切れない答えは分数（a/b）にするか、割り切れる数にしてある。
+#
+# 注意: LaTeX を含む文字列は必ずシングルクォート。ダブルクォートだと \frac が
+# 改ページ文字、\times がタブに化ける。
+advanced_problems_2 = {
+  "分数のかけ算・わり算" => [
+    { question: '$\frac{2}{5} \div \frac{3}{10} \times \frac{1}{4}$ を計算しなさい。（分数は a/b の形で答えること）',
+      answer: "1/3", hint: 'わり算を先にかけ算に直してから、左から順に計算します。', difficulty: 3, problem_type: "fill_in",
+      solution: '$\div \frac{3}{10}$ を $\times \frac{10}{3}$ に直します。$\frac{2}{5} \times \frac{10}{3} = \frac{20}{15} = \frac{4}{3}$、続けて $\times \frac{1}{4}$ で $\frac{4}{12} = \frac{1}{3}$ です。' },
+    { question: '$\frac{5}{9}$ の逆数と $\frac{3}{10}$ の積を求めなさい。（分数は a/b の形で答えること）',
+      answer: "27/50", hint: '逆数は分母と分子を入れかえた数です。', difficulty: 3, problem_type: "fill_in",
+      solution: '$\frac{5}{9}$ の逆数は $\frac{9}{5}$ です。$\frac{9}{5} \times \frac{3}{10} = \frac{27}{50}$ となり、これ以上は約分できません。' },
+    { question: '$\frac{7}{8}$ kgの砂糖を $\frac{7}{24}$ kgずつ袋に分けると、何袋できますか？（単位はつけず数字だけで答えること）',
+      answer: "3", hint: '「いくつ分か」を聞かれているのでわり算です。', difficulty: 4, problem_type: "fill_in",
+      solution: '$\frac{7}{8} \div \frac{7}{24} = \frac{7}{8} \times \frac{24}{7} = \frac{24}{8} = 3$ です。$7$ どうしが約分できます。' },
+    { question: 'ある数に $\frac{3}{4}$ をかけるところを、まちがえて $\frac{3}{4}$ でわってしまい、答えが $\frac{8}{3}$ になりました。正しい答えを求めなさい。（分数は a/b の形で答えること）',
+      answer: "3/2", hint: 'まず「ある数」を求めます。わった答えが分かっているので、逆にたどります。', difficulty: 5, problem_type: "fill_in",
+      solution: 'ある数を $\square$ とすると $\square \div \frac{3}{4} = \frac{8}{3}$。よって $\square = \frac{8}{3} \times \frac{3}{4} = 2$ です。正しくはこれに $\frac{3}{4}$ をかけて $2 \times \frac{3}{4} = \frac{3}{2}$ となります。' },
+    { question: '$\frac{3}{4}$ Lのジュースがあります。まず全体の $\frac{2}{3}$ を飲み、そのあと残りの $\frac{1}{2}$ を妹にあげました。残っているジュースは何Lですか？（単位はつけず、分数は a/b の形で答えること）',
+      answer: "1/8", hint: '「全体の $\frac{2}{3}$ を飲む」と、残りは全体の $\frac{1}{3}$ です。', difficulty: 5, problem_type: "fill_in",
+      solution: '$\frac{2}{3}$ 飲むと残りは $\frac{1}{3}$ なので $\frac{3}{4} \times \frac{1}{3} = \frac{1}{4}$ L。その半分をあげるので $\frac{1}{4} \times \frac{1}{2} = \frac{1}{8}$ L 残ります。' }
+  ],
+  "比と比の値" => [
+    { question: '$\frac{2}{3} : \frac{4}{9}$ を最も簡単な整数の比で答えなさい。（a:b の形で答えること）',
+      answer: "3:2", hint: '分母をそろえてから、分子どうしの比にします。', difficulty: 3, problem_type: "fill_in",
+      solution: '分母を $9$ にそろえると $\frac{6}{9} : \frac{4}{9}$ なので $6 : 4$。両方を $2$ でわって $3 : 2$ です。' },
+    { question: 'たてと横の長さの比が $3 : 5$ の長方形があります。まわりの長さが48cmのとき、横の長さは何cmですか？（単位はつけず数字だけで答えること）',
+      answer: "15", hint: 'まわりの長さは（たて＋横）の2倍です。', difficulty: 4, problem_type: "fill_in",
+      solution: 'たてを $3a$、横を $5a$ とすると、まわりは $(3a + 5a) \times 2 = 16a$。$16a = 48$ より $a = 3$ なので、横は $5 \times 3 = 15$ cm です。' },
+    { question: '$A : B = 3 : 4$、$B : C = 6 : 7$ のとき、$A : B : C$ を最も簡単な整数の比で答えなさい。（a:b:c の形で答えること）',
+      answer: "9:12:14", hint: '共通する $B$ の数をそろえます。$4$ と $6$ の最小公倍数は $12$ です。', difficulty: 5, problem_type: "fill_in",
+      solution: '$B$ を $12$ にそろえます。$A : B = 3 : 4 = 9 : 12$、$B : C = 6 : 7 = 12 : 14$。つなげて $9 : 12 : 14$ です。' },
+    { question: '兄と弟の所持金の比は $7 : 4$ でしたが、兄が弟に400円わたしたので比は $5 : 4$ になりました。はじめの兄の所持金は何円ですか？（単位はつけず数字だけで答えること）',
+      answer: "3150", hint: 'はじめを $7a$ 円と $4a$ 円とおいて、わたしたあとの比の式を作ります。', difficulty: 5, problem_type: "fill_in",
+      solution: 'はじめを $7a$ 円、$4a$ 円とおくと、あとは $7a - 400$ と $4a + 400$。これが $5 : 4$ なので $4(7a - 400) = 5(4a + 400)$、つまり $28a - 1600 = 20a + 2000$ より $8a = 3600$、$a = 450$。兄は $7 \times 450 = 3150$ 円です。' }
+  ],
+  "速さ・時間・距離" => [
+    { question: '秒速15mは時速何kmですか？（単位はつけず数字だけで答えること）',
+      answer: "54", hint: '1時間は3600秒、1kmは1000mです。', difficulty: 3, problem_type: "fill_in",
+      solution: '1時間に進む道のりは $15 \times 3600 = 54000$ m。$1000$ でわって km に直すと時速 $54$ km です。' },
+    { question: '6kmの道のりを、行きは時速4km、帰りは時速6kmで往復しました。往復にかかった時間は何時間ですか？（単位はつけず、分数は a/b の形で答えること）',
+      answer: "5/2", hint: '行きと帰りを別々に出してから足します。時間は道のり $\div$ 速さです。', difficulty: 4, problem_type: "fill_in",
+      solution: '行きは $6 \div 4 = \frac{3}{2}$ 時間、帰りは $6 \div 6 = 1$ 時間。合わせて $\frac{3}{2} + 1 = \frac{5}{2}$ 時間です。往復の平均は時速5kmではない点に注意します。' },
+    { question: '家から駅までを分速60mで歩くと、分速90mで歩くより10分多くかかります。家から駅までの道のりは何mですか？（単位はつけず数字だけで答えること）',
+      answer: "1800", hint: '道のりを $x$ mとおいて、かかる時間の差が10分になる式を作ります。', difficulty: 5, problem_type: "fill_in",
+      solution: '道のりを $x$ mとすると $\frac{x}{60} - \frac{x}{90} = 10$。左辺を通分して $\frac{3x - 2x}{180} = \frac{x}{180}$ なので $\frac{x}{180} = 10$、$x = 1800$ m です。' },
+    { question: '兄は分速70m、弟は分速50mで、同じ地点から同時に反対の方向へ歩き出しました。2人が3600mはなれるのは何分後ですか？（単位はつけず数字だけで答えること）',
+      answer: "30", hint: '反対の方向なので、1分ごとに2人の速さの合計だけはなれていきます。', difficulty: 5, problem_type: "fill_in",
+      solution: '1分間に $70 + 50 = 120$ mずつはなれます。$3600 \div 120 = 30$ 分後です。' }
+  ],
+  "文字と式（小6）" => [
+    { question: '$a = 3$、$b = 5$ のとき、$2a + 3b$ の値を求めなさい。',
+      answer: "21", hint: '$a$ と $b$ にそれぞれの数を入れます。', difficulty: 3, problem_type: "fill_in",
+      solution: '$2 \times 3 + 3 \times 5 = 6 + 15 = 21$ です。かけ算を先に計算します。' },
+    { question: '$a$ 円のノートを3冊買って1000円出したときのおつりを式で表しなさい。（スペースなし）',
+      answer: "1000-3a", hint: 'おつりは「出したお金 $-$ 代金」です。', difficulty: 3, problem_type: "fill_in",
+      solution: 'ノート3冊の代金は $3a$ 円。おつりは $1000 - 3a$ 円です。$a \times 3$ は $3a$ と数を前に書きます。' },
+    { question: '1本 $a$ 円のえんぴつを6本買い、100円の箱に入れてもらいました。代金の合計を式で表しなさい。（スペースなし）',
+      answer: "6a+100", hint: 'えんぴつの代金と箱の代金を足します。', difficulty: 4, problem_type: "fill_in",
+      solution: 'えんぴつは $a \times 6 = 6a$ 円、箱が $100$ 円なので、合計は $6a + 100$ 円です。' },
+    { question: '$a = 8$、$b = 2$ のとき、$\frac{a}{b} + \frac{a - b}{3}$ の値を求めなさい。',
+      answer: "6", hint: '分数のまま代入して、それぞれを先に計算します。', difficulty: 5, problem_type: "fill_in",
+      solution: '$\frac{8}{2} = 4$、$\frac{8 - 2}{3} = \frac{6}{3} = 2$。足して $4 + 2 = 6$ です。' },
+    { question: '1個 $a$ 円のりんごを5個と、1個 $b$ 円のみかんを8個買ったところ、合計から100円引いてもらいました。はらった代金を式で表しなさい。（スペースなし）',
+      answer: "5a+8b-100", hint: 'まず引かれる前の合計を作り、最後に100を引きます。', difficulty: 5, problem_type: "fill_in",
+      solution: 'りんごは $5a$ 円、みかんは $8b$ 円で、合計 $5a + 8b$ 円。ここから $100$ 円引くので $5a + 8b - 100$ 円です。' }
+  ],
+  "正の数・負の数" => [
+    { question: '$-3^2$ を計算しなさい。',
+      answer: "-9", hint: '$-3^2$ は $(-3)^2$ とはちがいます。2乗されているのはどこまででしょう。', difficulty: 3, problem_type: "fill_in",
+      solution: '$-3^2$ は $-(3 \times 3) = -9$ です。$(-3)^2 = 9$ とは答えがちがうので、かっこの有無をよく見ます。' },
+    { question: '$(-2)^3 \div 4 - (-3)$ を計算しなさい。',
+      answer: "1", hint: '累乗 $\rightarrow$ かけ算・わり算 $\rightarrow$ 足し算・引き算 の順です。', difficulty: 4, problem_type: "fill_in",
+      solution: '$(-2)^3 = -8$ なので $-8 \div 4 = -2$。$-(-3)$ は $+3$ なので $-2 + 3 = 1$ です。' },
+    { question: '$-2^2 - (-3)^2 \times 2$ を計算しなさい。',
+      answer: "-22", hint: '$-2^2$ と $(-3)^2$ で、2乗のかかり方がちがいます。', difficulty: 5, problem_type: "fill_in",
+      solution: '$-2^2 = -4$、$(-3)^2 = 9$ です。$9 \times 2 = 18$ なので $-4 - 18 = -22$ となります。' },
+    { question: '$(-4 + 6) \times (-3)^2 - 5 \times (-2)$ を計算しなさい。',
+      answer: "28", hint: 'かっこの中を先に、次に累乗、そのあとかけ算です。', difficulty: 5, problem_type: "fill_in",
+      solution: 'かっこの中は $-4 + 6 = 2$、$(-3)^2 = 9$ なので $2 \times 9 = 18$。$5 \times (-2) = -10$ を引くので $18 - (-10) = 28$ です。' }
+  ],
+  "文字と式" => [
+    { question: '$5x - 3 - 2x + 8$ を計算しなさい。（スペースなし、例: 4x+5）',
+      answer: "3x+5", hint: '文字の項どうし、数の項どうしをまとめます。', difficulty: 3, problem_type: "fill_in",
+      solution: '$5x - 2x = 3x$、$-3 + 8 = 5$ なので $3x + 5$ です。' },
+    { question: '$3(2x - 5) - 4(x - 3)$ を計算しなさい。（スペースなし、例: 4x+5）',
+      answer: "2x-3", hint: 'かっこを外すとき、うしろの $-4$ は中の両方にかかります。', difficulty: 4, problem_type: "fill_in",
+      solution: '$3(2x - 5) = 6x - 15$、$-4(x - 3) = -4x + 12$。合わせて $6x - 4x = 2x$、$-15 + 12 = -3$ なので $2x - 3$ です。' },
+    { question: '$a = -2$、$b = 3$ のとき、$a^2 b - a b^2$ の値を求めなさい。',
+      answer: "30", hint: '代入するときは $a$ を $(-2)$ とかっこをつけて入れます。', difficulty: 5, problem_type: "fill_in",
+      solution: '$a^2 b = (-2)^2 \times 3 = 4 \times 3 = 12$、$a b^2 = (-2) \times 3^2 = -18$。$12 - (-18) = 30$ です。' },
+    { question: '$x = -3$ のとき、$-x^2 + 4x + 1$ の値を求めなさい。',
+      answer: "-20", hint: '$-x^2$ は $-(x^2)$ です。先に $x^2$ を計算します。', difficulty: 5, problem_type: "fill_in",
+      solution: '$x^2 = (-3)^2 = 9$ なので $-x^2 = -9$。$4x = -12$ なので $-9 - 12 + 1 = -20$ です。' }
+  ],
+  "方程式" => [
+    { question: '$6x - 5 = 2x + 19$ を解きなさい。',
+      answer: "6", hint: '文字を左、数を右に移項してからまとめます。', difficulty: 3, problem_type: "fill_in",
+      solution: '$6x - 2x = 19 + 5$ より $4x = 24$。両辺を $4$ でわって $x = 6$ です。' },
+    { question: '$\frac{2x + 1}{3} = \frac{x + 4}{2}$ を解きなさい。',
+      answer: "10", hint: '両辺に $6$ をかけて分母をはらいます。', difficulty: 4, problem_type: "fill_in",
+      solution: '両辺に $6$ をかけると $2(2x + 1) = 3(x + 4)$。$4x + 2 = 3x + 12$ より $x = 10$ です。' },
+    { question: '姉は1500円、妹は900円持っています。2人が同じ金額ずつ使ったところ、姉の残りは妹の残りの3倍になりました。使った金額は何円ですか？（単位はつけず数字だけで答えること）',
+      answer: "600", hint: '使った金額を $x$ 円とおいて、残りの関係を式にします。', difficulty: 5, problem_type: "fill_in",
+      solution: '使った金額を $x$ 円とすると $1500 - x = 3(900 - x)$。展開して $1500 - x = 2700 - 3x$、$2x = 1200$ より $x = 600$ 円です。' },
+    { question: '現在、母は42才、子は12才です。母の年れいが子の年れいの3倍になるのは何年後ですか？（単位はつけず数字だけで答えること）',
+      answer: "3", hint: '$x$ 年後には2人とも同じだけ年をとります。', difficulty: 5, problem_type: "fill_in",
+      solution: '$x$ 年後を考えると $42 + x = 3(12 + x)$。$42 + x = 36 + 3x$ より $2x = 6$、$x = 3$ 年後です。' }
+  ],
+  "比例と反比例" => [
+    { question: '$y$ が $x$ に比例し、$x = 4$ のとき $y = 12$ です。比例定数を求めなさい。',
+      answer: "3", hint: '比例定数は $a = y \div x$ で求まります。', difficulty: 3, problem_type: "fill_in",
+      solution: '$a = 12 \div 4 = 3$ です。式にすると $y = 3x$ となります。' },
+    { question: '$y$ が $x$ に比例し、$x = -3$ のとき $y = 12$ です。$y = -20$ のときの $x$ の値を求めなさい。',
+      answer: "5", hint: '先に比例定数を求めて $y = ax$ の式を作ります。', difficulty: 4, problem_type: "fill_in",
+      solution: '$a = 12 \div (-3) = -4$ なので $y = -4x$。$-20 = -4x$ より $x = 5$ です。' },
+    { question: '$y$ が $x$ に反比例し、$x = 4$ のとき $y = -6$ です。$x = -3$ のときの $y$ の値を求めなさい。',
+      answer: "8", hint: '反比例では $x \times y$ がいつも同じ値になります。', difficulty: 5, problem_type: "fill_in",
+      solution: '比例定数は $a = 4 \times (-6) = -24$ なので $y = \frac{-24}{x}$。$x = -3$ を入れて $y = \frac{-24}{-3} = 8$ です。' },
+    { question: '歯車Aは歯数24で毎分15回転しています。かみ合っている歯車Bの歯数が18のとき、Bは毎分何回転しますか？（単位はつけず数字だけで答えること）',
+      answer: "20", hint: 'かみ合う歯車では「歯数 $\times$ 回転数」が等しくなります（反比例です）。', difficulty: 5, problem_type: "fill_in",
+      solution: 'かみ合う歯車では歯数と回転数は反比例します。$24 \times 15 = 18 \times \square$ より $\square = 360 \div 18 = 20$ 回転です。' }
+  ]
+}
+
+create_problems(advanced_problems_2)
 
 # 単元ごとの教材（解説）Markdown。既存単元にも反映されるよう update で入れる。
 lessons = {
