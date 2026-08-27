@@ -8,7 +8,7 @@
 # （高校受験・難関高校受験・中学卒業レベル）は目標であって人ではないので持たせない。
 #
 # **キャラを足すときは、ここに1つ足してペルソナを数行書くだけ。**
-# 守るべき線（AiSafety::COMMON_RULES）は共通なので触らない。
+# 守るべき線（AiSafety.common_rules）は共通なので触らない。
 # 足したら安全性テスト（script/ai_safety_check.rb）を必ず流すこと。
 class PersonaCatalog
   Persona = Struct.new(:key, :label, :emoji, :persona, keyword_init: true)
@@ -48,13 +48,19 @@ class PersonaCatalog
     )
   ].freeze
 
-  # 質問のプリセット。自由入力は "free"。
+  # 質問のプリセット。自由入力は "free"。教科名は呼び出し時に差し込む。
   KINDS = {
-    "why_study"  => "どうして算数・数学を勉強するのか、あなたの仕事や経験にひきつけて話してください。",
-    "how_used"   => "あなたの仕事で算数・数学をどんなふうに使っているか、具体例をひとつ挙げて話してください。",
-    "childhood"  => "あなたが小中学生のころ、算数・数学とどうつきあっていたかを話してください。",
+    "why_study"  => "どうして%{subject}を勉強するのか、あなたの仕事や経験にひきつけて話してください。",
+    "how_used"   => "あなたの仕事で%{subject}をどんなふうに使っているか、具体例をひとつ挙げて話してください。",
+    "childhood"  => "あなたが小中学生のころ、%{subject}とどうつきあっていたかを話してください。",
     "free"       => nil
   }.freeze
+
+  # 種類に対応する指示文（"free" は nil＝子どもの自由入力を使う）
+  def self.instruction(kind, subject)
+    template = KINDS[kind]
+    template && template % { subject: subject }
+  end
 
   def self.find(key) = ALL.find { |p| p.key == key }
   def self.keys = ALL.map(&:key)

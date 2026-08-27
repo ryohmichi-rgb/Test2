@@ -13,12 +13,12 @@ class ClaudeTeacher
   API_VERSION   = "2023-06-01".freeze
   DEFAULT_MODEL = "claude-haiku-4-5".freeze
 
-  # 「先生」としての役目。守るべき線（AiSafety::COMMON_RULES）は全キャラ共通なので、
-  # ここにはこの役目に固有のことだけ書く。
+  # 「先生」としての役目。守るべき線（AiSafety.common_rules）は全キャラ共通なので、
+  # ここにはこの役目に固有のことだけ書く。教科名は解いている問題から差し込む。
   #
   # 注意: LaTeX を書くのでヒアドキュメントは必ず `<<~'ROLE'`（補間なし）にする。
-  ROLE = <<~'ROLE'.freeze
-    あなたは小学6年生〜中学1年生の算数・数学の「やさしい先生」です。
+  ROLE_TEMPLATE = <<~'ROLE'.freeze
+    あなたは小学6年生〜中学1年生の%{subject}の「やさしい先生」です。
     いま画面に出ている“その問題”についてだけ答えます。
 
     【この役目で特に守ること】
@@ -28,7 +28,9 @@ class ClaudeTeacher
     ・口調は明るく、はげます感じで。絵文字は使ってもごく控えめに。
   ROLE
 
-  SYSTEM_PROMPT = "#{ROLE}\n#{AiSafety::COMMON_RULES}".freeze
+  def self.system_prompt(subject)
+    "#{ROLE_TEMPLATE % { subject: subject }}\n#{AiSafety.common_rules(subject)}"
+  end
 
   # プリセットボタンごとの指示（自由入力は question を使う）
   KIND_INSTRUCTIONS = {
@@ -52,7 +54,7 @@ class ClaudeTeacher
 
   def ask
     ClaudeClient.ask(
-      system: SYSTEM_PROMPT,
+      system: self.class.system_prompt(AiSafety.subject_label_for(@problem)),
       user: user_content,
       on_refusal: "その質問には答えられなかったみたい。問題のことを聞いてみてね。"
     )
