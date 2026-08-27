@@ -41,16 +41,15 @@ export function gradesOf(grades: Grade[], subjectId: number | null): Grade[] {
 }
 
 /**
- * その教科の単元に付いているステータスのID。
- * 旧バックエンドは stat_type_id を返さない（＝全部 null）ので、そのときは
+ * その教科の単元に付いているステータスのID（1単元に複数付く）。
+ * 旧バックエンドは stat_type_ids を返さない（＝全部から）ので、そのときは
  * 「分からない」とみなして null を返し、呼び出し側でしぼり込みを止める。
  */
 export function statTypeIdsOf(grades: Grade[], subjectId: number | null): number[] | null {
   const all = grades.flatMap((g) => g.units || []);
-  if (!all.some((u) => u.stat_type_id != null)) return null;
+  if (!all.some((u) => (u.stat_type_ids || []).length > 0)) return null;
   const ids = all
     .filter((u) => subjectId === null || u.subject?.id === subjectId)
-    .map((u) => u.stat_type_id)
-    .filter((id): id is number => id != null);
+    .flatMap((u) => u.stat_type_ids || []);
   return [...new Set(ids)];
 }

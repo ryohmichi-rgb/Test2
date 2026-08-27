@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_05_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -199,6 +199,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000000) do
     t.index ["subject_id"], name: "index_test_results_on_subject_id"
   end
 
+  create_table "unit_stat_types", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "stat_type_id", null: false
+    t.bigint "unit_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stat_type_id"], name: "index_unit_stat_types_on_stat_type_id"
+    t.index ["unit_id", "stat_type_id"], name: "index_unit_stat_types_on_unit_id_and_stat_type_id", unique: true
+    t.index ["unit_id"], name: "index_unit_stat_types_on_unit_id"
+  end
+
   create_table "units", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -235,6 +245,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000000) do
   add_foreign_key "students", "ranks"
   add_foreign_key "test_results", "students"
   add_foreign_key "test_results", "subjects"
+  add_foreign_key "unit_stat_types", "stat_types"
+  add_foreign_key "unit_stat_types", "units"
   add_foreign_key "units", "grades"
   add_foreign_key "units", "stat_types"
   add_foreign_key "units", "subjects"

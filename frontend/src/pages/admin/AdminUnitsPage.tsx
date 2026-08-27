@@ -26,7 +26,7 @@ export default function AdminUnitsPage() {
 
   const startNew = () => setDraft({
     title: "", description: "", lesson_body: "", display_order: (units.at(-1)?.display_order ?? 0) + 1,
-    grade_id: meta?.grades[0]?.id, subject_id: meta?.subjects[0]?.id, stat_type_id: meta?.stat_types[0]?.id ?? null, active: true,
+    grade_id: meta?.grades[0]?.id, subject_id: meta?.subjects[0]?.id, stat_type_ids: [], active: true,
   });
   const startEdit = (u: AdminUnit) => setDraft({ ...u });
 
@@ -80,12 +80,29 @@ export default function AdminUnitsPage() {
                 {meta.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select></div>
           </div>
+          <label className="admin-label">ステータス（複数えらべます）</label>
+          <p style={{ fontSize: "0.74rem", color: "#a0aec0", marginBottom: "0.35rem" }}>
+            この単元の問題で入るポイントは、えらんだステータスに均等に分かれます（合計は変わりません）。
+          </p>
+          <div className="admin-check-row" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 0.9rem", marginBottom: "0.75rem" }}>
+            {meta.stat_types.map((s) => {
+              const on = (draft.stat_type_ids ?? []).includes(s.id);
+              return (
+                <label key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.88rem" }}>
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={() => {
+                      const cur = draft.stat_type_ids ?? [];
+                      setDraft({ ...draft, stat_type_ids: on ? cur.filter((id) => id !== s.id) : [...cur, s.id] });
+                    }}
+                  />
+                  {s.name}
+                </label>
+              );
+            })}
+          </div>
           <div className="admin-row">
-            <div><label className="admin-label">ステータス</label>
-              <select className="admin-input" value={draft.stat_type_id ?? ""} onChange={(e) => setDraft({ ...draft, stat_type_id: e.target.value ? Number(e.target.value) : null })}>
-                <option value="">（なし）</option>
-                {meta.stat_types.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select></div>
             <div><label className="admin-label">表示順</label>
               <input type="number" className="admin-input" value={draft.display_order ?? 1} onChange={(e) => setDraft({ ...draft, display_order: Number(e.target.value) })} /></div>
           </div>
@@ -105,7 +122,7 @@ export default function AdminUnitsPage() {
           <div key={u.id} className="admin-row-card" style={{ opacity: u.active ? 1 : 0.55 }}>
             <div style={{ flex: 1 }}>
               <p style={{ fontWeight: 600 }}>{u.title} {!u.active && <span style={{ fontSize: "0.72rem", color: "#e53e3e" }}>（無効）</span>}</p>
-              <p style={{ fontSize: "0.76rem", color: "#a0aec0" }}>{u.grade}・{u.stat_type ?? "—"}・問題{u.problem_count}{u.used && "・使用中"}</p>
+              <p style={{ fontSize: "0.76rem", color: "#a0aec0" }}>{u.grade}・{u.stat_types?.length ? u.stat_types.join("＋") : "—"}・問題{u.problem_count}{u.used && "・使用中"}</p>
             </div>
             <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
               <button className="admin-btn" onClick={() => navigate(`/admin/units/${u.id}/problems`)}>問題</button>

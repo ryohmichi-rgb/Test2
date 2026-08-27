@@ -3,7 +3,7 @@ module Api
     module Admin
       class UnitsController < BaseController
         def index
-          units = Unit.includes(:grade, :subject, :stat_type, :problems).order(:grade_id, :display_order)
+          units = Unit.includes(:grade, :subject, :stat_types, :problems).order(:grade_id, :display_order)
           render json: units.map { |u| unit_json(u) }
         end
 
@@ -41,8 +41,9 @@ module Api
           AnswerRecord.where(problem_id: unit.problem_ids).exists?
         end
 
+        # stat_type_ids は配列。送られてこなければ現状のまま（部分更新で消さない）。
         def unit_params
-          params.require(:unit).permit(:title, :description, :lesson_body, :display_order, :grade_id, :subject_id, :stat_type_id, :active)
+          params.require(:unit).permit(:title, :description, :lesson_body, :display_order, :grade_id, :subject_id, :active, stat_type_ids: [])
         end
 
         def unit_json(u)
@@ -51,7 +52,7 @@ module Api
             display_order: u.display_order, active: u.active,
             grade_id: u.grade_id, grade: u.grade&.name,
             subject_id: u.subject_id, subject: u.subject&.name,
-            stat_type_id: u.stat_type_id, stat_type: u.stat_type&.name,
+            stat_type_ids: u.stat_type_ids, stat_types: u.stat_types.map(&:name),
             problem_count: u.problems.size,
             used: used?(u)
           }

@@ -50,7 +50,7 @@ module Api
         goals_summary.each do |goal|
           next if goal[:achieved]
 
-          units = Unit.where(stat_type_id: goal[:stat_type_id]).includes(:problems)
+          units = Unit.for_stat_type(goal[:stat_type_id]).includes(:problems)
           scored_units = score_units(student, units, goal, read_unit_ids)
 
           units_needed = [[(goal[:points_per_day] / ESTIMATED_POINTS_PER_UNIT).ceil, 1].max, MAX_UNITS_PER_STAT].min

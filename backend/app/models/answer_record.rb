@@ -83,13 +83,15 @@ class AnswerRecord < ApplicationRecord
     DailyQuota.for(student, created_at.to_date)
   end
 
+  # 単元が複数のステータスを伸ばすなら、ポイントを均等に分けて入れる。
+  # 合計は元のポイントのまま（total_points が総合ランクの判定軸なので増減させない）。
   def update_student_stat
-    stat_type = problem.unit.stat_type
-    return unless stat_type
     return if points_awarded.to_i.zero?
 
-    stat = StudentStat.find_or_initialize_by(student: student, stat_type: stat_type)
-    stat.value = (stat.value || 0) + points_awarded
-    stat.save!
+    StatPoints.split(points_awarded, problem.unit.stat_type_ids).each do |stat_type_id, pts|
+      stat = StudentStat.find_or_initialize_by(student: student, stat_type_id: stat_type_id)
+      stat.value = (stat.value || 0) + pts
+      stat.save!
+    end
   end
 end

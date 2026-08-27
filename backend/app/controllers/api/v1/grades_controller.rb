@@ -2,7 +2,7 @@ module Api
   module V1
     class GradesController < ApplicationController
       def index
-        grades = Grade.ordered.includes(units: :subject)
+        grades = Grade.ordered.includes(units: [:subject, :stat_types])
         render json: grades.map { |g| grade_json(g) }
       end
 
@@ -20,8 +20,8 @@ module Api
           id: grade.id,
           name: grade.name,
           display_order: grade.display_order,
-          # stat_type_id は「ステータス別テストで教科をしぼる」ときに使う（画面側の絞り込み用）
-          units: units.map { |u| { id: u.id, title: u.title, description: u.description, display_order: u.display_order, stat_type_id: u.stat_type_id, subject: u.subject.as_json(only: [:id, :name]) } }
+          # stat_type_ids は「ステータス別テストで教科をしぼる」ときに使う（画面側の絞り込み用）
+          units: units.map { |u| { id: u.id, title: u.title, description: u.description, display_order: u.display_order, stat_type_ids: u.stat_type_ids, subject: u.subject.as_json(only: [:id, :name]) } }
         }
       end
     end

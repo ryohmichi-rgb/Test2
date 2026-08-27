@@ -1,11 +1,11 @@
 import api from "./client";
 import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, PersonaKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
 
-// stat_type_id は後から足したフィールド。旧バックエンドの窓では返ってこないので
-// 既定値（null＝不明）を埋める。不明のときは教科でしぼらず全部見せる側に倒す
+// stat_type_ids は後から足したフィールド。旧バックエンドの窓では返ってこないので
+// 既定値（空＝不明）を埋める。不明のときは教科でしぼらず全部見せる側に倒す
 export const fetchGrades = (): Promise<Grade[]> =>
   api.get<Grade[]>("/grades").then((r) =>
-    r.data.map((g) => ({ ...g, units: (g.units ?? []).map((u) => ({ ...u, stat_type_id: u.stat_type_id ?? null })) }))
+    r.data.map((g) => ({ ...g, units: (g.units ?? []).map((u) => ({ ...u, stat_type_ids: u.stat_type_ids ?? [] })) }))
   );
 
 export const fetchUnit = (id: number): Promise<Unit> =>
@@ -151,8 +151,11 @@ export const fetchCondition = (studentId: number): Promise<Condition> =>
 export const fetchAdminMeta = (): Promise<AdminMeta> =>
   api.get<AdminMeta>("/admin/meta").then((r) => r.data);
 
+// stat_type_ids / stat_types は後から足したフィールド。旧バックエンドの窓でも落ちないよう既定値を埋める
 export const fetchAdminUnits = (): Promise<AdminUnit[]> =>
-  api.get<AdminUnit[]>("/admin/units").then((r) => r.data);
+  api.get<AdminUnit[]>("/admin/units").then((r) =>
+    r.data.map((u) => ({ ...u, stat_type_ids: u.stat_type_ids ?? [], stat_types: u.stat_types ?? [] }))
+  );
 export const createAdminUnit = (unit: Partial<AdminUnit>): Promise<AdminUnit> =>
   api.post<AdminUnit>("/admin/units", { unit }).then((r) => r.data);
 export const updateAdminUnit = (id: number, unit: Partial<AdminUnit>): Promise<AdminUnit> =>

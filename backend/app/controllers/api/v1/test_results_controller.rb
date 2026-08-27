@@ -78,6 +78,8 @@ module Api
       end
 
       # 高得点ボーナス。テストに出たステータスへ均等配分。
+      # 端数のぶんも配りきるので、配った合計は必ず bonus と一致する
+      # （test_results.bonus_points に記録した額と成長曲線がずれないように）。
       def apply_bonus(student, graded, score)
         bonus = if score >= 90 then BONUS_HIGH
                 elsif score >= 80 then BONUS_MID
@@ -85,13 +87,13 @@ module Api
                 end
         return 0 if bonus.zero?
 
-        stat_type_ids = graded.map { |g| g[:problem].unit.stat_type_id }.compact.uniq
-        return 0 if stat_type_ids.empty?
+        stat_type_ids = graded.flat_map { |g| g[:problem].unit.stat_type_ids }.uniq
+        shares = StatPoints.split(bonus, stat_type_ids)
+        return 0 if shares.empty?
 
-        per_stat = (bonus.to_f / stat_type_ids.size).round
-        stat_type_ids.each do |stat_type_id|
+        shares.each do |stat_type_id, pts|
           stat = StudentStat.find_or_initialize_by(student: student, stat_type_id: stat_type_id)
-          stat.value = (stat.value || 0) + per_stat
+          stat.value = (stat.value || 0) + pts
           stat.save!
         end
         bonus

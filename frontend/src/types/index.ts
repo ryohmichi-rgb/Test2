@@ -16,8 +16,8 @@ export interface Unit {
   description: string;
   display_order: number;
   lesson_body?: string;
-  /** ステータス別の範囲を教科でしぼるのに使う。未設定の単元は null */
-  stat_type_id?: number | null;
+  /** この単元が伸ばすステータス（複数可）。ステータス別の範囲を教科でしぼるのに使う */
+  stat_type_ids?: number[];
   grade?: Grade;
   subject?: Subject;
   problems?: Problem[];
@@ -175,8 +175,9 @@ export interface AdminUnit {
   grade: string;
   subject_id: number;
   subject: string;
-  stat_type_id: number | null;
-  stat_type: string | null;
+  /** この単元が伸ばすステータス（複数可）。ポイントは均等に分けて入る */
+  stat_type_ids: number[];
+  stat_types: string[];
   problem_count: number;
   used: boolean;
 }

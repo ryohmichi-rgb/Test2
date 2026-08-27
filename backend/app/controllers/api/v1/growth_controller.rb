@@ -21,26 +21,30 @@ module Api
         #   3. 教材の初回読了 … lesson_reads（1件 = LESSON_POINTS）
         daily = Hash.new { |h, k| h[k] = Hash.new(0) } # date => { stat_type_id => 加点 }
 
+        # 加点時と**同じ配分**（StatPoints.split）を通す。ここだけ配り方が違うと、
+        # 折れ線の途中と最後の「現在」（＝student_stats）がずれる。
         student.answer_records
           .where(is_correct: true)
-          .includes(problem: :unit)
+          .includes(problem: { unit: :stat_types })
           .find_each do |r|
-            sid = r.problem.unit&.stat_type_id
-            next unless sid
-            daily[r.created_at.to_date][sid] += r.points_awarded.to_i
+            unit = r.problem.unit
+            next unless unit
+            StatPoints.split(r.points_awarded, unit.stat_type_ids).each do |sid, pts|
+              daily[r.created_at.to_date][sid] += pts
+            end
           end
 
         student.test_results.where("bonus_points > 0").find_each do |t|
-          stat_ids = bonus_stat_type_ids(t)
-          next if stat_ids.empty?
-          per_stat = (t.bonus_points.to_f / stat_ids.size).round
-          stat_ids.each { |sid| daily[t.created_at.to_date][sid] += per_stat }
+          StatPoints.split(t.bonus_points, bonus_stat_type_ids(t)).each do |sid, pts|
+            daily[t.created_at.to_date][sid] += pts
+          end
         end
 
-        student.lesson_reads.includes(:unit).find_each do |lr|
-          sid = lr.unit&.stat_type_id
-          next unless sid
-          daily[lr.created_at.to_date][sid] += LessonRead::POINTS
+        student.lesson_reads.includes(unit: :stat_types).find_each do |lr|
+          next unless lr.unit
+          StatPoints.split(LessonRead::POINTS, lr.unit.stat_type_ids).each do |sid, pts|
+            daily[lr.created_at.to_date][sid] += pts
+          end
         end
 
         cumulative = Hash.new(0)
@@ -85,7 +89,7 @@ module Api
       def bonus_stat_type_ids(test_result)
         ProblemScope
           .new(scope_type: test_result.scope_type, scope_id: test_result.scope_id, subject_id: test_result.subject_id)
-          .units.pluck(:stat_type_id).compact.uniq
+          .units.joins(:unit_stat_types).distinct.pluck("unit_stat_types.stat_type_id")
       end
 
       # 日付 d におけるステータス st の期待値（線形補間、目標日以降は目標値、目標なしは現状維持）

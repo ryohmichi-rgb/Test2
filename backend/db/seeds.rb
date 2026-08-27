@@ -386,18 +386,20 @@ units_grade7.each do |unit_data|
   end
 end
 
-# 単元ごとのステータス種別マッピング
+# 単元ごとのステータス種別マッピング（1単元に複数書ける。ポイントは均等に分けて入る）
 {
-  "分数のかけ算・わり算" => stat_calc,
-  "比と比の値"           => stat_number,
-  "速さ・時間・距離"     => stat_reading,
-  "文字と式（小6）"      => stat_logic,
-  "正の数・負の数"       => stat_calc,
-  "文字と式"             => stat_logic,
-  "方程式"               => stat_logic,
-  "比例と反比例"         => stat_number
-}.each do |title, stat_type|
-  Unit.where(title: title).update_all(stat_type_id: stat_type.id)
+  "分数のかけ算・わり算" => [stat_calc],
+  "比と比の値"           => [stat_number],
+  "速さ・時間・距離"     => [stat_reading],
+  "文字と式（小6）"      => [stat_logic],
+  "正の数・負の数"       => [stat_calc],
+  "文字と式"             => [stat_logic],
+  "方程式"               => [stat_logic],
+  "比例と反比例"         => [stat_number]
+}.each do |title, types|
+  Unit.where(title: title).find_each do |unit|
+    types.each { |st| UnitStatType.find_or_create_by!(unit: unit, stat_type: st) }
+  end
 end
 
 # 追加の問題（既存はそのまま、不足分を足す）。title で単元に紐づける。

@@ -45,7 +45,7 @@ class ProblemScope
     @units ||= begin
       base = case scope_type
       when "grade"     then Unit.active_only.where(grade_id: scope_id)
-      when "stat_type" then Unit.active_only.where(stat_type_id: scope_id)
+      when "stat_type" then Unit.active_only.for_stat_type(scope_id)
       when "unit"      then Unit.active_only.where(id: scope_id)
       when "all"       then Unit.active_only
       else Unit.none

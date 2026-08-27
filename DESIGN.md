@@ -50,7 +50,8 @@ RPG風のステータス成長でモチベーションを維持しながら継�
 erDiagram
     grades ||--o{ units : ""
     subjects ||--o{ units : ""
-    stat_types ||--o{ units : ""
+    units ||--o{ unit_stat_types : ""
+    stat_types ||--o{ unit_stat_types : ""
     units ||--o{ problems : ""
     units ||--o{ lesson_reads : ""
     problems ||--o{ choices : ""
@@ -90,7 +91,11 @@ erDiagram
         bool active "無効化で出題除外"
         fk grade_id
         fk subject_id
-        fk stat_type_id "null許容"
+        fk stat_type_id "非推奨。unit_stat_types へ移行ずみ"
+    }
+    unit_stat_types {
+        fk unit_id
+        fk stat_type_id
     }
     problems {
         text question
@@ -187,7 +192,10 @@ erDiagram
 
 ### テーブル補足
 
-- **units.stat_type_id** … 単元がどのステータスを伸ばすか。`null` 許容（既存データ移行のため）。
+- **unit_stat_types** … 単元がどのステータスを伸ばすか。**1単元に複数**持てる（文章題＝文章読解力＋計算力 など）。
+  `(unit_id, stat_type_id)` で一意。0個でもよく、そのときは解いてもポイントが入らない。
+- **units.stat_type_id** … 1単元1ステータスだった頃の列。**もう読んでいない**（`unit_stat_types` に移行ずみ）。
+  デプロイ中に旧コードが新スキーマに対して動く窓があるため、この移行では消さずに残している。
 - **student_stats** … `(student_id, stat_type_id)` で一意。現在値のみを持つ（履歴は持たない）。
 - **goals** … `(student_id, stat_type_id)` で一意。目標値＋期限。
 - **reference_stats** … 目標の目安（参考値）。`label` でグルーピング。中学卒業レベル/高校受験（公立）/難関高校受験/数学の先生/エンジニア/研究者/ゲームクリエイター など。
@@ -287,6 +295,20 @@ erDiagram
 - 演習・問題集・テスト・復習すべて `AnswerRecord` を作るので、どのモードでも同じ経路でステータスが伸びる。
 - **同じ問題の解き直しは減額される**（farming対策。3.13参照）。
 
+#### 単元が複数のステータスを伸ばすとき（`StatPoints`）
+
+単元は `unit_stat_types` で**複数のステータス**を持てる（文章題＝文章読解力＋計算力 など）。
+そのとき1回の加点は **均等に分けて** 入る。分け方は `StatPoints.split` の1か所に集約する。
+
+- **配った合計は必ず元のポイントと一致させる。** `total_points`（＝`student_stats` の合計）が
+  総合ランクの判定軸なので、ここで増減するとランク・ノルマ・目標の意味がずれる
+  （「ステータスを2つ付けた単元だけ2倍おいしい」という抜け道にもなる）。
+- 端数は `stat_types.display_order` の先頭から1ptずつ配る。並びが決まっているので
+  何度計算しても同じ結果になる＝成長曲線の再構築が現在値とずれない。
+- ステータスが1つの単元は、これまでどおり全額そこに入る（既存データの数値は変わらない）。
+- ステータスを1つも持たない単元は加点されない（回答自体は記録される）。
+- 通す経路は3つとも同じ: 回答（`AnswerRecord`）・テストのボーナス・教材の読了。
+
 **ポイントは回答時に確定し `answer_records.points_awarded` に保存する。**
 「何回目か」「前回正解から何日か」に依存するルールなので、あとから再計算すると
 過去の成長曲線まで書き変わってしまう。読み出し側（今日のノルマ・成長曲線）はこの列を
@@ -301,7 +323,8 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 3. **自己ベスト判定**: 同じ範囲（`scope_type` + `scope_id` + `subject_id`）の過去最高点と比較
 4. **高得点ボーナス**（自己ベスト更新時のみ付与 = farming防止）
    - 90%以上 → +100pt / 80〜89% → +50pt
-   - ボーナスはテストに出たステータスへ均等配分
+   - ボーナスはテストに出たステータスへ均等配分（`StatPoints.split`。端数も配りきるので
+     配った合計は `bonus_points` と必ず一致する）
 5. `test_results` に保存し、`rank`・前回比較・`is_best` を返す
    （ボーナス額は `test_results.bonus_points` に記録する。成長曲線で合算するため）
 
@@ -347,6 +370,9 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 - **実績（過去→現在）**: ポイントの出どころ**3系統すべて**を日付順に累積する。最後に現在値（`student_stats`）を「現在」点として付ける。
   1. 問題の正解 … `answer_records.points_awarded`
   2. テストの高得点ボーナス … `test_results.bonus_points`（配分先は範囲のステータスから復元）
+
+いずれも**加点時と同じ `StatPoints.split` を通す**。ここだけ配り方が違うと、折れ線の途中と
+最後の「現在」（＝`student_stats`）がずれる。
   3. 教材の初回読了 … `lesson_reads`（1件 = `LessonRead::POINTS`）
 
   > どれかを落とすと折れ線が実際より低く伸び、最後の「現在」だけが跳ね上がる。
@@ -371,6 +397,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 ### 3.7 問題セットの動的抽出（`ProblemScope`）
 
 - 範囲（`grade | stat_type | unit`）から対象単元を解決し、その問題を指定数抽出。
+  `stat_type` は `unit_stat_types` を見るので、**そのステータスを2つ目以降に持つ単元も入る**。
 - 問題集・テストの両方がこの共通ロジックを使う（`GET /problem_set`）。
 - **練習（`mode=practice`）とテストで選び方が違う**：
   - 練習 … `sample_problems_for` … 4段階優先度 →（その中で）習熟度に応じた重みづけ（3.17）
@@ -572,6 +599,8 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 - 管理APIは `/api/v1/admin/*`（`AdminOnly` concern で `admin` 以外は403）。フロント `/admin/*` は管理者以外ホームへリダイレクト。
 - **削除は未使用のみ**（回答履歴のある問題・単元は削除不可 → 無効化で対応）。参考ステータス・生徒は削除可（管理者自身は不可）。
 - 管理機能: 単元/教材（追加・編集・無効化・削除）、問題（追加・編集・選択肢編集・無効化・削除）、参考ステータス（CRUD）、生徒（一覧・状況・削除）。
+- **単元のステータスはチェックボックスで複数えらべる**（`stat_type_ids`）。0個にもできる。
+  えらんだステータスにポイントが均等に分かれることを画面にも書いている（3.1）。
 
 ### 3.13 先生に聞く（生成AI連携）
 
@@ -840,7 +869,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | GET | `/students/:id/persona_usage` | 「この人に聞く」の残り回数（先生とは別枠） |
 | POST | `/students/:id/ask_persona` | 職業の人に相談する（character_key/kind/question） |
 | POST | `/students/:id/ask_teacher` | その問題の文脈で先生に質問（problem_id/kind/question） |
-| GET | `/grades` | 学年一覧（単元込み） |
+| GET | `/grades` | 学年一覧（単元込み。単元に `stat_type_ids` と `subject`） |
 | GET | `/units/:id` | 単元詳細（教材・問題込み） |
 | POST | `/answer_records` | 回答送信（即採点＋ポイント加算） |
 | GET | `/reference_stats` | 参考ステータス |

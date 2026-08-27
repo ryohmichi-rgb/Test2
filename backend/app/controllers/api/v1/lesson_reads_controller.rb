@@ -29,13 +29,16 @@ module Api
 
       private
 
+      # 単元が複数のステータスを伸ばすなら均等に分ける（合計は LESSON_POINTS のまま）
       def award_points(student, unit)
-        stat_type_id = unit.stat_type_id
-        return 0 unless stat_type_id
+        shares = StatPoints.split(LESSON_POINTS, unit.stat_type_ids)
+        return 0 if shares.empty?
 
-        stat = StudentStat.find_or_initialize_by(student: student, stat_type_id: stat_type_id)
-        stat.value = (stat.value || 0) + LESSON_POINTS
-        stat.save!
+        shares.each do |stat_type_id, pts|
+          stat = StudentStat.find_or_initialize_by(student: student, stat_type_id: stat_type_id)
+          stat.value = (stat.value || 0) + pts
+          stat.save!
+        end
         LESSON_POINTS
       end
     end
