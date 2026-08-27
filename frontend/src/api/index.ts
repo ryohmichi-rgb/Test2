@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AiUsage, AskKind, PersonaKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AdminSubject, AiUsage, AskKind, PersonaKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
 
 // stat_type_ids は後から足したフィールド。旧バックエンドの窓では返ってこないので
 // 既定値（空＝不明）を埋める。不明のときは教科でしぼらず全部見せる側に倒す
@@ -150,6 +150,15 @@ export const fetchCondition = (studentId: number): Promise<Condition> =>
 // ===== 管理（admin） =====
 export const fetchAdminMeta = (): Promise<AdminMeta> =>
   api.get<AdminMeta>("/admin/meta").then((r) => r.data);
+
+export const fetchAdminSubjects = (): Promise<AdminSubject[]> =>
+  api.get<AdminSubject[]>("/admin/subjects").then((r) => r.data);
+export const createAdminSubject = (subject: { name: string }): Promise<AdminSubject> =>
+  api.post<AdminSubject>("/admin/subjects", { subject }).then((r) => r.data);
+export const updateAdminSubject = (id: number, subject: { name: string }): Promise<AdminSubject> =>
+  api.put<AdminSubject>(`/admin/subjects/${id}`, { subject }).then((r) => r.data);
+export const deleteAdminSubject = (id: number): Promise<void> =>
+  api.delete(`/admin/subjects/${id}`).then(() => undefined);
 
 // stat_type_ids / stat_types は後から足したフィールド。旧バックエンドの窓でも落ちないよう既定値を埋める
 export const fetchAdminUnits = (): Promise<AdminUnit[]> =>

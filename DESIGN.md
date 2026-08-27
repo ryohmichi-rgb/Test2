@@ -598,7 +598,9 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 - 管理者は `students.admin`。`ADMIN_USERNAME` のユーザーを seed が管理者にする。認証レスポンスに `admin` を含める。
 - 管理APIは `/api/v1/admin/*`（`AdminOnly` concern で `admin` 以外は403）。フロント `/admin/*` は管理者以外ホームへリダイレクト。
 - **削除は未使用のみ**（回答履歴のある問題・単元は削除不可 → 無効化で対応）。参考ステータス・生徒は削除可（管理者自身は不可）。
-- 管理機能: 単元/教材（追加・編集・無効化・削除）、問題（追加・編集・選択肢編集・無効化・削除）、参考ステータス（CRUD）、生徒（一覧・状況・削除）。
+- 管理機能: 教科（CRUD）、単元/教材（追加・編集・無効化・削除）、問題（追加・編集・選択肢編集・無効化・削除）、参考ステータス（CRUD）、生徒（一覧・状況・削除）。
+- **教科の削除は単元がぶら下がっていないときだけ**。`Subject has_many :units, dependent: :destroy` なので、
+  そのまま消すと単元も問題も回答履歴もまとめて消える。他の管理画面と同じ「未使用のみ削除」に揃えている。
 - **単元のステータスはチェックボックスで複数えらべる**（`stat_type_ids`）。0個にもできる。
   えらんだステータスにポイントが均等に分かれることを画面にも書いている（3.1）。
 
@@ -875,7 +877,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | GET | `/reference_stats` | 参考ステータス |
 | GET | `/problem_set?scope_type=&scope_id=&subject_id=&count=&mode=` | 動的問題セット（`mode=practice` で重複回避つき／未指定はランダム＝テスト用。`subject_id` は省略可＝教科でしぼらない） |
 | POST | `/admin/students/:id/reset_password` | パスワード再発行（管理者。平文はこの応答でだけ返す） |
-| — | `/admin/*`（管理者のみ） | meta / units / problems / reference_stats / students のCRUD |
+| — | `/admin/*`（管理者のみ） | meta / subjects / units / problems / reference_stats / students のCRUD |
 
 ---
 
@@ -958,7 +960,7 @@ flowchart TD
 | `LessonPage` | `react-markdown` と KaTeX が重い。教材を開いたときだけ読み込む |
 | `PracticePage` / `ProblemSetPage` / `TestPage` / `ReviewPage` | 問題文の数式で KaTeX を使う。ログイン直後には要らない |
 | `DailyProblemCard`（ホーム内） | 同上。ホームの初期表示をブロックさせない |
-| `admin/*`（5画面） | 管理者しか使わない。生徒には読み込ませない |
+| `admin/*`（6画面） | 管理者しか使わない。生徒には読み込ませない |
 
 初回JS **487kB → 332kB**（gzip 148→105kB）。KaTeXを2箇所で使いながら軽くなっている。
 

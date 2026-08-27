@@ -3,6 +3,7 @@ import { useAdminGuard } from "./guard";
 
 const ITEMS = [
   { label: "単元・教材", desc: "単元/解説の編集、問題の管理", emoji: "📚", path: "/admin/units", color: "#38a169" },
+  { label: "教科", desc: "算数・数学・国語…の追加", emoji: "🏷️", path: "/admin/subjects", color: "#3182ce" },
   { label: "参考ステータス", desc: "目標の目安（人物・進路）", emoji: "🎯", path: "/admin/reference", color: "#4c51bf" },
   { label: "生徒", desc: "登録生徒の一覧・状況", emoji: "👥", path: "/admin/students", color: "#805ad5" },
 ];

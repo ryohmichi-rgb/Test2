@@ -44,6 +44,7 @@ Rails.application.routes.draw do
 
       namespace :admin do
         get "meta", to: "meta#show"
+        resources :subjects, only: [:index, :create, :update, :destroy]
         resources :units, only: [:index, :create, :update, :destroy]
         resources :problems, only: [:index, :create, :update, :destroy]
         resources :reference_stats, only: [:index, :create, :update, :destroy]

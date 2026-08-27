@@ -6,7 +6,7 @@ module Api
         def show
           render json: {
             grades: Grade.ordered.as_json(only: [:id, :name]),
-            subjects: Subject.all.as_json(only: [:id, :name]),
+            subjects: Subject.order(:id).as_json(only: [:id, :name]),
             stat_types: StatType.all.as_json(only: [:id, :name])
           }
         end

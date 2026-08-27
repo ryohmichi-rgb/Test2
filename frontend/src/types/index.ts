@@ -164,6 +164,14 @@ export interface AdminMeta {
   stat_types: { id: number; name: string }[];
 }
 
+export interface AdminSubject {
+  id: number;
+  name: string;
+  unit_count: number;
+  /** 単元がぶら下がっているか。true なら削除できない */
+  used: boolean;
+}
+
 export interface AdminUnit {
   id: number;
   title: string;
