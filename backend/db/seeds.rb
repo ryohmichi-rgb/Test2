@@ -10,6 +10,10 @@ end
 
 # 単元名 => 問題の配列、をまとめて作る。問題文をキーに探すので、
 # 既存の問題文を変えると別レコードとして増えてしまう点に注意（変えるなら移行を添える）。
+#
+# 選択式（problem_type: "multiple_choice"）は :choices を持たせる。
+# **採点は平文比較なので、answer は正解の選択肢の文字列とぴったり同じにすること**
+# （画面は選んだ選択肢の text をそのまま送る）。
 def create_problems(map)
   map.each do |title, probs|
     unit = Unit.find_by(title: title)
@@ -24,6 +28,10 @@ def create_problems(map)
         p.solution = pd[:solution]
       end
       fill_solution(problem_row, pd[:solution])
+
+      (pd[:choices] || []).each do |cd|
+        Choice.find_or_create_by!(problem: problem_row, text: cd[:text]) { |c| c.is_correct = cd[:is_correct] }
+      end
     end
   end
 end
@@ -702,6 +710,255 @@ advanced_problems_2 = {
 }
 
 create_problems(advanced_problems_2)
+
+# 選択式の問題。128問中1問しかなく、仕組み（problem_type: "multiple_choice" ＋ choices）が
+# ほとんど使われていなかった。
+#
+# 選択式が向くのは「打てない答え」と「見分け」——式そのものを選ばせる、まちがいを見つける、
+# 大小をくらべる、比例か反比例かを答える、など。記述式は答えをキーパッドの17文字で
+# 打てる範囲にしばられるが、選択肢にはその制約がない。
+#
+# 採点は平文比較なので、answer は正解の選択肢の text とぴったり同じにする。
+# 選択肢も MathText で描くので $...$ の数式が使える。
+#
+# 注意: LaTeX を含む文字列は必ずシングルクォート。ダブルクォートだと \frac が
+# 改ページ文字、\times がタブに化ける。
+choice_problems = {
+  "分数のかけ算・わり算" => [
+    { question: '$\frac{2}{3} \div \frac{4}{5}$ を計算するとき、はじめに直す式として正しいのはどれですか？',
+      answer: '$\frac{2}{3} \times \frac{5}{4}$', hint: 'わり算は、わる数を逆数にしてかけ算に直します。', difficulty: 2, problem_type: "multiple_choice",
+      solution: 'わり算はわる数（うしろの分数）を逆数にしてかけ算に直します。$\frac{4}{5}$ の逆数は $\frac{5}{4}$ なので $\frac{2}{3} \times \frac{5}{4}$ です。前の分数はそのままにします。',
+      choices: [
+        { text: '$\frac{2}{3} \times \frac{5}{4}$', is_correct: true },
+        { text: '$\frac{2}{3} \times \frac{4}{5}$', is_correct: false },
+        { text: '$\frac{3}{2} \times \frac{4}{5}$', is_correct: false },
+        { text: '$\frac{3}{2} \times \frac{5}{4}$', is_correct: false }
+      ] },
+    { question: '$\frac{3}{5} \times \frac{5}{6}$ の答えはどれですか？',
+      answer: '$\frac{1}{2}$', hint: '分子どうし・分母どうしをかけてから約分します。', difficulty: 3, problem_type: "multiple_choice",
+      solution: '$\frac{3 \times 5}{5 \times 6} = \frac{15}{30}$ で、約分すると $\frac{1}{2}$ です。分子どうし・分母どうしを「たす」のはまちがいです。',
+      choices: [
+        { text: '$\frac{8}{11}$', is_correct: false },
+        { text: '$\frac{1}{2}$', is_correct: true },
+        { text: '$\frac{2}{3}$', is_correct: false },
+        { text: '$\frac{5}{11}$', is_correct: false }
+      ] },
+    { question: '$\square \times \frac{3}{4} = \frac{1}{2}$ の $\square$ にあてはまる数はどれですか？',
+      answer: '$\frac{2}{3}$', hint: '$\square = \frac{1}{2} \div \frac{3}{4}$ で求まります。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '$\square = \frac{1}{2} \div \frac{3}{4} = \frac{1}{2} \times \frac{4}{3} = \frac{4}{6} = \frac{2}{3}$ です。かけ算のままにすると $\frac{3}{8}$ になってしまいます。',
+      choices: [
+        { text: '$\frac{3}{8}$', is_correct: false },
+        { text: '$\frac{3}{2}$', is_correct: false },
+        { text: '$\frac{2}{3}$', is_correct: true },
+        { text: '$\frac{8}{3}$', is_correct: false }
+      ] }
+  ],
+  "比と比の値" => [
+    { question: '$12 : 18$ を最も簡単な整数の比にしたものはどれですか？',
+      answer: '$2 : 3$', hint: '両方を同じ数でわります。$12$ と $18$ の最大公約数は $6$ です。', difficulty: 2, problem_type: "multiple_choice",
+      solution: '$12$ と $18$ を最大公約数の $6$ でわると $2 : 3$ です。$6 : 9$ や $4 : 6$ はまだ簡単にできます。',
+      choices: [
+        { text: '$6 : 9$', is_correct: false },
+        { text: '$4 : 6$', is_correct: false },
+        { text: '$3 : 2$', is_correct: false },
+        { text: '$2 : 3$', is_correct: true }
+      ] },
+    { question: '比の値が最も大きいのはどれですか？',
+      answer: '$7 : 9$', hint: '比の値は $a : b$ を $a \div b$ で計算した数です。', difficulty: 3, problem_type: "multiple_choice",
+      solution: '比の値は $a \div b$ です。$3 : 4 = 0.75$、$5 : 8 = 0.625$、$2 : 3 \fallingdotseq 0.67$、$7 : 9 \fallingdotseq 0.78$ なので $7 : 9$ が最大です。分母をそろえてくらべても同じです。',
+      choices: [
+        { text: '$7 : 9$', is_correct: true },
+        { text: '$3 : 4$', is_correct: false },
+        { text: '$5 : 8$', is_correct: false },
+        { text: '$2 : 3$', is_correct: false }
+      ] },
+    { question: '$A : B = 3 : 5$ のとき、いつでも正しいといえるのはどれですか？',
+      answer: '$A$ は $B$ の $\frac{3}{5}$ 倍', hint: '$A : B = 3 : 5$ なら、$A \div B$ はいくつになるでしょう。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '$A : B = 3 : 5$ の比の値は $A \div B = \frac{3}{5}$ なので、$A$ は $B$ の $\frac{3}{5}$ 倍です。差については、$A = 3a$、$B = 5a$ の $a$ が分からないので $2$ とは決まりません。',
+      choices: [
+        { text: '$A$ は $B$ の $\frac{5}{3}$ 倍', is_correct: false },
+        { text: '$A$ は $B$ の $\frac{3}{5}$ 倍', is_correct: true },
+        { text: '$B$ は $A$ の $\frac{3}{5}$ 倍', is_correct: false },
+        { text: '$B$ と $A$ の差は $2$', is_correct: false }
+      ] }
+  ],
+  "速さ・時間・距離" => [
+    { question: '速さを求める式として正しいのはどれですか？',
+      answer: '道のり $\div$ 時間', hint: '「1時間あたりに進む道のり」が速さです。', difficulty: 2, problem_type: "multiple_choice",
+      solution: '速さは「1時間（1分・1秒）あたりに進む道のり」なので、道のり $\div$ 時間 で求めます。ここから 道のり $=$ 速さ $\times$ 時間、時間 $=$ 道のり $\div$ 速さ も出ます。',
+      choices: [
+        { text: '道のり $\times$ 時間', is_correct: false },
+        { text: '時間 $\div$ 道のり', is_correct: false },
+        { text: '道のり $\div$ 時間', is_correct: true },
+        { text: '道のり $+$ 時間', is_correct: false }
+      ] },
+    { question: '次のうち、最も速いのはどれですか？',
+      answer: '分速700m', hint: '単位がばらばらなので、秒速か時速にそろえてくらべます。', difficulty: 3, problem_type: "multiple_choice",
+      solution: '秒速にそろえます。時速36km $=$ 秒速10m、分速700m $\fallingdotseq$ 秒速11.7m、秒速11m、時速40km $\fallingdotseq$ 秒速11.1m。いちばん速いのは分速700mです。',
+      choices: [
+        { text: '時速36km', is_correct: false },
+        { text: '秒速11m', is_correct: false },
+        { text: '時速40km', is_correct: false },
+        { text: '分速700m', is_correct: true }
+      ] },
+    { question: '300mを50秒で走る人の速さと同じものはどれですか？',
+      answer: '分速360m', hint: 'まず秒速を求めてから、1分（60秒）で進む道のりを考えます。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '$300 \div 50 = 6$ なので秒速6mです。1分は60秒なので $6 \times 60 = 360$、つまり分速360mです。秒速5mや分速300mでは足りません。',
+      choices: [
+        { text: '分速360m', is_correct: true },
+        { text: '秒速5m', is_correct: false },
+        { text: '分速300m', is_correct: false },
+        { text: '時速18km', is_correct: false }
+      ] }
+  ],
+  "文字と式（小6）" => [
+    { question: '$a \times 3 + 5$ を、かけ算の記号を省いて書いたものはどれですか？',
+      answer: '$3a + 5$', hint: '文字と数のかけ算は、数を前に書いて $\times$ を省きます。', difficulty: 2, problem_type: "multiple_choice",
+      solution: '数を前、文字をうしろに書いて $\times$ を省くので $a \times 3 = 3a$。$+5$ はそのままなので $3a + 5$ です。$a3$ とは書きません。',
+      choices: [
+        { text: '$a3 + 5$', is_correct: false },
+        { text: '$3a + 5$', is_correct: true },
+        { text: '$3(a + 5)$', is_correct: false },
+        { text: '$a + 35$', is_correct: false }
+      ] },
+    { question: '1個 $x$ 円のあめを4個買って500円出したときの、おつりを表す式はどれですか？',
+      answer: '$500 - 4x$', hint: 'おつりは「出したお金 $-$ 代金」です。代金はいくらでしょう。', difficulty: 3, problem_type: "multiple_choice",
+      solution: 'あめ4個の代金は $x \times 4 = 4x$ 円。おつりは出したお金から代金を引くので $500 - 4x$ 円です。引く順番を逆にしないよう気をつけます。',
+      choices: [
+        { text: '$4x - 500$', is_correct: false },
+        { text: '$500 - x + 4$', is_correct: false },
+        { text: '$500 - 4x$', is_correct: true },
+        { text: '$4(500 - x)$', is_correct: false }
+      ] },
+    { question: '$x = 3$ のとき、値が最も大きいのはどれですか？',
+      answer: '$4x - 2$', hint: 'それぞれに $x = 3$ を入れて、順番に計算してみます。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '$x = 3$ を入れると、$4x - 2 = 10$、$2x + 3 = 9$、$x + 6 = 9$、$\frac{x}{3} + 8 = 9$。最も大きいのは $4x - 2$ です。',
+      choices: [
+        { text: '$2x + 3$', is_correct: false },
+        { text: '$x + 6$', is_correct: false },
+        { text: '$\frac{x}{3} + 8$', is_correct: false },
+        { text: '$4x - 2$', is_correct: true }
+      ] }
+  ],
+  "正の数・負の数" => [
+    { question: '絶対値が最も大きいのはどれですか？',
+      answer: '$-7$', hint: '絶対値は数直線上で $0$ からどれだけはなれているかです。符号は関係ありません。', difficulty: 2, problem_type: "multiple_choice",
+      solution: '絶対値は $0$ からのきょりなので、符号を外した数でくらべます。$|-7| = 7$、$|6| = 6$、$|5| = 5$、$|-3| = 3$ なので $-7$ が最大です。',
+      choices: [
+        { text: '$-7$', is_correct: true },
+        { text: '$5$', is_correct: false },
+        { text: '$-3$', is_correct: false },
+        { text: '$6$', is_correct: false }
+      ] },
+    { question: '計算の答えが正の数になるのはどれですか？',
+      answer: '$(-2) \times (-3)$', hint: '負の数どうしのかけ算・わり算の符号を思い出します。', difficulty: 3, problem_type: "multiple_choice",
+      solution: '負 $\times$ 負 は正なので $(-2) \times (-3) = 6$ です。ほかは $(-2) \times 3 = -6$、$2 \times (-3) = -6$、$(-6) \div 2 = -3$ でどれも負の数になります。',
+      choices: [
+        { text: '$(-2) \times 3$', is_correct: false },
+        { text: '$(-2) \times (-3)$', is_correct: true },
+        { text: '$2 \times (-3)$', is_correct: false },
+        { text: '$(-6) \div 2$', is_correct: false }
+      ] },
+    { question: '$(-2)^4$ と $-2^4$ について、正しい説明はどれですか？',
+      answer: '$(-2)^4 = 16$、$-2^4 = -16$', hint: 'かっこがあるかどうかで、2乗（4乗）されるものが変わります。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '$(-2)^4$ は $-2$ を4回かけるので $16$。$-2^4$ は $-(2 \times 2 \times 2 \times 2) = -16$ です。かっこの有無で答えの符号が変わります。',
+      choices: [
+        { text: 'どちらも $16$', is_correct: false },
+        { text: 'どちらも $-16$', is_correct: false },
+        { text: '$(-2)^4 = 16$、$-2^4 = -16$', is_correct: true },
+        { text: '$(-2)^4 = -16$、$-2^4 = 16$', is_correct: false }
+      ] }
+  ],
+  "文字と式" => [
+    { question: '$x \times x \times y \div 3$ を、記号を省いて書いたものはどれですか？',
+      answer: '$\frac{x^2 y}{3}$', hint: '同じ文字のかけ算は累乗で書き、わり算は分数で書きます。', difficulty: 2, problem_type: "multiple_choice",
+      solution: '$x \times x = x^2$、$\div 3$ は分母に $3$ を置くので $\frac{x^2 y}{3}$ です。$x \times x$ を $2x$ と書くのはまちがいです。',
+      choices: [
+        { text: '$\frac{2xy}{3}$', is_correct: false },
+        { text: '$3x^2 y$', is_correct: false },
+        { text: '$\frac{x^2}{3y}$', is_correct: false },
+        { text: '$\frac{x^2 y}{3}$', is_correct: true }
+      ] },
+    { question: '$-(3x - 2)$ を計算したものはどれですか？',
+      answer: '$-3x + 2$', hint: 'かっこの前のマイナスは、中のすべての項の符号を変えます。', difficulty: 3, problem_type: "multiple_choice",
+      solution: 'かっこの前の $-$ は $-1$ をかけることなので、中の符号がすべて変わります。$-(3x - 2) = -3x + 2$ です。うしろの $-2$ を $-2$ のままにするのがよくあるまちがいです。',
+      choices: [
+        { text: '$-3x + 2$', is_correct: true },
+        { text: '$-3x - 2$', is_correct: false },
+        { text: '$3x - 2$', is_correct: false },
+        { text: '$3x + 2$', is_correct: false }
+      ] },
+    { question: '$x = -2$ のとき、値が $-4$ になるのはどれですか？',
+      answer: '$3x + 2$', hint: '代入するときは $x$ を $(-2)$ とかっこをつけて入れます。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '$x = -2$ を入れると、$3x + 2 = -6 + 2 = -4$。ほかは $x^2 = 4$、$-2x = 4$、$x - 1 = -3$ です。',
+      choices: [
+        { text: '$x^2$', is_correct: false },
+        { text: '$3x + 2$', is_correct: true },
+        { text: '$-2x$', is_correct: false },
+        { text: '$x - 1$', is_correct: false }
+      ] }
+  ],
+  "方程式" => [
+    { question: '$x + 5 = 12$ を解くとき、最初にすることとして正しいのはどれですか？',
+      answer: '両辺から $5$ をひく', hint: '$x$ だけを左に残すには、じゃまな $+5$ をどうすればよいでしょう。', difficulty: 2, problem_type: "multiple_choice",
+      solution: '$x$ だけを残したいので、両辺から $5$ をひきます。$x + 5 - 5 = 12 - 5$ となり $x = 7$ です。等式は両辺に同じことをしても成り立ちます。',
+      choices: [
+        { text: '両辺に $5$ をたす', is_correct: false },
+        { text: '両辺を $5$ でわる', is_correct: false },
+        { text: '両辺から $5$ をひく', is_correct: true },
+        { text: '両辺に $5$ をかける', is_correct: false }
+      ] },
+    { question: '次のうち、$x = 3$ が解になる方程式はどれですか？',
+      answer: '$2x - 1 = 5$', hint: 'それぞれの式に $x = 3$ を入れて、左辺と右辺が等しくなるか確かめます。', difficulty: 3, problem_type: "multiple_choice",
+      solution: '$x = 3$ を入れると $2x - 1 = 6 - 1 = 5$ で右辺と一致します。ほかは $x + 4 = 6$ が $x = 2$、$3x = 12$ が $x = 4$、$5 - x = 3$ が $x = 2$ です。',
+      choices: [
+        { text: '$x + 4 = 6$', is_correct: false },
+        { text: '$3x = 12$', is_correct: false },
+        { text: '$5 - x = 3$', is_correct: false },
+        { text: '$2x - 1 = 5$', is_correct: true }
+      ] },
+    { question: '1本 $x$ 円のジュースを4本買って1000円出したら、おつりは200円でした。この場面を表す方程式はどれですか？',
+      answer: '$1000 - 4x = 200$', hint: '「出したお金 $-$ 代金 $=$ おつり」を式にします。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '代金は $4x$ 円なので、おつりは $1000 - 4x$ 円。これが200円なので $1000 - 4x = 200$ です。解くと $x = 200$ になります。',
+      choices: [
+        { text: '$1000 - 4x = 200$', is_correct: true },
+        { text: '$4x - 1000 = 200$', is_correct: false },
+        { text: '$4(x - 1000) = 200$', is_correct: false },
+        { text: '$1000 - x = 200 \times 4$', is_correct: false }
+      ] }
+  ],
+  "比例と反比例" => [
+    { question: '$y$ が $x$ に反比例するのはどれですか？',
+      answer: '$y = \frac{6}{x}$', hint: '反比例は $y = \frac{a}{x}$ の形です。', difficulty: 2, problem_type: "multiple_choice",
+      solution: '反比例は $y = \frac{a}{x}$ の形なので $y = \frac{6}{x}$ です。$y = 6x$ は比例、$y = x + 6$ と $y = 6 - x$ はどちらでもありません。',
+      choices: [
+        { text: '$y = 6x$', is_correct: false },
+        { text: '$y = \frac{6}{x}$', is_correct: true },
+        { text: '$y = x + 6$', is_correct: false },
+        { text: '$y = 6 - x$', is_correct: false }
+      ] },
+    { question: '$y$ が $x$ に比例するとき、正しい説明はどれですか？',
+      answer: '$x$ が2倍になると $y$ も2倍になる', hint: '比例は $y = ax$ の形です。$x$ を2倍にすると $y$ はどうなるでしょう。', difficulty: 3, problem_type: "multiple_choice",
+      solution: '比例は $y = ax$ なので、$x$ を2倍にすると $y$ も2倍になります。「$x \times y$ がいつも同じ」は反比例の性質です。',
+      choices: [
+        { text: '$x$ が2倍になると $y$ は $\frac{1}{2}$ 倍になる', is_correct: false },
+        { text: '$x$ が増えても $y$ は変わらない', is_correct: false },
+        { text: '$x$ が2倍になると $y$ も2倍になる', is_correct: true },
+        { text: '$x \times y$ がいつも同じ値になる', is_correct: false }
+      ] },
+    { question: '$y$ が $x$ に反比例し、$x = 2$ のとき $y = 12$ です。この関係を表す式はどれですか？',
+      answer: '$y = \frac{24}{x}$', hint: '反比例の比例定数は $x \times y$ で求まります。', difficulty: 4, problem_type: "multiple_choice",
+      solution: '比例定数は $a = x \times y = 2 \times 12 = 24$ なので $y = \frac{24}{x}$ です。$a = y \div x$ としてしまうと比例の式になってしまいます。',
+      choices: [
+        { text: '$y = 6x$', is_correct: false },
+        { text: '$y = \frac{6}{x}$', is_correct: false },
+        { text: '$y = 24x$', is_correct: false },
+        { text: '$y = \frac{24}{x}$', is_correct: true }
+      ] }
+  ]
+}
+
+create_problems(choice_problems)
 
 # 単元ごとの教材（解説）Markdown。既存単元にも反映されるよう update で入れる。
 lessons = {
