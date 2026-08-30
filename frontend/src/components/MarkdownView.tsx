@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
@@ -17,11 +18,14 @@ import "katex/dist/katex.min.css";
 //
 // 画像も Markdown の ![説明](URL) でそのまま貼れる（幅は CSS で画面に合わせる）。
 //
+// 表は remark-gfm で描く。無いと「| 読み | 漢字 |」がそのまま画面に出てしまう
+// （素の Markdown に表は無い）。読み方と漢字の対応のように、並べてくらべる内容に使う。
+//
 // react-markdown と KaTeX は重いので、このコンポーネントを使うページは
 // App.tsx で遅延読み込み（React.lazy）にして初回のJSを軽く保つこと。
 export default function MarkdownView({ children }: { children: string }) {
   return (
-    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
       {children}
     </ReactMarkdown>
   );

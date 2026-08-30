@@ -47,6 +47,7 @@ stat_number  = StatType.find_or_create_by!(name: "数的センス") { |s| s.desc
 stat_shape   = StatType.find_or_create_by!(name: "図形力")    { |s| s.description = "図形の性質・面積・体積の理解";       s.display_order = 3 }
 stat_reading = StatType.find_or_create_by!(name: "文章読解力") { |s| s.description = "文章題を式に落とし込む力";           s.display_order = 4 }
 stat_logic   = StatType.find_or_create_by!(name: "論理力")    { |s| s.description = "順序立てて考え、式を組み立てる力";   s.display_order = 5 }
+stat_vocab   = StatType.find_or_create_by!(name: "語彙力")    { |s| s.description = "漢字・ことばの意味を知り、使い分ける力"; s.display_order = 6 }
 
 # 参考値
 [
@@ -64,6 +65,9 @@ stat_logic   = StatType.find_or_create_by!(name: "論理力")    { |s| s.descrip
   { label: "難関高校受験",     stat_type: stat_logic,   value: 350 },
   { label: "難関高校受験",     stat_type: stat_reading, value: 300 },
   { label: "難関高校受験",     stat_type: stat_number,  value: 300 },
+  { label: "難関高校受験",     stat_type: stat_vocab,   value: 300 },
+  { label: "高校受験（公立）", stat_type: stat_vocab,   value: 200 },
+  { label: "中学卒業レベル",   stat_type: stat_vocab,   value: 150 },
 
   { label: "エンジニア",       stat_type: stat_logic,   value: 450 },
   { label: "エンジニア",       stat_type: stat_calc,    value: 400 },
@@ -960,6 +964,398 @@ choice_problems = {
 
 create_problems(choice_problems)
 
+# ===== 国語（小学6年生）=====
+#
+# ランクは別のまとまりにする。算数・数学とは積み上げが別系統なので、同じまとまりに
+# 入れると「国語をやった分で数学のランクが上がる」ことになってしまう。
+japanese_group = SubjectGroup.find_or_create_by!(name: "国語") { |g| g.display_order = 1 }
+japanese = Subject.find_or_create_by!(name: "国語") { |s| s.subject_group = japanese_group }
+japanese.update!(subject_group: japanese_group) if japanese.subject_group_id.nil?
+
+# 国語の答えは漢字やひらがなで、キーパッド（AnswerInput の KEYPAD_ROWS）では打てない。
+# そのため**全問を選択式**にしている。打てない答えは選択式にする、という既存の方針どおり。
+units_japanese = [
+  { title: "漢字の読み書き",   description: "小6で習う漢字の読み・送りがな・同音異義語",           display_order: 5,
+    stat_types: -> { [stat_vocab, stat_reading] } },
+  { title: "ことばの意味",     description: "慣用句・ことわざ・四字熟語の意味と使い分け",         display_order: 6,
+    stat_types: -> { [stat_vocab] } },
+  { title: "説明文の読み取り", description: "接続語・指示語をたどって、筆者の言いたいことをつかむ", display_order: 7,
+    stat_types: -> { [stat_reading, stat_logic] } }
+]
+
+units_japanese.each do |ud|
+  unit = Unit.find_or_create_by!(title: ud[:title], grade: grade6) do |u|
+    u.subject = japanese
+    u.description = ud[:description]
+    u.display_order = ud[:display_order]
+  end
+  ud[:stat_types].call.each { |st| UnitStatType.find_or_create_by!(unit: unit, stat_type: st) }
+end
+
+# 国語の問題。全問が選択式（答えが漢字・ひらがなでキーパッドから打てないため）。
+# answer は正解の選択肢の文字列とぴったり同じにすること。
+japanese_problems = {
+  "漢字の読み書き" => [
+    { question: "「厳しい」の読み方はどれですか？",
+      answer: "きびしい", hint: "「げんかく（厳格）」の「厳」です。", difficulty: 1, problem_type: "multiple_choice",
+      solution: "「厳しい」は「きびしい」と読みます。音読みは「ゲン」で、「厳格」「厳重」などに使います。",
+      choices: [
+        { text: "きびしい", is_correct: true },
+        { text: "はげしい", is_correct: false },
+        { text: "くるしい", is_correct: false },
+        { text: "さびしい", is_correct: false }
+      ] },
+    { question: "「幼い」の読み方はどれですか？",
+      answer: "おさない", hint: "「幼稚園（ようちえん）」の「幼」です。", difficulty: 1, problem_type: "multiple_choice",
+      solution: "「幼い」は「おさない」と読みます。年れいが小さいことを表します。音読みは「ヨウ」で「幼児」「幼虫」などに使います。",
+      choices: [
+        { text: "わかい", is_correct: false },
+        { text: "おさない", is_correct: true },
+        { text: "ちいさい", is_correct: false },
+        { text: "あさい", is_correct: false }
+      ] },
+    { question: "「胸」の音読みはどれですか？",
+      answer: "キョウ", hint: "「胸囲（きょうい）」ということばを思い出しましょう。", difficulty: 2, problem_type: "multiple_choice",
+      solution: "「胸」の音読みは「キョウ」で、「胸囲」「度胸」などに使います。訓読みは「むね」です。",
+      choices: [
+        { text: "ムネ", is_correct: false },
+        { text: "ケイ", is_correct: false },
+        { text: "キョウ", is_correct: true },
+        { text: "コウ", is_correct: false }
+      ] },
+    { question: "「あたたかい」を漢字と送りがなで正しく書いたものはどれですか？（気温のとき）",
+      answer: "暖かい", hint: "送りがなは、変わる部分から送ります。「あたたかろう」「あたたかった」と変わるのはどこでしょう。", difficulty: 2, problem_type: "multiple_choice",
+      solution: "気温には「暖かい」を使い、送りがなは「かい」です。「暖」までが変わらない部分なので、そこから送ります。なお心や食べ物には「温かい」を使います。",
+      choices: [
+        { text: "暖い", is_correct: false },
+        { text: "暖たかい", is_correct: false },
+        { text: "暖かたい", is_correct: false },
+        { text: "暖かい", is_correct: true }
+      ] },
+    { question: "「会社につとめる」の「つとめる」に合う漢字はどれですか？",
+      answer: "勤める", hint: "「勤務（きんむ）」ということばを思い出しましょう。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "会社ではたらくのは「勤める」です。「努める」は努力すること、「務める」は役目を引き受けること（司会を務める）で、使い分けます。",
+      choices: [
+        { text: "勤める", is_correct: true },
+        { text: "努める", is_correct: false },
+        { text: "務める", is_correct: false },
+        { text: "勉める", is_correct: false }
+      ] },
+    { question: "「読書」と同じ組み立ての熟語はどれですか？（下の字が上の字の目的や対象になっているもの）",
+      answer: "登山", hint: "「読書」は「書を読む」と、下から上に返って読めます。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "「読書」は「書を読む」と読める組み立てです。「登山」も「山に登る」と読めるので同じ形です。「親友」は上が下を修飾、「高低」は反対の意味の組み合わせ、「年少」は主語と述語の関係です。",
+      choices: [
+        { text: "親友", is_correct: false },
+        { text: "登山", is_correct: true },
+        { text: "高低", is_correct: false },
+        { text: "年少", is_correct: false }
+      ] },
+    { question: "「複雑」の反対の意味を表すことばはどれですか？",
+      answer: "単純", hint: "「入り組んでいる」の反対は「こみいっていない」です。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "「複雑」の対義語は「単純」です。「簡易」「容易」「明白」はどれも似た感じがしますが、「複雑」とちょうど反対の組みになるのは「単純」です。",
+      choices: [
+        { text: "簡易", is_correct: false },
+        { text: "容易", is_correct: false },
+        { text: "単純", is_correct: true },
+        { text: "明白", is_correct: false }
+      ] },
+    { question: "「実験のカテイを記録する」の「カテイ」に合う漢字はどれですか？",
+      answer: "過程", hint: "「とちゅうの道すじ」という意味です。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "とちゅうの道すじを表すのは「過程」です。「課程」は学校で学ぶ内容のまとまり、「仮定」はかりに決めること、「家庭」は家族の集まりを指します。",
+      choices: [
+        { text: "家庭", is_correct: false },
+        { text: "課程", is_correct: false },
+        { text: "仮定", is_correct: false },
+        { text: "過程", is_correct: true }
+      ] },
+    { question: "「無意識」と同じ組み立ての三字熟語はどれですか？",
+      answer: "未完成", hint: "「無」は下の二字を打ち消しています。同じはたらきの字が上についているのはどれでしょう。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "「無意識」は打ち消しの「無」が下の二字についた形です。「未完成」も「未」が打ち消しているので同じ形です。「衣食住」「松竹梅」「都道府県」は同じ仲間のことばを並べた形です。",
+      choices: [
+        { text: "衣食住", is_correct: false },
+        { text: "未完成", is_correct: true },
+        { text: "松竹梅", is_correct: false },
+        { text: "都道府県", is_correct: false }
+      ] },
+    { question: "送りがなが正しいものはどれですか？（「こころざす」）",
+      answer: "志す", hint: "「志」の一字で「こころざ」まで読みます。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "「志す」が正しい書き方です。「志」だけで「こころざ」と読み、変化する「す」だけを送ります。",
+      choices: [
+        { text: "志ざす", is_correct: false },
+        { text: "志こころざす", is_correct: false },
+        { text: "志す", is_correct: true },
+        { text: "志しす", is_correct: false }
+      ] },
+    { question: "「生」の読み方が、ほかの三つとちがうものはどれですか？",
+      answer: "生糸", hint: "音読みか訓読みかで分けてみましょう。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "「生物」「生死」「生活」はどれも音読みで「セイ」と読みます。「生糸」だけは訓読みで「きいと」と読みます。「生」は読み方の多い漢字なので、熟語ごとに覚えます。",
+      choices: [
+        { text: "生物", is_correct: false },
+        { text: "生死", is_correct: false },
+        { text: "生糸", is_correct: true },
+        { text: "生活", is_correct: false }
+      ] },
+    { question: "上の字が下の字をくわしく説明している熟語はどれですか？",
+      answer: "青空", hint: "「〜な○○」と説明する形になっているものをさがします。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "「青空」は「青い空」で、上の字が下の字をくわしくしています。「登山」は「山に登る」、「高低」は反対の意味の組み合わせ、「地震」は「地が震える」で主語と述語の関係です。",
+      choices: [
+        { text: "青空", is_correct: true },
+        { text: "登山", is_correct: false },
+        { text: "高低", is_correct: false },
+        { text: "地震", is_correct: false }
+      ] },
+    { question: "「委員長にスイセンされる」の「スイセン」に合う漢字はどれですか？",
+      answer: "推薦", hint: "「よい人としてすすめる」という意味です。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "人をすすめるのは「推薦」です。「推選」は選び出すこと、「水洗」は水で洗うこと、「吹奏」は楽器をふいて演奏することで、どれも意味がちがいます。",
+      choices: [
+        { text: "推選", is_correct: false },
+        { text: "水洗", is_correct: false },
+        { text: "吹奏", is_correct: false },
+        { text: "推薦", is_correct: true }
+      ] }
+  ],
+  "ことばの意味" => [
+    { question: "「油を売る」の意味はどれですか？",
+      answer: "むだ話をして、仕事をなまける", hint: "昔、油売りが客と長話をしたことからできたことばです。", difficulty: 1, problem_type: "multiple_choice",
+      solution: "「油を売る」は、むだ話などをして仕事をなまけることです。昔の油売りが客と長話をしながら売っていたことからきています。",
+      choices: [
+        { text: "むだ話をして、仕事をなまける", is_correct: true },
+        { text: "商売がうまくいく", is_correct: false },
+        { text: "とても急いでいる", is_correct: false },
+        { text: "人にお世辞を言う", is_correct: false }
+      ] },
+    { question: "「猫の手も借りたい」の意味はどれですか？",
+      answer: "とてもいそがしい", hint: "役に立ちそうにない猫の手まで借りたい、という気持ちです。", difficulty: 1, problem_type: "multiple_choice",
+      solution: "「猫の手も借りたい」は、役に立ちそうにない猫の手さえ借りたくなるほど、とてもいそがしいことを表します。",
+      choices: [
+        { text: "動物が好きだ", is_correct: false },
+        { text: "とてもいそがしい", is_correct: true },
+        { text: "人手が足りていて楽だ", is_correct: false },
+        { text: "こっそりと何かをする", is_correct: false }
+      ] },
+    { question: "「後の祭り」の意味はどれですか？",
+      answer: "時期がすぎて、今さらどうにもならない", hint: "お祭りが終わってから出かけても、もう見られません。", difficulty: 2, problem_type: "multiple_choice",
+      solution: "「後の祭り」は、時期がすぎてしまって今さらどうにもならないこと、つまり手おくれを表します。祭りが終わったあとに行っても見られないことからきています。",
+      choices: [
+        { text: "楽しいことが続く", is_correct: false },
+        { text: "みんなで祝う", is_correct: false },
+        { text: "時期がすぎて、今さらどうにもならない", is_correct: true },
+        { text: "順番が回ってくる", is_correct: false }
+      ] },
+    { question: "「耳が痛い」の意味はどれですか？",
+      answer: "自分の弱点を言われて、聞くのがつらい", hint: "本当に耳が痛むわけではありません。", difficulty: 2, problem_type: "multiple_choice",
+      solution: "「耳が痛い」は、自分の弱点や欠点を言われて、聞くのがつらいという意味です。体のようすではなく気持ちを表す慣用句です。",
+      choices: [
+        { text: "大きな音がうるさい", is_correct: false },
+        { text: "自分の弱点を言われて、聞くのがつらい", is_correct: true },
+        { text: "同じ話を何度も聞かされる", is_correct: false },
+        { text: "よい知らせを聞いてうれしい", is_correct: false }
+      ] },
+    { question: "「情けは人のためならず」の意味はどれですか？",
+      answer: "人に親切にすると、めぐりめぐって自分に返ってくる", hint: "「ためならず」は「その人のためにならない」ではありません。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "「情けは人のためならず」は、人にかけた親切はめぐりめぐって自分に返ってくる、という意味です。「親切はその人のためにならない」と取りちがえやすいことわざの代表です。",
+      choices: [
+        { text: "親切にすると、その人のためにならない", is_correct: false },
+        { text: "人に親切にすると、めぐりめぐって自分に返ってくる", is_correct: true },
+        { text: "人の助けをあてにしてはいけない", is_correct: false },
+        { text: "情けをかけるのはむだである", is_correct: false }
+      ] },
+    { question: "「五十歩百歩」と似た意味のことわざはどれですか？",
+      answer: "どんぐりの背くらべ", hint: "どちらも「たいしたちがいがない」という意味です。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "「五十歩百歩」は、少しのちがいはあっても本質的には同じだという意味です。「どんぐりの背くらべ」も、どれも似たようなもので大きな差がないことを表します。",
+      choices: [
+        { text: "急がば回れ", is_correct: false },
+        { text: "石の上にも三年", is_correct: false },
+        { text: "どんぐりの背くらべ", is_correct: true },
+        { text: "ちりも積もれば山となる", is_correct: false }
+      ] },
+    { question: "「愛想がつきる」の意味はどれですか？",
+      answer: "あきれて、見はなしたい気持ちになる", hint: "よい意味では使いません。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "「愛想がつきる」は、相手にあきれてしまって、もう付き合いたくないという気持ちになることです。",
+      choices: [
+        { text: "あきれて、見はなしたい気持ちになる", is_correct: true },
+        { text: "うれしくてたまらない", is_correct: false },
+        { text: "とても親しくなる", is_correct: false },
+        { text: "遠慮がなくなる", is_correct: false }
+      ] },
+    { question: "「手を焼く」の意味はどれですか？",
+      answer: "あつかいに困る", hint: "料理で手をやけどする、という意味ではありません。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "「手を焼く」は、うまく処理できずにあつかいに困ることです。「弟のいたずらに手を焼く」のように使います。",
+      choices: [
+        { text: "料理が上手になる", is_correct: false },
+        { text: "あつかいに困る", is_correct: true },
+        { text: "仕事を手伝う", is_correct: false },
+        { text: "力をつくして働く", is_correct: false }
+      ] },
+    { question: "「気が置けない友人」とは、どんな友人ですか？",
+      answer: "遠慮をしなくてよい、打ちとけた友人", hint: "「油断できない」という意味で使うのはまちがいです。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "「気が置けない」は、気をつかう必要がない、つまり遠慮なく付き合えるという意味です。「油断できない」と反対の意味で取りちがえる人が多いことばです。",
+      choices: [
+        { text: "油断できない、信用しにくい友人", is_correct: false },
+        { text: "いつもけんかをする友人", is_correct: false },
+        { text: "遠慮をしなくてよい、打ちとけた友人", is_correct: true },
+        { text: "めったに会えない友人", is_correct: false }
+      ] },
+    { question: "「一石二鳥」と同じ意味の四字熟語はどれですか？",
+      answer: "一挙両得", hint: "一つのことで二つの得をする、という意味です。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "「一石二鳥」は一つの行いで二つの利益を得ることです。「一挙両得」も同じ意味です。「一朝一夕」はごく短い時間、「一長一短」は長所も短所もあること、「一進一退」はよくなったり悪くなったりすることです。",
+      choices: [
+        { text: "一朝一夕", is_correct: false },
+        { text: "一長一短", is_correct: false },
+        { text: "一進一退", is_correct: false },
+        { text: "一挙両得", is_correct: true }
+      ] },
+    { question: "「手ごたえがなく、はりあいがない」という意味を表すのはどれですか？",
+      answer: "ぬかにくぎ", hint: "やわらかいものにくぎを打っても、きき目がありません。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "「ぬかにくぎ」は、やわらかいぬかにくぎを打つように、いくらはたらきかけても手ごたえがないことです。「のれんに腕おし」も同じ意味です。",
+      choices: [
+        { text: "ぬかにくぎ", is_correct: true },
+        { text: "火に油をそそぐ", is_correct: false },
+        { text: "石橋をたたいて渡る", is_correct: false },
+        { text: "地に足がつく", is_correct: false }
+      ] },
+    { question: "「（　）を長くして待つ」の（　）に入る、体を表すことばはどれですか？",
+      answer: "首", hint: "早く来ないかと、のび上がって待つようすです。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "「首を長くして待つ」で、今か今かと待ちこがれるようすを表します。のび上がって遠くを見ようとする姿からきています。",
+      choices: [
+        { text: "目", is_correct: false },
+        { text: "首", is_correct: true },
+        { text: "手", is_correct: false },
+        { text: "耳", is_correct: false }
+      ] },
+    { question: "「以心（　）心」の（　）に入る漢字はどれですか？",
+      answer: "伝", hint: "ことばにしなくても気持ちが通じることを表す四字熟語です。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "「以心伝心」で、ことばにしなくてもたがいの気持ちが通じ合うことを表します。「心をもって心に伝える」という組み立てです。",
+      choices: [
+        { text: "電", is_correct: false },
+        { text: "転", is_correct: false },
+        { text: "伝", is_correct: true },
+        { text: "点", is_correct: false }
+      ] }
+  ],
+  "説明文の読み取り" => [
+    { question: "「朝から雨がふっていた。（　）、遠足は中止になった。」の（　）に入ることばはどれですか？",
+      answer: "だから", hint: "前の文が理由、あとの文がその結果になっています。", difficulty: 1, problem_type: "multiple_choice",
+      solution: "前の「雨がふっていた」が理由で、あとの「中止になった」がその結果です。理由と結果をつなぐのは「だから」です。",
+      choices: [
+        { text: "だから", is_correct: true },
+        { text: "しかし", is_correct: false },
+        { text: "たとえば", is_correct: false },
+        { text: "または", is_correct: false }
+      ] },
+    { question: "「机の上に一冊の本がある。それは兄のものだ。」の「それ」が指しているものはどれですか？",
+      answer: "本", hint: "指示語の指す内容は、たいてい前の文にあります。", difficulty: 1, problem_type: "multiple_choice",
+      solution: "「それ」を「本」に置きかえると「本は兄のものだ」となり、意味が通ります。指示語が指すものは、前の文からさがして入れかえてみると確かめられます。",
+      choices: [
+        { text: "机", is_correct: false },
+        { text: "上", is_correct: false },
+        { text: "本", is_correct: true },
+        { text: "兄", is_correct: false }
+      ] },
+    { question: "「このかばんは値段が高い。（　）、とてもじょうぶだ。」の（　）に入ることばはどれですか？",
+      answer: "しかし", hint: "前の内容とあとの内容が、反対の向きになっています。", difficulty: 2, problem_type: "multiple_choice",
+      solution: "「値段が高い」は短所、「じょうぶだ」は長所で、向きが反対です。反対の内容をつなぐのは「しかし」です。",
+      choices: [
+        { text: "そのうえ", is_correct: false },
+        { text: "しかし", is_correct: true },
+        { text: "だから", is_correct: false },
+        { text: "つまり", is_correct: false }
+      ] },
+    { question: "段落が「たとえば」ということばで始まっているとき、その段落のはたらきはどれですか？",
+      answer: "前に述べたことの具体例をあげる", hint: "「たとえば」のあとには、いつも何が続くでしょう。", difficulty: 2, problem_type: "multiple_choice",
+      solution: "「たとえば」は具体例を示すことばです。前の段落で述べた考えを、実際の例で分かりやすくする役目をしています。",
+      choices: [
+        { text: "前に述べたことを打ち消す", is_correct: false },
+        { text: "前に述べたことの具体例をあげる", is_correct: true },
+        { text: "話題をまったく別のものに変える", is_correct: false },
+        { text: "文章全体をまとめる", is_correct: false }
+      ] },
+    { question: "次の文章を読んで答えなさい。「植物は動くことができない。そのため、種を遠くへ運ぶしくみを持っている。風に飛ばされるもの、動物の毛につくもの、実を食べてもらうもの。どれも、自分では動けないという弱点をおぎなうくふうである。」——この文章で筆者がいちばん言いたいことはどれですか？",
+      answer: "植物は動けない弱点を、種を運ぶくふうでおぎなっている", hint: "最初の文と最後の文をつなげて読んでみましょう。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "最初に「動くことができない」という弱点を示し、最後に「弱点をおぎなうくふう」とまとめています。とちゅうの三つの例は、そのくふうの具体例です。",
+      choices: [
+        { text: "植物には風に飛ばされる種が多い", is_correct: false },
+        { text: "動物は植物の種を運ぶ役目をしている", is_correct: false },
+        { text: "植物は動けない弱点を、種を運ぶくふうでおぎなっている", is_correct: true },
+        { text: "植物は動物よりもすぐれている", is_correct: false }
+      ] },
+    { question: "次の文章の「この方法」が指しているものはどれですか？「氷を長持ちさせたいときは、新聞紙で包んでからクーラーボックスに入れるとよい。この方法なら、ふつうより二倍ほど長くもつ。」",
+      answer: "新聞紙で包んでからクーラーボックスに入れること", hint: "指示語のところに、選んだ内容をそのまま入れて読んでみましょう。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "「この方法」に「新聞紙で包んでからクーラーボックスに入れること」を入れると意味が通ります。指示語は直前の内容を指すことが多く、入れかえて確かめるのが確実です。",
+      choices: [
+        { text: "氷を長持ちさせたいと思うこと", is_correct: false },
+        { text: "新聞紙で包んでからクーラーボックスに入れること", is_correct: true },
+        { text: "クーラーボックスを二倍の大きさにすること", is_correct: false },
+        { text: "氷をふつうより多く用意すること", is_correct: false }
+      ] },
+    { question: "次の文章で、筆者が「早ね早おき」をすすめる理由はどれですか？「体には、朝の光を浴びると目が覚め、暗くなると眠くなるリズムがそなわっている。夜おそくまで明かりの下にいると、このリズムがくるってしまう。だから早ねをすすめたい。」",
+      answer: "夜ふかしをすると、体のリズムがくるってしまうから", hint: "「だから」の直前に理由が書かれています。", difficulty: 3, problem_type: "multiple_choice",
+      solution: "「だから早ねをすすめたい」の直前に「このリズムがくるってしまう」とあります。理由を問われたら、結論の直前をさがすのが基本です。",
+      choices: [
+        { text: "朝の光を浴びると気持ちがよいから", is_correct: false },
+        { text: "夜ふかしをすると、体のリズムがくるってしまうから", is_correct: true },
+        { text: "早おきをすると勉強がはかどるから", is_correct: false },
+        { text: "暗いところにいると目が悪くなるから", is_correct: false }
+      ] },
+    { question: "次の文章の要旨として最も適切なものはどれですか？「道具は、人の力を大きくするために生まれた。てこは小さな力を大きな力に変え、車輪は重い物を軽く運ばせる。だが道具は、使う人の考えまで大きくしてくれるわけではない。何のために使うのかは、いつも人が決めなければならない。」",
+      answer: "道具は力を大きくするが、使い道を決めるのは人である", hint: "「だが」のあとに、筆者がいちばん言いたいことが来ています。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "前半で道具の便利さを認めたうえで、「だが」で向きを変え、「使い道は人が決める」と述べています。逆接のあとに筆者の主張が来る、という型です。",
+      choices: [
+        { text: "てこや車輪は、とても役に立つ発明である", is_correct: false },
+        { text: "道具は人の力を大きくするので、たくさん使うべきだ", is_correct: false },
+        { text: "道具にたよりすぎると、人の力は弱くなる", is_correct: false },
+        { text: "道具は力を大きくするが、使い道を決めるのは人である", is_correct: true }
+      ] },
+    { question: "次の文章で、筆者は二つのものを何のためにくらべていますか？「日本の家は木でつくられることが多く、ヨーロッパでは石が多い。日本は湿気が多く、木は湿気を吸ってくれる。ヨーロッパは乾そうしていて、石でも住みやすい。家の材料は、その土地の気候が決めてきたのである。」",
+      answer: "家の材料が、その土地の気候によって決まることを示すため", hint: "最後の一文が、くらべた結果のまとめになっています。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "日本とヨーロッパをくらべたうえで、最後に「その土地の気候が決めてきた」とまとめています。二つを並べるのは、共通するきまりを示すためです。",
+      choices: [
+        { text: "日本の家のほうがすぐれていることを示すため", is_correct: false },
+        { text: "家の材料が、その土地の気候によって決まることを示すため", is_correct: true },
+        { text: "木と石のどちらが丈夫かをくらべるため", is_correct: false },
+        { text: "ヨーロッパの気候を説明するため", is_correct: false }
+      ] },
+    { question: "「この魚は深い海にすんでいる。（　）、水族館で見られることはめったにない。」の（　）に入ることばはどれですか？",
+      answer: "そのため", hint: "前が理由で、あとがその結果になっているかを確かめましょう。", difficulty: 4, problem_type: "multiple_choice",
+      solution: "「深い海にすんでいる」が理由で、「めったに見られない」がその結果です。理由と結果をつなぐ「そのため」が入ります。「ところが」は逆接、「また」は付け加え、「つまり」は言いかえです。",
+      choices: [
+        { text: "ところが", is_correct: false },
+        { text: "また", is_correct: false },
+        { text: "そのため", is_correct: true },
+        { text: "つまり", is_correct: false }
+      ] },
+    { question: "次の文章で、筆者の考えとして最も適切なものはどれですか？「失敗すると、人はその原因をさがす。原因が分かれば、次は同じところでつまずかない。つまり失敗は、次に進むための手がかりを残してくれる。ただし、原因をさがさずに終わらせてしまえば、それはただの失敗のままである。」",
+      answer: "失敗は、原因をさがして初めて次に生きる", hint: "「ただし」のあとの条件まで読んで、全体をまとめましょう。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "「失敗は手がかりを残す」と述べたあと、「ただし、原因をさがさずに終わらせれば、ただの失敗のまま」と条件をつけています。条件まで含めると「原因をさがして初めて次に生きる」となります。",
+      choices: [
+        { text: "失敗は、原因をさがして初めて次に生きる", is_correct: true },
+        { text: "失敗はしないほうがよい", is_correct: false },
+        { text: "失敗はいつでも成功のもとになる", is_correct: false },
+        { text: "原因をさがすことは、なかなかむずかしい", is_correct: false }
+      ] },
+    { question: "次の文章の組み立てとして正しいものはどれですか？「【1】時計は、時間を計るための道具である。【2】砂時計は砂の落ちる量で計った。【3】水時計は水の減り方で計った。【4】どちらも、少しずつ変わっていくものを使って時間を表している。」",
+      answer: "1で話題を示し、2と3で例をあげ、4でまとめている", hint: "それぞれの段落が、話題・例・まとめのどれにあたるかを考えます。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "【1】で「時計とは何か」という話題を示し、【2】【3】で具体例を二つあげ、【4】の「どちらも」で共通点をまとめています。話題→例→まとめは説明文の基本の型です。",
+      choices: [
+        { text: "1で問いを出し、2から4で順に答えている", is_correct: false },
+        { text: "1と2で反対の意見を並べ、3と4で選んでいる", is_correct: false },
+        { text: "1で話題を示し、2と3で例をあげ、4でまとめている", is_correct: true },
+        { text: "1から3まで理由を並べ、4で新しい話題に移っている", is_correct: false }
+      ] },
+    { question: "次の文章で、——の「それ」が指しているものはどれですか？「動物園のライオンは、野生のライオンより長生きすることが多い。えさの心配がなく、けがをしても手当てを受けられるからだ。しかし、それと引きかえに、広い場所を走り回る自由は失われている。」",
+      answer: "えさの心配がなく、手当ても受けられるという安全さ", hint: "「引きかえに」とあるので、何かを差し出して自由を失った、という関係です。", difficulty: 5, problem_type: "multiple_choice",
+      solution: "「それと引きかえに自由が失われる」という形なので、「それ」は自由と交換されたもの、つまり前の文の「えさの心配がなく手当ても受けられる」という安全さを指します。",
+      choices: [
+        { text: "野生のライオンであること", is_correct: false },
+        { text: "長生きすること自体", is_correct: false },
+        { text: "動物園という建物", is_correct: false },
+        { text: "えさの心配がなく、手当ても受けられるという安全さ", is_correct: true }
+      ] }
+  ]
+}
+
+create_problems(japanese_problems)
+
 # 単元ごとの教材（解説）Markdown。既存単元にも反映されるよう update で入れる。
 lessons = {
   # 数式は KaTeX（$...$ / $$...$$）。バックスラッシュを守るため
@@ -1234,6 +1630,131 @@ lessons = {
     ### ポイント
     - 比例は $y = ax$（わり算で $a$ が出る）
     - 反比例は $y = \frac{a}{x}$（$x \times y$ が一定）
+  MD
+  "漢字の読み書き" => <<~'MD',
+    ## 漢字の読み書き
+
+    漢字は「読めればいい」ものではありません。**同じ読み方でちがう漢字**がたくさんあるので、意味で選べるようになると、文章がぐっと正確に書けるようになります。
+
+    ### 音読みと訓読み
+    漢字には二とおりの読み方があります。
+
+    - **音読み** … 中国から来た読み方。カタカナで書くことが多い（胸 → キョウ）
+    - **訓読み** … 日本のことばをあてた読み方。それだけで意味が分かる（胸 → むね）
+
+    熟語はふつう音読みどうし、訓読みどうしで組み合わさります。「生糸（きいと）」のように訓読みで読む熟語もあるので、熟語ごとに覚えるのが確実です。
+
+    ### 送りがなのきまり
+    送りがなは、**形が変わる部分から送る**のが基本です。
+
+    - あたたかい → あたたかろう・あたたかった … 変わるのは「かい」の部分 → **暖かい**
+    - こころざす → こころざそう・こころざした … 変わるのは「す」の部分 → **志す**
+
+    ### 同じ読みで意味がちがう漢字
+    文の意味から選びます。
+
+    | 読み | 漢字 | 意味 |
+    |------|------|------|
+    | つとめる | 勤める | 会社などではたらく |
+    | | 努める | 努力する |
+    | | 務める | 役目を引き受ける |
+    | カテイ | 過程 | とちゅうの道すじ |
+    | | 課程 | 学校で学ぶ内容のまとまり |
+    | | 仮定 | かりに決めること |
+
+    ### 熟語の組み立て
+    二字熟語は、組み立てで四つに分けられます。
+
+    1. 似た意味を重ねる（**豊富**）
+    2. 反対の意味を組み合わせる（**高低**）
+    3. 上が下をくわしくする（**青空** ＝ 青い空）
+    4. 下が上の目的や対象になる（**読書** ＝ 書を読む）
+
+    「読書」の仲間かどうかは、**下から上へ返って読めるか**で見分けられます。
+
+    ### よくあるまちがい
+    - 「志ざす」と送ってしまう … 「志」だけで「こころざ」と読みます
+    - 「暖かい」と「温かい」の混同 … 気温は「暖」、心や飲み物は「温」
+  MD
+  "ことばの意味" => <<~'MD',
+    ## ことばの意味（慣用句・ことわざ・四字熟語）
+
+    慣用句やことわざは、**ことばをそのままの意味で足し算しても答えが出ません**。「油を売る」は本当に油を売っているわけではないし、「耳が痛い」は耳が痛むわけでもありません。ひとまとまりで意味を覚えます。
+
+    ### 体の部分を使う慣用句
+    数が多く、テストにもよく出ます。
+
+    - **首**を長くして待つ … 今か今かと待ちこがれる
+    - **耳**が痛い … 弱点を言われて聞くのがつらい
+    - **手**を焼く … あつかいに困る
+    - **顔**が広い … 知り合いが多い
+
+    ### 意味を取りちがえやすいことば
+    ここがいちばんの山場です。**反対の意味で覚えてしまっている**ことばがあります。
+
+    | ことば | 正しい意味 | よくあるまちがい |
+    |--------|-----------|-----------------|
+    | 情けは人のためならず | 親切は自分に返ってくる | 親切はその人のためにならない |
+    | 気が置けない | 遠慮がいらない | 油断できない |
+    | 役不足 | 力に対して役目が軽すぎる | 力が足りない |
+
+    ### 似た意味どうしをまとめる
+    別のことばでも意味が重なるものがあります。組みで覚えると強くなります。
+
+    - 五十歩百歩 ＝ どんぐりの背くらべ（たいしたちがいがない）
+    - 一石二鳥 ＝ 一挙両得（一つのことで二つの得）
+    - ぬかにくぎ ＝ のれんに腕おし（手ごたえがない）
+
+    ### 四字熟語の見分け方
+    組み立てが分かると、意味も推せます。
+
+    - **以心伝心** … 心をもって心に伝える → ことばにしなくても通じる
+    - **一朝一夕** … 一つの朝と一つの夕 → ごく短い時間
+    - **一長一短** … 長所も短所もある
+
+    ### よくあるまちがい
+    - ことわざを字づらだけで判断する … 「情けは人のためならず」がその代表です
+    - 似た形のことばを混ぜる … 「一朝一夕」と「一長一短」は形が似ていて意味は別
+  MD
+  "説明文の読み取り" => <<~'MD',
+    ## 説明文の読み取り
+
+    説明文は、**筆者が言いたいことが必ずどこかに書いてあります**。感想で答えるのではなく、文章の中から根きょをさがすのがこつです。
+
+    ### つなぎことばで向きが分かる
+    つなぎことば（接続語）は、次に何が来るかの道しるべです。
+
+    | つなぎことば | 次に来るもの |
+    |--------------|-------------|
+    | だから・そのため | 前の内容の**結果** |
+    | しかし・ところが | 前と**反対**の内容 |
+    | たとえば | 前の内容の**具体例** |
+    | つまり・要するに | 前の内容の**言いかえ・まとめ** |
+    | また・そのうえ | **付け加え** |
+
+    **「しかし」のあとには筆者の主張が来やすい**、と覚えておくと要旨をつかみやすくなります。
+
+    ### 指示語は入れかえて確かめる
+    「それ」「この方法」などが出てきたら、指すものを前からさがして、**その場に入れて読み直します**。意味が通れば正解です。
+
+    > 氷は新聞紙で包んでからクーラーボックスに入れるとよい。**この方法**なら長くもつ。
+    > → 「新聞紙で包んでからクーラーボックスに入れる方法なら長くもつ」　意味が通る
+
+    ### 説明文のよくある型
+    多くの説明文は、次の形をしています。
+
+    1. **話題** … 何について書くかを示す
+    2. **具体例** … たとえを二つ三つ並べる
+    3. **まとめ** … 例に共通することを述べる
+
+    「どちらも」「このように」で始まる段落は、まとめのことが多いです。
+
+    ### 理由を聞かれたら
+    「なぜですか」と問われたら、**結論の直前**をさがします。「〜から」「〜ため」で終わる文が答えになっていることがほとんどです。
+
+    ### よくあるまちがい
+    - 本文に書いていない、自分の知識で答えてしまう
+    - 「ただし」「とはいえ」のあとを読み落として、条件つきの主張を言い切りにしてしまう
   MD
 }
 

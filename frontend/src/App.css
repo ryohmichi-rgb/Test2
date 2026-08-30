@@ -179,6 +179,14 @@ body {
   border-bottom: 2px solid #ebf4ff;
 }
 
+/* 学年カードの中の教科の見出し。同じ学年に2教科以上あるときだけ出る */
+.unit-subject {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #718096;
+  margin: 0.7rem 0 0.3rem;
+}
+
 .unit-list {
   list-style: none;
   display: flex;
