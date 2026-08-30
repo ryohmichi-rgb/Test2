@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_06_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_07_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -175,16 +175,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_000000) do
   create_table "students", force: :cascade do |t|
     t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
-    t.integer "last_exam_points"
     t.string "name"
     t.boolean "onboarded", default: false, null: false
     t.string "password_digest"
-    t.bigint "rank_id"
     t.string "role", default: "student", null: false
     t.string "title_key"
     t.datetime "updated_at", null: false
     t.string "username"
-    t.index ["rank_id"], name: "index_students_on_rank_id"
     t.index ["role"], name: "index_students_on_role"
     t.index ["username"], name: "index_students_on_username", unique: true
   end
@@ -238,12 +235,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_000000) do
     t.integer "display_order"
     t.bigint "grade_id", null: false
     t.text "lesson_body"
-    t.bigint "stat_type_id"
     t.bigint "subject_id", null: false
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["grade_id"], name: "index_units_on_grade_id"
-    t.index ["stat_type_id"], name: "index_units_on_stat_type_id"
     t.index ["subject_id"], name: "index_units_on_subject_id"
   end
 
@@ -267,13 +262,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_000000) do
   add_foreign_key "student_ranks", "subject_groups"
   add_foreign_key "student_stats", "stat_types"
   add_foreign_key "student_stats", "students"
-  add_foreign_key "students", "ranks"
   add_foreign_key "subjects", "subject_groups"
   add_foreign_key "test_results", "students"
   add_foreign_key "test_results", "subjects"
   add_foreign_key "unit_stat_types", "stat_types"
   add_foreign_key "unit_stat_types", "units"
   add_foreign_key "units", "grades"
-  add_foreign_key "units", "stat_types"
   add_foreign_key "units", "subjects"
 end

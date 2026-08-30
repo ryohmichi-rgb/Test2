@@ -1,8 +1,6 @@
 class Student < ApplicationRecord
   has_secure_password
 
-  belongs_to :rank, optional: true
-
   has_many :answer_records, dependent: :destroy
   has_many :student_stats, dependent: :destroy
   has_many :goals, dependent: :destroy

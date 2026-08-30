@@ -1,7 +1,8 @@
-# 総合ランク（10級 → 1級 → 初段）。全ステータスの合計ポイントで到達を判定する。
-# 到達しただけでは上がらず、昇格試験に合格して初めて昇格する（PromotionExam）。
+# ランクの段位（10級 → 1級 → 初段）。**「教科のまとまり」ごと**に、そのまとまりで
+# 積んだポイントで到達を判定する（RankPoints）。到達しただけでは上がらず、
+# 昇格試験に合格して初めて昇格する（PromotionExam）。
 class Rank < ApplicationRecord
-  has_many :students, dependent: :nullify
+  has_many :student_ranks, dependent: :nullify
 
   validates :name, presence: true
   validates :threshold_points, :display_order, presence: true

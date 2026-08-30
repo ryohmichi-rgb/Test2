@@ -106,7 +106,6 @@ erDiagram
         bool active "無効化で出題除外"
         fk grade_id
         fk subject_id
-        fk stat_type_id "非推奨。unit_stat_types へ移行ずみ"
     }
     unit_stat_types {
         fk unit_id
@@ -209,8 +208,6 @@ erDiagram
 
 - **unit_stat_types** … 単元がどのステータスを伸ばすか。**1単元に複数**持てる（文章題＝文章読解力＋計算力 など）。
   `(unit_id, stat_type_id)` で一意。0個でもよく、そのときは解いてもポイントが入らない。
-- **units.stat_type_id** … 1単元1ステータスだった頃の列。**もう読んでいない**（`unit_stat_types` に移行ずみ）。
-  デプロイ中に旧コードが新スキーマに対して動く窓があるため、この移行では消さずに残している。
 - **student_stats** … `(student_id, stat_type_id)` で一意。現在値のみを持つ（履歴は持たない）。
 - **goals** … `(student_id, stat_type_id)` で一意。目標値＋期限。
 - **reference_stats** … 目標の目安（参考値）。`label` でグルーピング。中学卒業レベル/高校受験（公立）/難関高校受験/数学の先生/エンジニア/研究者/ゲームクリエイター など。
@@ -236,11 +233,12 @@ erDiagram
 - **students.username / password_digest** … 認証用。`username` は一意（ログインID）、`password_digest` は bcrypt（`has_secure_password`）。
 - **students.onboarded** … 初回オンボーディング済みか。`false` の間だけウィザードを表示。
 - **subject_groups / student_ranks** … ランクを数える単位と、生徒のまとまりごとのランク（3.15）。
+  移行前の `students.rank_id` / `students.last_exam_points`、および `units.stat_type_id` は
+  **削除ずみ**（`20260807000000_drop_migrated_legacy_columns`）。列を消すのは、参照を外した
+  リリースが出たあとの次のリリースにする——デプロイ中は旧コードが新スキーマに対して動く窓があり、
+  同じリリースで消すと `units.*` や `students.*` を読む旧インスタンスがその間だけ落ちるため。
   `subjects.subject_group_id` を指定せずに教科を作ると、**その教科だけの新しいまとまり**ができる
   （新しい教科は別系統のことが多い。同じ積み上げに混ぜたいときは管理画面でえらぶ）。
-- **students.rank_id / students.last_exam_points** … まとまりごとのランクにする前の列。
-  **もう読んでいない**（`student_ranks` に移行ずみ）。デプロイ中に旧コードが新スキーマに
-  対して動く窓があるため、この移行では消さずに残している。
 - **students.admin** … 管理者か。`ADMIN_USERNAME` 環境変数のユーザーを seed が管理者にする。
 - **units.active / problems.active** … 無効化フラグ。`false` は新しい出題（演習・問題集・テスト・今日の一問・復習・単元一覧）から除外。回答履歴は保持。
 - **units.lesson_body** … 単元の教材（Markdown）。フロントで `react-markdown` により描画。
