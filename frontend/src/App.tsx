@@ -29,6 +29,7 @@ const PromotionExamPage = lazy(() => import("./pages/PromotionExamPage"));
 const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
 const AdminUnitsPage = lazy(() => import("./pages/admin/AdminUnitsPage"));
 const AdminSubjectsPage = lazy(() => import("./pages/admin/AdminSubjectsPage"));
+const AdminRanksPage = lazy(() => import("./pages/admin/AdminRanksPage"));
 const AdminProblemsPage = lazy(() => import("./pages/admin/AdminProblemsPage"));
 const AdminReferenceStatsPage = lazy(() => import("./pages/admin/AdminReferenceStatsPage"));
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
@@ -68,6 +69,7 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/units" element={<AdminUnitsPage />} />
         <Route path="/admin/subjects" element={<AdminSubjectsPage />} />
+        <Route path="/admin/ranks" element={<AdminRanksPage />} />
         <Route path="/admin/units/:unitId/problems" element={<AdminProblemsPage />} />
         <Route path="/admin/reference" element={<AdminReferenceStatsPage />} />
         <Route path="/admin/students" element={<AdminStudentsPage />} />

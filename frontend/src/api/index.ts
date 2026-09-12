@@ -1,5 +1,5 @@
 import api from "./client";
-import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AdminSubject, AiUsage, AskKind, PersonaKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
+import type { Grade, Unit, Student, AuthResult, AnswerResult, StudentProgress, StudentStat, ReferenceStat, LearningPlan, ScopeType, ProblemSet, TestResult, TestSubmitResult, Growth, ReviewList, DailyQuota, LessonReadResult, Problem, Condition, AdminMeta, AdminUnit, AdminProblem, AdminChoice, AdminReferenceStat, AdminStudentSummary, AdminSubject, AdminRank, AiUsage, AskKind, PersonaKind, AskTeacherResult, Achievements, Child, RankStatus, PromotionExamSet, PromotionExamResult } from "../types";
 
 // stat_type_ids は後から足したフィールド。旧バックエンドの窓では返ってこないので
 // 既定値（空＝不明）を埋める。不明のときは教科でしぼらず全部見せる側に倒す
@@ -159,6 +159,20 @@ export const fetchCondition = (studentId: number): Promise<Condition> =>
 // ===== 管理（admin） =====
 export const fetchAdminMeta = (): Promise<AdminMeta> =>
   api.get<AdminMeta>("/admin/meta").then((r) => ({ ...r.data, subject_groups: r.data.subject_groups ?? [] }));
+
+type RankInput = { name: string; threshold_points: number; exam_question_count: number; pass_percent: number };
+
+// badges / student_count は後から足したフィールド。旧バックエンドの窓でも落ちないよう既定値を埋める
+export const fetchAdminRanks = (): Promise<AdminRank[]> =>
+  api.get<AdminRank[]>("/admin/ranks").then((r) =>
+    r.data.map((x) => ({ ...x, badges: x.badges ?? [], student_count: x.student_count ?? 0 }))
+  );
+export const createAdminRank = (rank: RankInput): Promise<AdminRank> =>
+  api.post<AdminRank>("/admin/ranks", { rank }).then((r) => r.data);
+export const updateAdminRank = (id: number, rank: RankInput): Promise<AdminRank> =>
+  api.put<AdminRank>(`/admin/ranks/${id}`, { rank }).then((r) => r.data);
+export const deleteAdminRank = (id: number): Promise<void> =>
+  api.delete(`/admin/ranks/${id}`).then(() => undefined);
 
 type SubjectInput = { name: string; subject_group_id?: number | null };
 

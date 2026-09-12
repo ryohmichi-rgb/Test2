@@ -636,11 +636,30 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 - 管理者は `students.admin`。`ADMIN_USERNAME` のユーザーを seed が管理者にする。認証レスポンスに `admin` を含める。
 - 管理APIは `/api/v1/admin/*`（`AdminOnly` concern で `admin` 以外は403）。フロント `/admin/*` は管理者以外ホームへリダイレクト。
 - **削除は未使用のみ**（回答履歴のある問題・単元は削除不可 → 無効化で対応）。参考ステータス・生徒は削除可（管理者自身は不可）。
-- 管理機能: 教科（CRUD）、単元/教材（追加・編集・無効化・削除）、問題（追加・編集・選択肢編集・無効化・削除）、参考ステータス（CRUD）、生徒（一覧・状況・削除）。
+- 管理機能: 教科（CRUD）、ランク（CRUD）、単元/教材（追加・編集・無効化・削除）、問題（追加・編集・選択肢編集・無効化・削除）、参考ステータス（CRUD）、生徒（一覧・状況・削除）。
 - **教科の削除は単元がぶら下がっていないときだけ**。`Subject has_many :units, dependent: :destroy` なので、
   そのまま消すと単元も問題も回答履歴もまとめて消える。他の管理画面と同じ「未使用のみ削除」に揃えている。
 - **単元のステータスはチェックボックスで複数えらべる**（`stat_type_ids`）。0個にもできる。
   えらんだステータスにポイントが均等に分かれることを画面にも書いている（3.1）。
+
+#### ランクの調整（`/admin/ranks`）
+
+到達ポイント・昇格試験の問題数・合格ライン・名前を画面から直せる。気をつける点が3つある。
+
+- **seed はランクを初回作成のときだけ入れる**（`find_or_create_by!`）。毎回上書きする作りだと、
+  画面で直した値がデプロイのたびに戻ってしまう（`fill_solution` と同じ考え方）。
+- **しきい値は段位の順に増えていなければならない**（モデルで検証）。`Rank.reached_by` が
+  「しきい値が points 以下のうち display_order が最後のもの」を返す作りなので、逆転すると
+  下の級に届く前に上の級へ到達してしまう。同じ値は許す。
+- **そのランクの生徒がいたら削除させない**。消すと `student_ranks.rank_id` が NULL になり
+  最下位ランク扱い＝実質の降格になる（「降格はしない」に反する）。
+
+新しい段位は**一番上に足す**（`display_order` は最大＋1）。途中への差しこみは用意していない。
+`next_rank` は display_order の順で次を探すので**抜け番があっても動く**＝削除しても番号を詰め直さない。
+
+> ⚠️ **バッジ「1級とうたつ」「初段とうたつ」はランクを名前で引いている**（`BadgeCatalog::RANK_NAME_BADGES`）。
+> 名前を変えるとそのバッジが取れなくなるので、管理画面では該当する段位に印（🏅）を出し、
+> 編集フォームでも注意書きを出している。ランク名に依存しているのはこの2つだけ。
 
 ### 3.13 先生に聞く（生成AI連携）
 
@@ -952,7 +971,7 @@ SUM するだけでよく、ロジックが `AnswerRecord` の1箇所に集約�
 | GET | `/reference_stats` | 参考ステータス |
 | GET | `/problem_set?scope_type=&scope_id=&subject_id=&count=&mode=` | 動的問題セット（`mode=practice` で重複回避つき／未指定はランダム＝テスト用。`subject_id` は省略可＝教科でしぼらない） |
 | POST | `/admin/students/:id/reset_password` | パスワード再発行（管理者。平文はこの応答でだけ返す） |
-| — | `/admin/*`（管理者のみ） | meta / subjects / units / problems / reference_stats / students のCRUD |
+| — | `/admin/*`（管理者のみ） | meta / subjects / ranks / units / problems / reference_stats / students のCRUD |
 
 ---
 
@@ -1035,7 +1054,7 @@ flowchart TD
 | `LessonPage` | `react-markdown` と KaTeX が重い。教材を開いたときだけ読み込む |
 | `PracticePage` / `ProblemSetPage` / `TestPage` / `ReviewPage` | 問題文の数式で KaTeX を使う。ログイン直後には要らない |
 | `DailyProblemCard`（ホーム内） | 同上。ホームの初期表示をブロックさせない |
-| `admin/*`（6画面） | 管理者しか使わない。生徒には読み込ませない |
+| `admin/*`（7画面） | 管理者しか使わない。生徒には読み込ませない |
 
 初回JS **487kB → 332kB**（gzip 148→105kB）。KaTeXを2箇所で使いながら軽くなっている。
 
@@ -1049,7 +1068,6 @@ flowchart TD
 
 - 教科の追加（現在は算数・数学。`subjects` で拡張可能な構造）
 - ステータスの追加（`stat_types` にレコードを足すだけ）
-- ランクの管理画面（今は seed のみ。しきい値・合格ラインを画面から変えられるように）
 - 途中保存のバックエンド永続化（現在は端末内 localStorage）
 - テストの制限時間バリエーション、farming対策の精緻化
 - ノルマ達成日連続（現在は「学習した日」の連続）

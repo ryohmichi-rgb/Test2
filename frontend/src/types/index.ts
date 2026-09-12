@@ -173,6 +173,21 @@ export interface AdminMeta {
   stat_types: { id: number; name: string }[];
 }
 
+export interface AdminRank {
+  id: number;
+  name: string;
+  display_order: number;
+  threshold_points: number;
+  exam_question_count: number;
+  pass_percent: number;
+  /** このランクにいる生徒の数 */
+  student_count: number;
+  /** 生徒がいると削除できない（消すと実質の降格になるため） */
+  used: boolean;
+  /** この名前を見ているバッジ。名前を変えると取れなくなる */
+  badges: string[];
+}
+
 export interface AdminSubject {
   id: number;
   name: string;

@@ -36,6 +36,17 @@ class BadgeCatalog
     Badge.new(key: "rank_dan",         label: "初段とうたつ",   emoji: "🐉", hint: "初段に昇格する")
   ].freeze
 
+  # ランクを**名前で**引いているバッジ。ここだけ `ranks.name` に依存している。
+  # 管理画面でランク名を変えると獲得できなくなるので、どの名前に依存しているかを
+  # 1か所に出しておき、管理画面がその印を出せるようにする。
+  RANK_NAME_BADGES = { "1級" => "rank_1kyu", "初段" => "rank_dan" }.freeze
+
+  # そのランク名に依存しているバッジ（管理画面の注意書き用）
+  def self.badges_for_rank_name(name)
+    key = RANK_NAME_BADGES[name.to_s]
+    key ? [BY_KEY[key]] : []
+  end
+
   BY_KEY = ALL.index_by(&:key).freeze
 
   def self.find(key)
@@ -71,8 +82,7 @@ class BadgeCatalog
     keys << "all_lessons"      if all_lessons_read?
     keys << "unit_master"      if any_unit_mastered?
     keys << "review_zero"      if review_cleared?
-    keys << "rank_1kyu"        if rank_reached?("1級")
-    keys << "rank_dan"         if rank_reached?("初段")
+    RANK_NAME_BADGES.each { |rank_name, key| keys << key if rank_reached?(rank_name) }
     keys.to_set
   end
 

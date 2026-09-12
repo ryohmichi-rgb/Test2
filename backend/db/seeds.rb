@@ -1762,10 +1762,12 @@ lessons.each do |title, body|
   Unit.where(title: title).update_all(lesson_body: body)
 end
 
-# === 総合ランク ===
-# 全ステータスの合計ポイントで到達を判定する。参考目標の合計は 500〜1750pt なので、
+# === ランク（段位）===
+# 「教科のまとまり」ごとに積んだポイントで到達を判定する。参考目標の合計は 500〜1750pt なので、
 # その道中に昇格イベントが並ぶよう刻んでいる（最初の昇格は2〜3問で来る）。
-# display_order をキーに更新するので、しきい値の調整は seed の書き換えだけで効く。
+#
+# **ここは初回作成のときだけ入れる。** しきい値・合格ライン・問題数は管理画面から
+# 調整できるようにしたので、毎回上書きすると管理画面で直した値がデプロイのたびに戻ってしまう。
 [
   ["10級",   0],
   ["9級",    30],
@@ -1779,12 +1781,12 @@ end
   ["1級",  1500],
   ["初段", 2000]
 ].each_with_index do |(name, threshold), i|
-  rank = Rank.find_or_initialize_by(display_order: i + 1)
-  rank.name = name
-  rank.threshold_points = threshold
-  rank.exam_question_count = 10
-  rank.pass_percent = 80
-  rank.save!
+  Rank.find_or_create_by!(display_order: i + 1) do |rank|
+    rank.name = name
+    rank.threshold_points = threshold
+    rank.exam_question_count = 10
+    rank.pass_percent = 80
+  end
 end
 
 puts "Seed完了: #{Grade.count}学年, #{Unit.count}単元, #{Problem.count}問題, #{StatType.count}ステータス種別, 教材#{lessons.size}件, ランク#{Rank.count}段階"
