@@ -9,3 +9,18 @@
 .byebug_history
 .env
 *.pid
+
+# credentials を復号する鍵。**コミットしない。**
+# Rails 標準の .gitignore にはこの行があるが、抜けていたため一度コミットされてしまった
+# （公開リポジトリなので、履歴に残った鍵はもう秘密ではない＝再開時に作り直す。README 参照）。
+# 本番（Railway）は RAILS_MASTER_KEY 環境変数から読むので、ファイルが無くてもデプロイは動く。
+/config/master.key
+
+# DBのダンプ。子どもの名前とパスワードハッシュが入るので絶対にコミットしない
+# （リポジトリの外に置くのが本筋。これは取りこぼし用の保険）
+*.dump
+*.sql
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
+
